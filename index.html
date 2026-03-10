@@ -196,19 +196,30 @@ const RHYTHMS = {
     label: "Normal Sinus Rhythm", rate: 72, color: "#00ff88", irregular: false,
     category: "Normal", severity: "normal",
     vitals: { hr: 72, sbp: 118, dbp: 76, spo2: 98, rr: 14, temp: 98.6, etco2: 38, map: 90 },
+    // Textbook 72bpm NSR: PR=160ms, QRS=80ms, QT=360ms, TP=400ms
+    // P:0.00-0.10  PR-seg:0.10-0.20  QRS:0.20-0.28  ST:0.28-0.36  T:0.36-0.56  TP:0.56-1.0
     segments: [
-      { t: "L", pts: [[0,0],[0.08,0]] },
-      { t: "B", pts: [[0.08,0],[0.11,0.18],[0.14,0.22],[0.17,0.18]] },
-      { t: "B", pts: [[0.17,0.18],[0.20,0.12],[0.23,0],[0.26,0]] },
-      { t: "L", pts: [[0.26,0],[0.32,0]] },
-      { t: "B", pts: [[0.32,0],[0.34,-0.12],[0.35,-0.18],[0.36,-0.22]] },
-      { t: "B", pts: [[0.36,-0.22],[0.365,0.5],[0.37,1.6],[0.375,2.4]] },
-      { t: "B", pts: [[0.375,2.4],[0.38,1.0],[0.39,-0.35],[0.40,-0.42]] },
-      { t: "B", pts: [[0.40,-0.42],[0.41,-0.2],[0.43,0],[0.46,0.04]] },
-      { t: "L", pts: [[0.46,0.04],[0.54,0.06]] },
-      { t: "B", pts: [[0.54,0.06],[0.57,0.12],[0.60,0.38],[0.63,0.45]] },
-      { t: "B", pts: [[0.63,0.45],[0.66,0.38],[0.70,0.12],[0.74,0]] },
-      { t: "L", pts: [[0.74,0],[1.0,0]] },
+      // Flat baseline
+      { t: "L", pts: [[0,0],[0.04,0]] },
+      // P wave — rounded, upright, symmetric, 0.10 wide, amplitude 0.22
+      { t: "B", pts: [[0.04,0],[0.06,0.10],[0.08,0.22],[0.09,0.24]] },
+      { t: "B", pts: [[0.09,0.24],[0.10,0.22],[0.12,0.10],[0.13,0.02]] },
+      { t: "B", pts: [[0.13,0.02],[0.135,0.01],[0.140,0],[0.145,0]] },
+      // PR segment — isoelectric, 160ms total PR - 80ms P = 80ms segment
+      { t: "L", pts: [[0.145,0],[0.215,0]] },
+      // QRS — Q small dip, R tall narrow spike, S small dip, return
+      { t: "B", pts: [[0.215,0],[0.220,-0.07],[0.225,-0.12],[0.228,-0.14]] },
+      { t: "B", pts: [[0.228,-0.14],[0.233,0.6],[0.238,1.8],[0.241,2.5]] },
+      { t: "B", pts: [[0.241,2.5],[0.244,1.2],[0.249,-0.25],[0.253,-0.38]] },
+      { t: "B", pts: [[0.253,-0.38],[0.257,-0.20],[0.261,-0.04],[0.265,0]] },
+      // ST segment — flat isoelectric
+      { t: "L", pts: [[0.265,0],[0.285,0.01]] },
+      // T wave — asymmetric: gradual rise, rounded peak, slightly faster fall
+      { t: "B", pts: [[0.285,0.01],[0.300,0.08],[0.320,0.30],[0.338,0.44]] },
+      { t: "B", pts: [[0.338,0.44],[0.348,0.40],[0.360,0.24],[0.372,0.08]] },
+      { t: "B", pts: [[0.372,0.08],[0.378,0.03],[0.383,0.01],[0.388,0]] },
+      // Long TP segment back to next P
+      { t: "L", pts: [[0.388,0],[1.0,0]] },
     ],
   },
 
@@ -217,19 +228,20 @@ const RHYTHMS = {
     label: "Sinus Bradycardia", rate: 40, color: "#ffcc00", irregular: false,
     category: "Sinus", severity: "warning",
     vitals: { hr: 40, sbp: 96, dbp: 58, spo2: 96, rr: 14, temp: 98.2, etco2: 36, map: 71 },
+    // 40bpm: long TP segment dominates. P/QRS/T morphology same as NSR.
     segments: [
-      { t: "L", pts: [[0,0],[0.10,0]] },
-      { t: "B", pts: [[0.10,0],[0.13,0.18],[0.16,0.22],[0.19,0.18]] },
-      { t: "B", pts: [[0.19,0.18],[0.22,0.10],[0.25,0],[0.28,0]] },
-      { t: "L", pts: [[0.28,0],[0.34,0]] },
-      { t: "B", pts: [[0.34,0],[0.36,-0.12],[0.37,-0.18],[0.375,-0.22]] },
-      { t: "B", pts: [[0.375,-0.22],[0.38,0.5],[0.385,1.6],[0.39,2.4]] },
-      { t: "B", pts: [[0.39,2.4],[0.395,0.9],[0.405,-0.35],[0.415,-0.40]] },
-      { t: "B", pts: [[0.415,-0.40],[0.425,-0.18],[0.44,0],[0.47,0.04]] },
-      { t: "L", pts: [[0.47,0.04],[0.54,0.05]] },
-      { t: "B", pts: [[0.54,0.05],[0.57,0.10],[0.60,0.36],[0.63,0.44]] },
-      { t: "B", pts: [[0.63,0.44],[0.66,0.36],[0.70,0.10],[0.74,0]] },
-      { t: "L", pts: [[0.74,0],[1.0,0]] },
+      { t: "L", pts: [[0,0],[0.030,0]] },
+      { t: "B", pts: [[0.030,0],[0.040,0.10],[0.052,0.22],[0.058,0.24]] },
+      { t: "B", pts: [[0.058,0.24],[0.064,0.22],[0.072,0.10],[0.078,0.01]] },
+      { t: "L", pts: [[0.078,0],[0.122,0]] },
+      { t: "B", pts: [[0.122,0],[0.127,-0.08],[0.131,-0.13],[0.134,-0.16]] },
+      { t: "B", pts: [[0.134,-0.16],[0.138,0.6],[0.143,1.8],[0.146,2.5]] },
+      { t: "B", pts: [[0.146,2.5],[0.149,1.2],[0.154,-0.25],[0.158,-0.40]] },
+      { t: "B", pts: [[0.158,-0.40],[0.162,-0.20],[0.166,-0.04],[0.170,0]] },
+      { t: "L", pts: [[0.170,0],[0.190,0.01]] },
+      { t: "B", pts: [[0.190,0.01],[0.204,0.08],[0.220,0.30],[0.234,0.44]] },
+      { t: "B", pts: [[0.234,0.44],[0.244,0.38],[0.256,0.18],[0.266,0.04]] },
+      { t: "L", pts: [[0.266,0],[1.0,0]] },
     ],
   },
   STACH: {
@@ -420,104 +432,393 @@ const RHYTHMS = {
   },
 
   // ── HEART BLOCKS ─────────────────────────────────────────────────────────
+  //
+  // CLINICAL REFERENCE — Key distinguishing features for new grads:
+  //
+  //  1° HB  — PR >200ms (>1 large box), CONSTANT, every P conducts, narrow QRS
+  //           Hallmark: just a very long flat PR segment before QRS. Rate normal.
+  //
+  //  2° M1  — (Wenckebach) PR progressively LENGTHENS beat-by-beat until one
+  //  (Mobitz I) P wave is completely BLOCKED (no QRS). Pattern repeats.
+  //           RR intervals shorten as PR lengthens (grouped beating).
+  //           QRS is narrow. AV nodal disease. Usually benign.
+  //           Ratio shown: 4:3 (4 P waves, 3 QRS) — classic teaching example.
+  //
+  //  2° M2  — (Mobitz II) PR is FIXED and NORMAL on conducted beats, then
+  //  (Mobitz II) suddenly a P wave is blocked WITHOUT any warning PR change.
+  //           QRS often WIDE (infranodal disease below bundle of His).
+  //           Dangerous — can deteriorate suddenly to 3° block or asystole.
+  //           Ratio shown: 3:2 (3 P waves, 2 QRS).
+  //
+  //  2:1    — Every OTHER P wave is blocked. Cannot distinguish Mobitz I vs II
+  //  Block    from 2:1 alone (need longer strip). PR is constant. QRS may be wide.
+  //           Ventricular rate = atrial rate / 2. Treated as Mobitz II (high risk).
+  //
+  //  Hi-Gr  — Multiple consecutive P waves blocked (3:1 or 4:1).
+  //  Block    Very slow ventricular rate. Severe disease. Near-complete block.
+  //           Always requires pacing. Wide QRS, marked bradycardia.
+  //
+  //  3° HB  — COMPLETE AV dissociation. P waves and QRS are TOTALLY independent.
+  //  (Complete) Atrial rate ~70-80bpm, ventricular escape 20-40bpm. MORE P waves than QRS.
+  //           P waves march through, OVER, and BURIED IN QRS/T waves — no relationship.
+  //           QRS WIDE (ventricular escape) or narrow (junctional escape if His bundle).
+  //           The "trick": occasional PR may look correct — it is purely coincidental.
+  //
+  // ─────────────────────────────────────────────────────────────────────────
+
   HB1: {
-    label: "1° Heart Block", rate: 70, color: "#ffcc00", irregular: false,
+    label: "1° AV Block", rate: 68, color: "#ffdd00", irregular: false,
     category: "Blocks", severity: "warning",
-    vitals: { hr: 70, sbp: 116, dbp: 74, spo2: 97, rr: 14, temp: 98.6, etco2: 38, map: 88 },
-    // Normal P-QRS-T but prolonged PR interval (>0.20s = >20% of beat at normal rate)
+    vitals: { hr: 68, sbp: 118, dbp: 74, spo2: 97, rr: 14, temp: 98.6, etco2: 38, map: 89 },
+    // ── Clinical: PR interval is markedly prolonged (~320ms = 0.32s).
+    //    Every P conducts to QRS. QRS is narrow. T wave normal. Baseline is flat.
+    //    The distinguishing feature is ONLY the long flat PR segment.
+    //    Rate and rhythm are otherwise perfectly regular.
     segments: [
-      { t: "L", pts: [[0,0],[0.06,0]] },
-      { t: "B", pts: [[0.06,0],[0.09,0.18],[0.12,0.22],[0.15,0.18]] },
-      { t: "B", pts: [[0.15,0.18],[0.18,0.10],[0.20,0],[0.22,0]] },
-      // Prolonged PR segment
-      { t: "L", pts: [[0.22,0],[0.36,0]] },
-      { t: "B", pts: [[0.36,0],[0.37,-0.10],[0.375,-0.18],[0.38,-0.22]] },
-      { t: "B", pts: [[0.38,-0.22],[0.385,0.5],[0.39,1.6],[0.395,2.4]] },
-      { t: "B", pts: [[0.395,2.4],[0.40,0.9],[0.41,-0.32],[0.42,-0.38]] },
-      { t: "B", pts: [[0.42,-0.38],[0.43,-0.16],[0.45,0],[0.47,0.04]] },
-      { t: "L", pts: [[0.47,0.04],[0.55,0.06]] },
-      { t: "B", pts: [[0.55,0.06],[0.58,0.12],[0.61,0.36],[0.64,0.44]] },
-      { t: "B", pts: [[0.64,0.44],[0.67,0.36],[0.71,0.10],[0.74,0]] },
-      { t: "L", pts: [[0.74,0],[1.0,0]] },
-    ],
-  },
-  HB2_M1: {
-    label: "2° Block Mobitz I", rate: 60, color: "#ff8800", irregular: true,
-    category: "Blocks", severity: "warning",
-    vitals: { hr: 58, sbp: 100, dbp: 62, spo2: 95, rr: 14, temp: 98.2, etco2: 35, map: 75 },
-    // PR progressively lengthens then a P with no QRS (Wenckebach)
-    segments: [
-      // Beat 1 — short PR
-      { t: "L", pts: [[0,0],[0.04,0]] },
-      { t: "B", pts: [[0.04,0],[0.06,0.18],[0.08,0.22],[0.10,0.18]] },
-      { t: "B", pts: [[0.10,0.18],[0.12,0.08],[0.14,0],[0.16,0]] },
-      { t: "L", pts: [[0.16,0],[0.20,0]] },
-      { t: "B", pts: [[0.20,0],[0.21,-0.10],[0.215,-0.18],[0.22,-0.22]] },
-      { t: "B", pts: [[0.22,-0.22],[0.225,0.5],[0.23,1.6],[0.235,2.4]] },
-      { t: "B", pts: [[0.235,2.4],[0.24,0.9],[0.25,-0.32],[0.26,-0.38]] },
-      { t: "B", pts: [[0.26,-0.38],[0.27,-0.16],[0.29,0],[0.31,0.04]] },
-      { t: "L", pts: [[0.31,0.04],[0.35,0.05]] },
-      { t: "B", pts: [[0.35,0.05],[0.37,0.10],[0.39,0.32],[0.41,0.40]] },
-      { t: "B", pts: [[0.41,0.40],[0.43,0.32],[0.46,0.08],[0.48,0]] },
-      // Beat 2 — longer PR
-      { t: "L", pts: [[0.48,0],[0.51,0]] },
-      { t: "B", pts: [[0.51,0],[0.53,0.18],[0.55,0.22],[0.57,0.18]] },
-      { t: "B", pts: [[0.57,0.18],[0.59,0.08],[0.61,0],[0.63,0]] },
-      { t: "L", pts: [[0.63,0],[0.70,0]] },  // longer PR
-      { t: "B", pts: [[0.70,0],[0.71,-0.10],[0.715,-0.18],[0.72,-0.22]] },
-      { t: "B", pts: [[0.72,-0.22],[0.725,0.5],[0.73,1.6],[0.735,2.4]] },
-      { t: "B", pts: [[0.735,2.4],[0.74,0.9],[0.75,-0.32],[0.76,-0.38]] },
-      { t: "B", pts: [[0.76,-0.38],[0.77,-0.16],[0.79,0],[0.81,0.04]] },
-      { t: "L", pts: [[0.81,0.04],[0.85,0.05]] },
-      { t: "B", pts: [[0.85,0.05],[0.87,0.10],[0.89,0.30],[0.91,0.38]] },
-      { t: "B", pts: [[0.91,0.38],[0.93,0.30],[0.96,0.08],[0.98,0]] },
-      // Beat 3 — P wave only, no QRS (dropped beat)
-      { t: "L", pts: [[0.98,0],[1.0,0]] },
-    ],
-  },
-  HB2_M2: {
-    label: "2° Block Mobitz II", rate: 55, color: "#ff8800", irregular: true,
-    category: "Blocks", severity: "critical",
-    vitals: { hr: 55, sbp: 94, dbp: 58, spo2: 94, rr: 14, temp: 98.0, etco2: 33, map: 70 },
-    // Constant PR, then sudden dropped beat (no warning)
-    segments: [
+      // Flat baseline before P wave
       { t: "L", pts: [[0,0],[0.05,0]] },
-      { t: "B", pts: [[0.05,0],[0.07,0.18],[0.09,0.22],[0.11,0.18]] },
-      { t: "B", pts: [[0.11,0.18],[0.13,0.08],[0.15,0],[0.17,0]] },
-      { t: "L", pts: [[0.17,0],[0.22,0]] },
-      { t: "B", pts: [[0.22,0],[0.23,-0.10],[0.235,-0.18],[0.24,-0.22]] },
-      { t: "B", pts: [[0.24,-0.22],[0.245,0.5],[0.25,1.6],[0.255,2.4]] },
-      { t: "B", pts: [[0.255,2.4],[0.26,0.9],[0.27,-0.32],[0.28,-0.38]] },
-      { t: "B", pts: [[0.28,-0.38],[0.29,-0.16],[0.31,0],[0.33,0.04]] },
-      { t: "L", pts: [[0.33,0.04],[0.38,0.05]] },
-      { t: "B", pts: [[0.38,0.05],[0.40,0.10],[0.42,0.32],[0.44,0.40]] },
-      { t: "B", pts: [[0.44,0.40],[0.46,0.32],[0.49,0.08],[0.51,0]] },
-      // P wave with NO QRS (suddenly dropped — same PR interval as above)
-      { t: "L", pts: [[0.51,0],[0.55,0]] },
-      { t: "B", pts: [[0.55,0],[0.57,0.18],[0.59,0.22],[0.61,0.18]] },
-      { t: "B", pts: [[0.61,0.18],[0.63,0.08],[0.65,0],[0.67,0]] },
-      // Flat — no QRS follows
-      { t: "L", pts: [[0.67,0],[1.0,0]] },
+      // P wave — rounded, upright, 0.08s wide, amplitude ~0.18
+      { t: "B", pts: [[0.05,0],[0.08,0.12],[0.10,0.20],[0.12,0.24]] },
+      { t: "B", pts: [[0.12,0.24],[0.14,0.20],[0.16,0.10],[0.18,0.04]] },
+      { t: "B", pts: [[0.18,0.04],[0.19,0.02],[0.20,0],[0.21,0]] },
+      // ─── LONG PR SEGMENT (320ms) ───────────────────────────────────────
+      // This is the key teaching moment: 320ms ≈ 1.6 large boxes at 25mm/s
+      // Visually: a noticeably long flat line before the QRS
+      { t: "L", pts: [[0.21,0],[0.38,0]] },
+      // QRS: narrow normal complex — small Q, tall R, small S
+      //   Q wave: brief downstroke
+      { t: "B", pts: [[0.38,0],[0.385,-0.06],[0.390,-0.10],[0.392,-0.14]] },
+      //   R wave: fast upstroke to peak
+      { t: "B", pts: [[0.392,-0.14],[0.396,0.80],[0.400,2.0],[0.404,2.4]] },
+      //   R down to S
+      { t: "B", pts: [[0.404,2.4],[0.408,1.2],[0.412,-0.20],[0.416,-0.36]] },
+      //   S wave return to baseline
+      { t: "B", pts: [[0.416,-0.36],[0.420,-0.18],[0.424,-0.04],[0.428,0]] },
+      // ST segment — isoelectric (short, narrow QRS so short ST)
+      { t: "L", pts: [[0.428,0],[0.46,0.02]] },
+      // T wave — slightly asymmetric: gradual upstroke, faster downstroke, amplitude ~0.40
+      { t: "B", pts: [[0.46,0.02],[0.49,0.14],[0.52,0.38],[0.55,0.44]] },
+      { t: "B", pts: [[0.55,0.44],[0.57,0.38],[0.59,0.18],[0.61,0.04]] },
+      { t: "B", pts: [[0.61,0.04],[0.62,0.02],[0.63,0],[0.64,0]] },
+      // TP segment — flat back to baseline before next cycle
+      { t: "L", pts: [[0.64,0],[1.0,0]] },
     ],
   },
-  HEART_BLOCK_3: {
-    label: "3° Heart Block", rate: 35, color: "#ff4444", irregular: false,
-    category: "Blocks", severity: "critical",
-    vitals: { hr: 35, sbp: 78, dbp: 46, spo2: 90, rr: 18, temp: 97.8, etco2: 28, map: 57 },
+
+  HB2_M1: {
+    label: "2° Block Mobitz I (Wenckebach)", rate: 56, color: "#ff9900", irregular: true,
+    category: "Blocks", severity: "warning",
+    vitals: { hr: 52, sbp: 104, dbp: 66, spo2: 96, rr: 14, temp: 98.2, etco2: 36, map: 79 },
+    // ── Clinical: 4:3 Wenckebach cycle (4 P waves, 3 conducted QRS).
+    //    Beat 1: normal PR (~160ms)
+    //    Beat 2: PR lengthens (~240ms) — RR interval SHORTENS
+    //    Beat 3: PR lengthens further (~320ms) — RR interval SHORTENS more
+    //    Beat 4: P wave fires, NO QRS (blocked). LONG PAUSE.
+    //    Then pattern RESETS. Grouped beating is the hallmark.
+    //    QRS is narrow throughout (AV nodal disease, not infranodal).
+    //    Teaching point: RR DECREASES as PR INCREASES, then long pause.
     segments: [
-      { t: "B", pts: [[0,0],[0.03,0.18],[0.06,0.22],[0.09,0.18]] },
-      { t: "B", pts: [[0.09,0.18],[0.12,0.10],[0.14,0],[0.16,0]] },
-      { t: "B", pts: [[0.24,0],[0.27,0.16],[0.30,0.20],[0.33,0.16]] },
-      { t: "B", pts: [[0.33,0.16],[0.36,0.08],[0.38,0],[0.40,0]] },
-      { t: "L", pts: [[0.40,0],[0.44,0]] },
-      { t: "B", pts: [[0.44,0],[0.46,-0.10],[0.47,-0.18],[0.475,-0.22]] },
-      { t: "B", pts: [[0.475,-0.22],[0.48,0.4],[0.485,1.4],[0.49,2.0]] },
-      { t: "B", pts: [[0.49,2.0],[0.50,0.8],[0.515,-0.30],[0.53,-0.36]] },
-      { t: "B", pts: [[0.53,-0.36],[0.55,-0.15],[0.57,0],[0.60,0.03]] },
-      { t: "L", pts: [[0.60,0.03],[0.66,0.04]] },
-      { t: "B", pts: [[0.66,0.04],[0.69,0.08],[0.72,0.28],[0.75,0.36]] },
-      { t: "B", pts: [[0.75,0.36],[0.78,0.28],[0.81,0.08],[0.84,0]] },
-      { t: "L", pts: [[0.84,0],[1.0,0]] },
+      // ─── BEAT 1: Normal PR ~160ms ────────────────────────────────────────
+      { t: "L", pts: [[0,0],[0.02,0]] },
+      // P1 — upright, round, normal
+      { t: "B", pts: [[0.02,0],[0.04,0.12],[0.055,0.22],[0.065,0.22]] },
+      { t: "B", pts: [[0.065,0.22],[0.075,0.18],[0.088,0.06],[0.095,0]] },
+      // PR segment #1 — normal length
+      { t: "L", pts: [[0.095,0],[0.145,0]] },
+      // QRS1 — narrow, clean: Q, R, S
+      { t: "B", pts: [[0.145,0],[0.149,-0.08],[0.152,-0.14],[0.154,-0.16]] },
+      { t: "B", pts: [[0.154,-0.16],[0.158,0.80],[0.162,2.1],[0.165,2.5]] },
+      { t: "B", pts: [[0.165,2.5],[0.168,1.1],[0.172,-0.28],[0.175,-0.40]] },
+      { t: "B", pts: [[0.175,-0.40],[0.179,-0.20],[0.183,-0.04],[0.186,0]] },
+      // ST1 + T1
+      { t: "L", pts: [[0.186,0],[0.206,0.02]] },
+      { t: "B", pts: [[0.206,0.02],[0.218,0.12],[0.230,0.36],[0.240,0.42]] },
+      { t: "B", pts: [[0.240,0.42],[0.250,0.34],[0.262,0.12],[0.272,0.02]] },
+      { t: "B", pts: [[0.272,0.02],[0.276,0.01],[0.280,0],[0.285,0]] },
+
+      // ─── BEAT 2: PR lengthens to ~240ms ──────────────────────────────────
+      // (note: RR1→2 is slightly shorter than normal — grouped beating feature)
+      { t: "L", pts: [[0.285,0],[0.295,0]] },
+      // P2 — same morphology, same rate
+      { t: "B", pts: [[0.295,0],[0.315,0.12],[0.330,0.22],[0.340,0.22]] },
+      { t: "B", pts: [[0.340,0.22],[0.350,0.18],[0.360,0.06],[0.368,0]] },
+      // PR2 — noticeably LONGER than PR1 (teaching: measure this)
+      { t: "L", pts: [[0.368,0],[0.440,0]] },
+      // QRS2 — same narrow QRS
+      { t: "B", pts: [[0.440,0],[0.444,-0.08],[0.447,-0.14],[0.449,-0.16]] },
+      { t: "B", pts: [[0.449,-0.16],[0.453,0.80],[0.457,2.1],[0.460,2.5]] },
+      { t: "B", pts: [[0.460,2.5],[0.463,1.1],[0.467,-0.28],[0.470,-0.40]] },
+      { t: "B", pts: [[0.470,-0.40],[0.474,-0.20],[0.478,-0.04],[0.481,0]] },
+      // ST2 + T2
+      { t: "L", pts: [[0.481,0],[0.499,0.02]] },
+      { t: "B", pts: [[0.499,0.02],[0.511,0.12],[0.523,0.36],[0.533,0.40]] },
+      { t: "B", pts: [[0.533,0.40],[0.543,0.32],[0.555,0.10],[0.565,0.02]] },
+      { t: "B", pts: [[0.565,0.02],[0.570,0],[0.575,0],[0.580,0]] },
+
+      // ─── BEAT 3: PR lengthens further to ~320ms ──────────────────────────
+      { t: "L", pts: [[0.580,0],[0.590,0]] },
+      // P3 — same morphology (P-P interval remains constant throughout)
+      { t: "B", pts: [[0.590,0],[0.610,0.12],[0.624,0.22],[0.634,0.22]] },
+      { t: "B", pts: [[0.634,0.22],[0.644,0.18],[0.654,0.06],[0.661,0]] },
+      // PR3 — very long, clearly visible flat line (teaching moment)
+      { t: "L", pts: [[0.661,0],[0.758,0]] },
+      // QRS3 — still narrow (AV nodal block, not infranodal)
+      { t: "B", pts: [[0.758,0],[0.762,-0.08],[0.765,-0.14],[0.767,-0.16]] },
+      { t: "B", pts: [[0.767,-0.16],[0.771,0.80],[0.775,2.1],[0.778,2.5]] },
+      { t: "B", pts: [[0.778,2.5],[0.781,1.1],[0.785,-0.28],[0.788,-0.40]] },
+      { t: "B", pts: [[0.788,-0.40],[0.792,-0.20],[0.796,-0.04],[0.799,0]] },
+      // ST3 + T3
+      { t: "L", pts: [[0.799,0],[0.815,0.02]] },
+      { t: "B", pts: [[0.815,0.02],[0.825,0.12],[0.835,0.34],[0.843,0.38]] },
+      { t: "B", pts: [[0.843,0.38],[0.852,0.30],[0.862,0.10],[0.870,0.01]] },
+      { t: "B", pts: [[0.870,0.01],[0.874,0],[0.878,0],[0.882,0]] },
+
+      // ─── BEAT 4 (BLOCKED P): P fires — NO QRS follows ────────────────────
+      // This is the blocked beat. Long pause. P-P interval stays constant.
+      // After this, pattern RESETS with short PR again.
+      { t: "L", pts: [[0.882,0],[0.890,0]] },
+      // P4 — NORMAL P wave morphology, same as others. Just NO QRS after it.
+      { t: "B", pts: [[0.890,0],[0.910,0.12],[0.924,0.22],[0.934,0.22]] },
+      { t: "B", pts: [[0.934,0.22],[0.944,0.18],[0.953,0.06],[0.960,0]] },
+      // The LONG pause after dropped beat — no QRS, just flat line to end
+      { t: "L", pts: [[0.960,0],[1.0,0]] },
+    ],
+  },
+
+  HB2_M2: {
+    label: "2° Block Mobitz II", rate: 46, color: "#ff6600", irregular: true,
+    category: "Blocks", severity: "critical",
+    vitals: { hr: 44, sbp: 88, dbp: 56, spo2: 94, rr: 14, temp: 98.0, etco2: 33, map: 67 },
+    // ── Clinical: 3:2 Mobitz II cycle (3 P waves, 2 conducted QRS).
+    //    PRs on conducted beats are IDENTICAL (constant) — this is the key.
+    //    Normal or SLIGHTLY prolonged PR (usually 0.16-0.22s).
+    //    Then sudden P wave with NO QRS — no lengthening warning.
+    //    QRS is WIDE (≥0.12s) because block is BELOW AV node (infranodal),
+    //    in the bundle of His or bundle branches. Dangerous — may → 3° block.
+    //    Teaching point: SAME PR on conducted beats, then sudden block. Wide QRS.
+    segments: [
+      // ─── BEAT 1: Conducted — normal PR, WIDE QRS ─────────────────────────
+      { t: "L", pts: [[0,0],[0.025,0]] },
+      // P1 — normal upright P wave
+      { t: "B", pts: [[0.025,0],[0.045,0.12],[0.060,0.22],[0.070,0.22]] },
+      { t: "B", pts: [[0.070,0.22],[0.080,0.16],[0.092,0.04],[0.100,0]] },
+      // PR — constant, mildly prolonged (~0.20s)
+      { t: "L", pts: [[0.100,0],[0.155,0]] },
+      // QRS1 — WIDE (≥0.12s), notched, slurred — infranodal disease
+      //   Initial r, then slurred wide R, then deep S (left bundle branch pattern)
+      { t: "B", pts: [[0.155,0],[0.158,-0.04],[0.161,-0.06],[0.163,-0.08]] },
+      // Slurred wide upstroke
+      { t: "B", pts: [[0.163,-0.08],[0.170,0.30],[0.178,1.40],[0.184,2.20]] },
+      // Wide peak, slightly notched
+      { t: "B", pts: [[0.184,2.20],[0.188,2.40],[0.192,2.20],[0.197,1.80]] },
+      // Slurred descent
+      { t: "B", pts: [[0.197,1.80],[0.204,0.60],[0.212,-0.30],[0.218,-0.46]] },
+      // S wave — wider than normal, slow return
+      { t: "B", pts: [[0.218,-0.46],[0.224,-0.28],[0.230,-0.08],[0.236,0]] },
+      // ST slightly elevated (discordant ST/T in bundle branch block)
+      { t: "L", pts: [[0.236,0],[0.258,0.04]] },
+      // T wave — DISCORDANT (opposite to main QRS deflection — classic BBB)
+      // Since QRS is positive, T is inverted/negative
+      { t: "B", pts: [[0.258,0.04],[0.268,-0.04],[0.282,-0.28],[0.292,-0.38]] },
+      { t: "B", pts: [[0.292,-0.38],[0.302,-0.28],[0.314,-0.08],[0.322,-0.01]] },
+      { t: "B", pts: [[0.322,-0.01],[0.326,0],[0.330,0],[0.335,0]] },
+
+      // ─── BEAT 2: Conducted — IDENTICAL PR, IDENTICAL wide QRS ────────────
+      { t: "L", pts: [[0.335,0],[0.352,0]] },
+      // P2 — EXACTLY same morphology, exactly same PR interval (teaching: measure both)
+      { t: "B", pts: [[0.352,0],[0.372,0.12],[0.386,0.22],[0.396,0.22]] },
+      { t: "B", pts: [[0.396,0.22],[0.406,0.16],[0.418,0.04],[0.426,0]] },
+      // PR2 — SAME as PR1 (key diagnostic criterion: constant PR)
+      { t: "L", pts: [[0.426,0],[0.481,0]] },
+      // QRS2 — identical wide, slurred QRS
+      { t: "B", pts: [[0.481,0],[0.484,-0.04],[0.487,-0.06],[0.489,-0.08]] },
+      { t: "B", pts: [[0.489,-0.08],[0.496,0.30],[0.504,1.40],[0.510,2.20]] },
+      { t: "B", pts: [[0.510,2.20],[0.514,2.40],[0.518,2.20],[0.523,1.80]] },
+      { t: "B", pts: [[0.523,1.80],[0.530,0.60],[0.538,-0.30],[0.544,-0.46]] },
+      { t: "B", pts: [[0.544,-0.46],[0.550,-0.28],[0.556,-0.08],[0.562,0]] },
+      { t: "L", pts: [[0.562,0],[0.584,0.04]] },
+      // T2 — discordant again
+      { t: "B", pts: [[0.584,0.04],[0.594,-0.04],[0.608,-0.28],[0.618,-0.38]] },
+      { t: "B", pts: [[0.618,-0.38],[0.628,-0.28],[0.640,-0.08],[0.648,-0.01]] },
+      { t: "B", pts: [[0.648,-0.01],[0.652,0],[0.656,0],[0.661,0]] },
+
+      // ─── BEAT 3 (BLOCKED): P fires, NO QRS — SUDDEN, no warning ─────────
+      // The key: NO change in preceding PR intervals. Completely unexpected.
+      { t: "L", pts: [[0.661,0],[0.678,0]] },
+      // P3 — normal P wave. Same as P1 and P2.
+      { t: "B", pts: [[0.678,0],[0.698,0.12],[0.712,0.22],[0.722,0.22]] },
+      { t: "B", pts: [[0.722,0.22],[0.732,0.16],[0.744,0.04],[0.752,0]] },
+      // FLAT — no QRS. Long compensatory pause. Very dangerous clinically.
+      { t: "L", pts: [[0.752,0],[1.0,0]] },
+    ],
+  },
+
+  HB2_21: {
+    label: "2° Block 2:1", rate: 40, color: "#ff6600", irregular: false,
+    category: "Blocks", severity: "critical",
+    vitals: { hr: 40, sbp: 90, dbp: 56, spo2: 94, rr: 14, temp: 98.0, etco2: 32, map: 67 },
+    // ── Clinical: 2:1 AV block — every OTHER P wave is blocked.
+    //    Ventricular rate = exactly HALF the atrial rate.
+    //    Cannot distinguish Mobitz I vs II from 2:1 alone (need longer strip).
+    //    Treated as Mobitz II (dangerous) until proven otherwise.
+    //    PR is constant on all CONDUCTED beats. QRS may be wide.
+    //    Teaching point: count P waves — twice as many as QRS.
+    //    Blocked P waves appear at regular intervals between QRS complexes.
+    segments: [
+      // P1 — conducted, normal PR, narrow-to-wide QRS
+      { t: "L", pts: [[0,0],[0.02,0]] },
+      { t: "B", pts: [[0.02,0],[0.04,0.12],[0.055,0.22],[0.065,0.20]] },
+      { t: "B", pts: [[0.065,0.20],[0.075,0.14],[0.086,0.03],[0.093,0]] },
+      // PR interval — constant
+      { t: "L", pts: [[0.093,0],[0.145,0]] },
+      // QRS1 — mildly wide (0.11s), slightly slurred
+      { t: "B", pts: [[0.145,0],[0.148,-0.06],[0.151,-0.12],[0.153,-0.16]] },
+      { t: "B", pts: [[0.153,-0.16],[0.157,0.70],[0.161,1.90],[0.164,2.40]] },
+      { t: "B", pts: [[0.164,2.40],[0.168,1.20],[0.173,-0.22],[0.177,-0.38]] },
+      { t: "B", pts: [[0.177,-0.38],[0.181,-0.18],[0.185,-0.03],[0.188,0]] },
+      { t: "L", pts: [[0.188,0],[0.210,0.02]] },
+      // T wave
+      { t: "B", pts: [[0.210,0.02],[0.220,0.10],[0.232,0.30],[0.240,0.36]] },
+      { t: "B", pts: [[0.240,0.36],[0.250,0.28],[0.262,0.08],[0.270,0.01]] },
+      { t: "B", pts: [[0.270,0.01],[0.274,0],[0.278,0],[0.283,0]] },
+
+      // P2 — BLOCKED: no QRS follows (appears at regular P-P interval)
+      { t: "L", pts: [[0.283,0],[0.295,0]] },
+      // This P wave sits alone in the middle of the pause — very visible
+      { t: "B", pts: [[0.295,0],[0.315,0.12],[0.330,0.22],[0.340,0.20]] },
+      { t: "B", pts: [[0.340,0.20],[0.350,0.14],[0.361,0.03],[0.368,0]] },
+      // FLAT — no QRS follows this P
+      { t: "L", pts: [[0.368,0],[0.440,0]] },
+
+      // P3 — conducted again, SAME PR as P1 (constant PR)
+      { t: "B", pts: [[0.440,0],[0.460,0.12],[0.475,0.22],[0.485,0.20]] },
+      { t: "B", pts: [[0.485,0.20],[0.495,0.14],[0.506,0.03],[0.513,0]] },
+      // PR — identical to first conducted beat
+      { t: "L", pts: [[0.513,0],[0.565,0]] },
+      // QRS3 — identical morphology to QRS1
+      { t: "B", pts: [[0.565,0],[0.568,-0.06],[0.571,-0.12],[0.573,-0.16]] },
+      { t: "B", pts: [[0.573,-0.16],[0.577,0.70],[0.581,1.90],[0.584,2.40]] },
+      { t: "B", pts: [[0.584,2.40],[0.588,1.20],[0.593,-0.22],[0.597,-0.38]] },
+      { t: "B", pts: [[0.597,-0.38],[0.601,-0.18],[0.605,-0.03],[0.608,0]] },
+      { t: "L", pts: [[0.608,0],[0.630,0.02]] },
+      { t: "B", pts: [[0.630,0.02],[0.640,0.10],[0.652,0.30],[0.660,0.36]] },
+      { t: "B", pts: [[0.660,0.36],[0.670,0.28],[0.682,0.08],[0.690,0.01]] },
+      { t: "B", pts: [[0.690,0.01],[0.694,0],[0.698,0],[0.703,0]] },
+
+      // P4 — BLOCKED again (same pattern)
+      { t: "L", pts: [[0.703,0],[0.712,0]] },
+      { t: "B", pts: [[0.712,0],[0.732,0.12],[0.747,0.22],[0.757,0.20]] },
+      { t: "B", pts: [[0.757,0.20],[0.767,0.14],[0.778,0.03],[0.785,0]] },
+      { t: "L", pts: [[0.785,0],[0.860,0]] },
+
+      // P5 — conducted, same PR again (demonstrating constant PR)
+      { t: "B", pts: [[0.860,0],[0.880,0.12],[0.894,0.22],[0.904,0.20]] },
+      { t: "B", pts: [[0.904,0.20],[0.914,0.14],[0.925,0.03],[0.932,0]] },
+      { t: "L", pts: [[0.932,0],[0.984,0]] },
+      { t: "B", pts: [[0.984,0],[0.988,-0.06],[0.991,-0.10],[0.993,-0.12]] },
+      { t: "B", pts: [[0.993,-0.12],[0.997,0.60],[1.0,1.60]] },
+    ],
+  },
+
+  HB2_HG: {
+    label: "High-Grade AV Block", rate: 28, color: "#ff4400", irregular: false,
+    category: "Blocks", severity: "critical",
+    vitals: { hr: 28, sbp: 74, dbp: 44, spo2: 92, rr: 18, temp: 97.8, etco2: 26, map: 54 },
+    // ── Clinical: 4:1 High-grade block — 3 consecutive P waves blocked for
+    //    every 1 conducted QRS. Ventricular rate dangerously low (~28bpm).
+    //    PR is constant on conducted beats. Wide QRS.
+    //    Requires immediate pacing — atropine usually ineffective.
+    //    Teaching point: multiple P waves between QRS complexes. Count them.
+    segments: [
+      // P1 — CONDUCTED beat with long PR and wide QRS
+      { t: "L", pts: [[0,0],[0.01,0]] },
+      { t: "B", pts: [[0.01,0],[0.03,0.12],[0.043,0.22],[0.052,0.20]] },
+      { t: "B", pts: [[0.052,0.20],[0.060,0.14],[0.070,0.03],[0.076,0]] },
+      { t: "L", pts: [[0.076,0],[0.120,0]] },
+      // Wide QRS
+      { t: "B", pts: [[0.120,0],[0.123,-0.05],[0.127,-0.12],[0.129,-0.16]] },
+      { t: "B", pts: [[0.129,-0.16],[0.134,0.60],[0.139,1.80],[0.143,2.30]] },
+      { t: "B", pts: [[0.143,2.30],[0.147,2.50],[0.151,2.20],[0.156,1.60]] },
+      { t: "B", pts: [[0.156,1.60],[0.162,0.40],[0.168,-0.36],[0.173,-0.50]] },
+      { t: "B", pts: [[0.173,-0.50],[0.178,-0.28],[0.183,-0.06],[0.187,0]] },
+      { t: "L", pts: [[0.187,0],[0.210,0.03]] },
+      // T wave — broad in escape beats
+      { t: "B", pts: [[0.210,0.03],[0.222,0.10],[0.236,0.30],[0.248,0.38]] },
+      { t: "B", pts: [[0.248,0.38],[0.260,0.28],[0.274,0.08],[0.284,0.01]] },
+      { t: "B", pts: [[0.284,0.01],[0.288,0],[0.292,0],[0.297,0]] },
+
+      // P2 — BLOCKED (1st of 3 blocked P waves)
+      { t: "L", pts: [[0.297,0],[0.312,0]] },
+      { t: "B", pts: [[0.312,0],[0.330,0.12],[0.344,0.22],[0.353,0.20]] },
+      { t: "B", pts: [[0.353,0.20],[0.362,0.14],[0.372,0.03],[0.379,0]] },
+      { t: "L", pts: [[0.379,0],[0.412,0]] },
+
+      // P3 — BLOCKED (2nd blocked P)
+      { t: "B", pts: [[0.412,0],[0.430,0.12],[0.444,0.22],[0.453,0.20]] },
+      { t: "B", pts: [[0.453,0.20],[0.462,0.14],[0.472,0.03],[0.479,0]] },
+      { t: "L", pts: [[0.479,0],[0.512,0]] },
+
+      // P4 — BLOCKED (3rd blocked P — dramatic flat pause)
+      { t: "B", pts: [[0.512,0],[0.530,0.12],[0.544,0.22],[0.553,0.20]] },
+      { t: "B", pts: [[0.553,0.20],[0.562,0.14],[0.572,0.03],[0.579,0]] },
+      { t: "L", pts: [[0.579,0],[0.612,0]] },
+
+      // P5 — CONDUCTED again (same PR as P1, starts new 4:1 cycle)
+      { t: "B", pts: [[0.612,0],[0.630,0.12],[0.644,0.22],[0.653,0.20]] },
+      { t: "B", pts: [[0.653,0.20],[0.662,0.14],[0.672,0.03],[0.679,0]] },
+      { t: "L", pts: [[0.679,0],[0.722,0]] },
+      // Wide QRS again — identical to first
+      { t: "B", pts: [[0.722,0],[0.725,-0.05],[0.729,-0.12],[0.731,-0.16]] },
+      { t: "B", pts: [[0.731,-0.16],[0.736,0.60],[0.741,1.80],[0.745,2.30]] },
+      { t: "B", pts: [[0.745,2.30],[0.749,2.50],[0.753,2.20],[0.758,1.60]] },
+      { t: "B", pts: [[0.758,1.60],[0.764,0.40],[0.770,-0.36],[0.775,-0.50]] },
+      { t: "B", pts: [[0.775,-0.50],[0.780,-0.28],[0.785,-0.06],[0.789,0]] },
+      { t: "L", pts: [[0.789,0],[0.810,0.03]] },
+      { t: "B", pts: [[0.810,0.03],[0.822,0.10],[0.836,0.30],[0.848,0.36]] },
+      { t: "B", pts: [[0.848,0.36],[0.860,0.28],[0.874,0.08],[0.884,0.01]] },
+      { t: "L", pts: [[0.884,0],[0.910,0]] },
+      // P6 — BLOCKED (first of next 3)
+      { t: "B", pts: [[0.910,0],[0.928,0.12],[0.942,0.22],[0.951,0.20]] },
+      { t: "B", pts: [[0.951,0.20],[0.960,0.14],[0.970,0.03],[0.977,0]] },
+      { t: "L", pts: [[0.977,0],[1.0,0]] },
+    ],
+  },
+
+  HEART_BLOCK_3: {
+    label: "3° Heart Block (Complete)", rate: 32, color: "#ff2222", irregular: false,
+    category: "Blocks", severity: "critical",
+    vitals: { hr: 32, sbp: 74, dbp: 44, spo2: 90, rr: 18, temp: 97.6, etco2: 26, map: 54 },
+    // ── Clinical: COMPLETE AV dissociation. Static segments here are just used
+    //    as the VENTRICULAR ESCAPE QRS+T template. The real magic is in nextBeat():
+    //    P waves are generated by a SEPARATE oscillator at ~75bpm and overlaid
+    //    onto the ventricular beats — they march right through QRS complexes.
+    //    Rate: atria ~75bpm, ventricles ~32bpm → ~2.3:1 P:QRS ratio.
+    //    QRS: WIDE and BIZARRE (ventricular escape, not junctional).
+    //    P waves: normal morphology, regular rate, but NO relationship to QRS.
+    //    Teaching point: P-P regular. R-R regular. But PR has NO pattern.
+    //    Cannon A-waves in JVP. Variation in S1 intensity.
+    segments: [
+      // Ventricular escape QRS template — WIDE, bizarre morphology
+      // Pre-QRS flat
+      { t: "L", pts: [[0,0],[0.08,0]] },
+      // Wide, slurred upstroke (no P before it — P oscillator runs independently)
+      { t: "B", pts: [[0.08,0],[0.085,-0.04],[0.09,-0.10],[0.093,-0.16]] },
+      // Tall but broad R wave
+      { t: "B", pts: [[0.093,-0.16],[0.100,0.60],[0.108,1.80],[0.114,2.40]] },
+      // Slightly notched peak (common in ventricular escape)
+      { t: "B", pts: [[0.114,2.40],[0.118,2.60],[0.122,2.40],[0.127,1.80]] },
+      // Slurred descent
+      { t: "B", pts: [[0.127,1.80],[0.134,0.60],[0.141,-0.40],[0.147,-0.58]] },
+      // Broad S wave
+      { t: "B", pts: [[0.147,-0.58],[0.153,-0.36],[0.159,-0.10],[0.164,0]] },
+      // ST segment — typically elevated discordant to main QRS deflection
+      { t: "L", pts: [[0.164,0],[0.200,0.08]] },
+      // T wave — BROAD, discordant (opposite to QRS), characteristic of ventricular beats
+      { t: "B", pts: [[0.200,0.08],[0.216,-0.04],[0.236,-0.30],[0.252,-0.48]] },
+      { t: "B", pts: [[0.252,-0.48],[0.268,-0.36],[0.284,-0.12],[0.298,-0.02]] },
+      { t: "B", pts: [[0.298,-0.02],[0.304,-0.01],[0.310,0],[0.318,0]] },
+      // Long isoelectric baseline (slow rate = long TP interval)
+      { t: "L", pts: [[0.318,0],[1.0,0]] },
     ],
   },
 
@@ -859,55 +1160,80 @@ function nextBeat(rhythmKey, basePixPerBeat, beatState) {
     }
   }
 
-  // ── 3° Heart Block: dual oscillator — P waves march independently ─────────
-  // We render P waves at atrial rate (~75bpm) and QRS at ventricular rate (~35bpm).
-  // beatState tracks P-wave phase across beats so Ps drift through QRS freely.
+  // ── 3° Heart Block: dual oscillator ─────────────────────────────────────
+  // VENTRICULAR ESCAPE rate ~32bpm. ATRIAL (SA node) rate ~75bpm.
+  // P waves march INDEPENDENTLY — they drift through QRS complexes and T waves.
+  // This creates the hallmark: NO consistent PR interval.
+  // Sometimes a P appears just before a QRS (coincidence, not conduction).
+  // Sometimes a P is buried inside or on top of a QRS or T wave.
+  // The teaching trap: don't be fooled when PR "looks right" — check consistency.
+  //
+  // P wave amplitude is prominent (0.26 units) so students can clearly see them
+  // marching through — especially when overlapping QRS and T.
   if (rhythmKey === "HEART_BLOCK_3") {
-    if (!beatState.pPhase) beatState.pPhase = 0;
-    const len = basePixPerBeat; // ventricular escape beat length
+    if (beatState.pPhase === undefined) beatState.pPhase = 0.05; // offset so first P is visible
+    const len = basePixPerBeat; // length of one ventricular beat
     const buf = new Float32Array(len);
 
-    // 1. Paint ventricular escape QRS + T (wide, no P before it)
+    // ── Step 1: Paint the wide ventricular escape complex ───────────────────
     const vSegs = [
-      { t: "L",  pts: [[0,0],[0.10,0]] },
-      // Escape QRS — wider than normal
-      { t: "B",  pts: [[0.10,0],[0.12,-0.10],[0.13,-0.16],[0.135,-0.20]] },
-      { t: "B",  pts: [[0.135,-0.20],[0.14,0.5],[0.145,1.5],[0.15,2.1]] },
-      { t: "B",  pts: [[0.15,2.1],[0.155,0.9],[0.165,-0.35],[0.175,-0.42]] },
-      { t: "B",  pts: [[0.175,-0.42],[0.185,-0.18],[0.20,0],[0.22,0.03]] },
-      { t: "L",  pts: [[0.22,0.03],[0.30,0.04]] },
-      // Broad T — often discordant with escape beats
-      { t: "B",  pts: [[0.30,0.04],[0.34,0.06],[0.38,0.32],[0.42,0.40]] },
-      { t: "B",  pts: [[0.42,0.40],[0.46,0.32],[0.50,0.08],[0.55,0]] },
-      { t: "L",  pts: [[0.55,0],[1.0,0]] },
+      // Long pre-QRS flat (slow rate = long TP segment)
+      { t: "L",  pts: [[0,0],[0.09,0]] },
+      // Wide bizarre QRS upstroke — slurred, not sharp
+      { t: "B",  pts: [[0.09,0],[0.094,-0.06],[0.098,-0.12],[0.101,-0.18]] },
+      // Broad R wave ascent
+      { t: "B",  pts: [[0.101,-0.18],[0.107,0.50],[0.114,1.70],[0.119,2.40]] },
+      // Notched near peak (characteristic of ventricular beats)
+      { t: "B",  pts: [[0.119,2.40],[0.123,2.60],[0.127,2.45],[0.131,2.10]] },
+      // Broad slurred descent
+      { t: "B",  pts: [[0.131,2.10],[0.138,0.80],[0.145,-0.40],[0.150,-0.60]] },
+      // Wide S wave, slow return
+      { t: "B",  pts: [[0.150,-0.60],[0.156,-0.38],[0.162,-0.12],[0.167,0]] },
+      // Slightly elevated ST (discordant to QRS)
+      { t: "L",  pts: [[0.167,0],[0.196,0.06]] },
+      // T wave: BROAD and DISCORDANT (opposite polarity to main QRS deflection)
+      // Since QRS is mostly positive, T is inverted/biphasic
+      { t: "B",  pts: [[0.196,0.06],[0.210,-0.02],[0.228,-0.26],[0.244,-0.46]] },
+      { t: "B",  pts: [[0.244,-0.46],[0.260,-0.34],[0.276,-0.12],[0.290,-0.02]] },
+      { t: "B",  pts: [[0.290,-0.02],[0.296,-0.01],[0.302,0],[0.310,0]] },
+      // Long isoelectric baseline (most of the beat at 32bpm)
+      { t: "L",  pts: [[0.310,0],[1.0,0]] },
     ];
     paintSegments(vSegs, buf, len);
 
-    // 2. Overlay independent P waves marching at ~75bpm (≈ 0.58× ventricular rate at 35bpm)
-    // P-wave period in fractional beat units: ventricular/atrial = 35/75 ≈ 0.467
-    const pPeriod = (35 / 75); // fraction of ventricular beat length
-    let pStart = beatState.pPhase; // where the next P starts (in fraction of this beat)
+    // ── Step 2: Overlay independent P waves ─────────────────────────────────
+    // Atrial rate 75bpm, ventricular 32bpm → pPeriod = 32/75 = 0.4267 of beat length
+    // This gives ~2.34 P waves per ventricular beat — creates marching pattern
+    const pPeriod = (32 / 75);
+    let pStart = beatState.pPhase;
 
-    while (pStart < 1.0) {
-      const pWidth = 0.09; // P wave occupies 9% of ventricular beat length
-      if (pStart + pWidth < 1.0) {
-        // Render P wave at this position, additive onto buf
-        const iS = Math.floor(pStart * len);
-        const iE = Math.ceil((pStart + pWidth) * len);
-        for (let i = iS; i <= iE && i < len; i++) {
-          const tt = (i - iS) / Math.max(1, iE - iS);
-          const u = 1 - tt;
-          // Smooth bump bezier: 0 → 0.18 → 0.20 → 0.18 → 0
-          const py = u*u*u*0 + 3*u*u*tt*0.22 + 3*u*tt*tt*0.22 + tt*tt*tt*0;
-          buf[i] = (buf[i] || 0) + py;
-        }
+    // Render a smooth rounded P wave at fractional position pStart
+    const renderP = (fStart, amplitude) => {
+      const pWidth = 0.10; // 10% of beat — slightly wide, normal P morphology
+      const iS = Math.floor(fStart * len);
+      const iE = Math.ceil((fStart + pWidth) * len);
+      for (let i = iS; i <= iE && i < len; i++) {
+        const tt = Math.max(0, Math.min(1, (i - iS) / Math.max(1, iE - iS)));
+        const u = 1 - tt;
+        // Smooth symmetric hump: gentle rise, rounded peak, gentle fall
+        const py = u*u*u*0 + 3*u*u*tt*(amplitude*0.95) + 3*u*tt*tt*(amplitude*0.95) + tt*tt*tt*0;
+        // Additional slight asymmetry: real P waves have slight upstroke peak before center
+        const asymm = amplitude * 0.06 * Math.sin(tt * Math.PI * 1.2);
+        buf[i] = (buf[i] || 0) + py + asymm;
+      }
+    };
+
+    while (pStart < 1.02) { // slight overshoot to catch Ps near end
+      if (pStart >= 0 && pStart < 1.0) {
+        renderP(pStart, 0.26); // 0.26 = prominent enough to see even when overlapping T
       }
       pStart += pPeriod;
     }
-    // Advance phase for next beat: remainder carries over
-    beatState.pPhase = ((beatState.pPhase - 1.0) % pPeriod + pPeriod) % pPeriod;
-    // Add slight P-march drift so Ps walk through QRS over time
-    beatState.pPhase += pPeriod * 0.015;
+
+    // Advance pPhase for next beat — carry over remainder
+    // The phase advances by (1.0 mod pPeriod), so Ps drift across the QRS over cycles
+    beatState.pPhase = (beatState.pPhase - 1.0 + pPeriod * 20) % pPeriod;
+    // No additional drift — the natural modulo arithmetic creates the march
 
     return { buf, beatLen: len };
   }
@@ -973,7 +1299,7 @@ function ECGCanvas({ rhythm, height = 160, gridColor = "rgba(0,80,40,0.35)", bgC
       const r = RHYTHMS[rKey];
       if (!r || r.rate <= 0) return Math.round(W * 0.9);
       // 25mm/s paper speed: ~130px per beat at 75bpm feels natural on screen
-      return Math.round((60 / r.rate) * 130);
+      return Math.round((60 / r.rate) * 120);
     };
 
     let rKey = rhythm;
@@ -983,7 +1309,7 @@ function ECGCanvas({ rhythm, height = 160, gridColor = "rgba(0,80,40,0.35)", bgC
     let nb = nextBeat(rKey, st.basePixPerBeat, st.beatState);
     st.beatBuf = nb.buf; st.beatLen = nb.beatLen; st.beatPos = 0;
 
-    const SPEED = 1; // 1px per frame @ ~60fps = ~60px/sec — realistic 25mm/s feel
+    const SPEED = 2; // 2px/frame @ 60fps — beat scrolls at real cardiac tempo
 
     const hexToRgba = (hex, a) => {
       const c = hex.replace("#","");
@@ -1092,6 +1418,7 @@ const INITIAL_STATE = {
     paco2: { val: 40, ref: "35-45", unit: "mmHg" },
     hco3: { val: 24, ref: "22-26", unit: "mEq/L" },
     lactate: { val: 1.1, ref: "0.5-2.0", unit: "mmol/L" },
+    magnesium: { val: 2.0, ref: "1.7-2.2", unit: "mg/dL" },
     troponin: { val: 0.01, ref: "<0.04", unit: "ng/mL" },
     bnp: { val: 85, ref: "<100", unit: "pg/mL" },
   },
@@ -1160,10 +1487,10 @@ function PlethCanvas({ hr = 72, spo2 = 98, height = 70 }) {
     }
 
     const rate = Math.max(20, Math.min(200, hr));
-    let beatLen = Math.round((60 / rate) * 130);
+    let beatLen = Math.round((60 / rate) * 120);
     let beatBuf = buildPlethBeat(beatLen);
     let beatPos = 0;
-    const SPEED = 1;
+    const SPEED = 2; // match ECG speed
 
     const draw = () => {
       // Generate samples
@@ -1174,7 +1501,7 @@ function PlethCanvas({ hr = 72, spo2 = 98, height = 70 }) {
         if (beatPos >= beatLen) {
           beatPos = 0;
           const newRate = Math.max(20, Math.min(200, hr));
-          beatLen = Math.round((60 / newRate) * 130);
+          beatLen = Math.round((60 / newRate) * 120);
           beatBuf = buildPlethBeat(beatLen);
         }
       }
@@ -1490,7 +1817,7 @@ function StudentEMR({ state, onMARUpdate }) {
         {activeTab === "labs" && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
             {[
-              { title: "Basic Metabolic Panel", keys: ["sodium","potassium","chloride","co2","bun","creatinine","glucose"] },
+              { title: "Basic Metabolic Panel", keys: ["sodium","potassium","chloride","co2","bun","creatinine","glucose","magnesium"] },
               { title: "Complete Blood Count", keys: ["wbc","hgb","hct","platelets"] },
               { title: "Arterial Blood Gas", keys: ["ph","pao2","paco2","hco3","lactate"] },
               { title: "Cardiac Markers", keys: ["troponin","bnp"] },
@@ -1622,31 +1949,435 @@ function StudentEMR({ state, onMARUpdate }) {
 }
 
 // ─── INSTRUCTOR PANEL ───────────────────────────────────────────────────────
-function InstructorPanel({ state, onUpdate }) {
+function InstructorPanel({ state, onUpdate, O2Panel, StandingOrdersPanel, EventLogPanel }) {
   const { vitals, rhythm, labs, scenario } = state;
+  const [scenarioCat, setScenarioCat] = useState("All");
+  const [activeScenario, setActiveScenario] = useState(null);
 
-  // ── Scenario presets ──────────────────────────────────────────────────────
-  const scenarios = [
-    { name: "Stable Post-Op Day 1",   rhythm: "NSR",          labs: {} },
-    { name: "Septic Shock",           rhythm: "STACH",        labs: { wbc: { val: 18.4 }, lactate: { val: 4.2 }, glucose: { val: 180 } } },
-    { name: "Respiratory Failure",    rhythm: "STACH",        labs: { ph: { val: 7.28 }, paco2: { val: 58 }, pao2: { val: 54 }, hco3: { val: 20 } } },
-    { name: "Anterior STEMI",         rhythm: "PVC",          labs: { troponin: { val: 2.84 }, bnp: { val: 480 } } },
-    { name: "DKA",                    rhythm: "STACH",        labs: { glucose: { val: 488 }, ph: { val: 7.18 }, hco3: { val: 8 }, potassium: { val: 5.9 } } },
-    { name: "Cardiac Arrest (VF)",    rhythm: "VFIB",         labs: {} },
-    { name: "Complete Heart Block",   rhythm: "HEART_BLOCK_3",labs: {} },
-    { name: "Hypokalemia / TdP",      rhythm: "TORSADES",     labs: { potassium: { val: 2.2 }, magnesium: { val: 0.8 } } },
-    { name: "Pacemaker Malfunction",  rhythm: "PACED_FAILURE",labs: {} },
+  // ── All 38 scenarios ──────────────────────────────────────────────────────
+  const ALL_SCENARIOS = [
+    // CARDIAC
+    { category:"Cardiac", name:"Anterior STEMI", rhythm:"PVC",
+      vitals:{ hr:95, sbp:96, dbp:60, spo2:94, rr:22, temp:98.2, etco2:34, map:72 },
+      labs:{ troponin:{val:2.84}, bnp:{val:480}, potassium:{val:4.2} },
+      interventions:["Aspirin 325mg PO","Heparin IV bolus + drip","Nitroglycerin SL/IV","Morphine 2-4mg IV","Activate cath lab — 90min door-to-balloon goal","12-lead ECG immediately"],
+      medications:[
+        {id:1,drug:"Aspirin",dose:"325mg",route:"PO",freq:"Once",barcode:"ASA-325-PO",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Nitroglycerin",dose:"0.4mg",route:"SL",freq:"Q5min x3 PRN",barcode:"NTG-004-SL",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Heparin",dose:"5000 units",route:"IV",freq:"Bolus then drip",barcode:"HEP-5000-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Morphine",dose:"4mg",route:"IV",freq:"Once",barcode:"MOR-004-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Cardiac", name:"Inferior STEMI + RV", rhythm:"SBRAD",
+      vitals:{ hr:52, sbp:78, dbp:50, spo2:93, rr:20, temp:98.0, etco2:32, map:59 },
+      labs:{ troponin:{val:3.1}, sodium:{val:136}, potassium:{val:4.0} },
+      interventions:["IV fluid bolus 500mL NS (preload dependent — NOT Lasix)","Aspirin 325mg PO","Heparin IV","AVOID nitrates (contraindicated in RV infarct)","Atropine 0.5mg IV if symptomatic bradycardia","Activate cath lab"],
+      medications:[
+        {id:1,drug:"Aspirin",dose:"325mg",route:"PO",freq:"Once",barcode:"ASA-325-PO",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"NS 0.9%",dose:"500mL",route:"IV",freq:"Bolus",barcode:"NS-500-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Heparin",dose:"5000 units",route:"IV",freq:"Bolus then drip",barcode:"HEP-5000-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Atropine",dose:"0.5mg",route:"IV",freq:"Q3-5min PRN",barcode:"ATR-05-IV",due:"PRN brady",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Cardiac", name:"Cardiogenic Shock", rhythm:"STACH",
+      vitals:{ hr:122, sbp:78, dbp:50, spo2:88, rr:28, temp:97.8, etco2:22, map:59 },
+      labs:{ troponin:{val:4.2}, bnp:{val:1820}, lactate:{val:4.8}, creatinine:{val:2.1} },
+      interventions:["Dobutamine drip 2-20 mcg/kg/min (first-line inotrope)","Furosemide 40mg IV for pulmonary edema","Heparin drip","O2/CPAP","Swan-Ganz catheter placement","IABP or Impella consideration"],
+      medications:[
+        {id:1,drug:"Dobutamine",dose:"5 mcg/kg/min",route:"IV drip",freq:"Titrate",barcode:"DOB-005-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Furosemide",dose:"40mg",route:"IV",freq:"Once",barcode:"FUR-040-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Heparin",dose:"5000 units",route:"IV",freq:"Bolus then drip",barcode:"HEP-5000-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Cardiac", name:"Hypertensive Emergency", rhythm:"NSR",
+      vitals:{ hr:98, sbp:218, dbp:132, spo2:96, rr:18, temp:98.6, etco2:38, map:161 },
+      labs:{ creatinine:{val:2.8}, sodium:{val:140}, potassium:{val:4.2} },
+      interventions:["Nicardipine drip 5-15mg/hr OR Labetalol drip","Reduce MAP by 25% in first hour ONLY — avoid overcorrection","Foley catheter for UO monitoring","Head CT if neuro symptoms","NO oral antihypertensives in emergency"],
+      medications:[
+        {id:1,drug:"Nicardipine",dose:"5mg/hr",route:"IV drip",freq:"Titrate to goal MAP",barcode:"NIC-005-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Labetalol",dose:"20mg",route:"IV",freq:"Q10min PRN",barcode:"LAB-020-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Cardiac", name:"Acute Decompensated CHF", rhythm:"AFIB",
+      vitals:{ hr:118, sbp:158, dbp:96, spo2:84, rr:32, temp:98.8, etco2:42, map:117 },
+      labs:{ bnp:{val:2420}, creatinine:{val:1.4}, sodium:{val:134}, potassium:{val:3.8} },
+      interventions:["CPAP/BiPAP immediately (reduces preload + work of breathing)","Furosemide 80mg IV (2× home dose if taking it)","Diltiazem IV bolus for AFib rate control","Nitroglycerin IV drip (reduces preload/afterload)","Daily weights","Fluid restriction 1.5L/day"],
+      medications:[
+        {id:1,drug:"Furosemide",dose:"80mg",route:"IV",freq:"Once",barcode:"FUR-080-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Diltiazem",dose:"0.25mg/kg",route:"IV",freq:"Bolus then drip",barcode:"DIL-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Nitroglycerin",dose:"10 mcg/min",route:"IV drip",freq:"Titrate",barcode:"NTG-010-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Cardiac", name:"Complete Heart Block", rhythm:"HEART_BLOCK_3",
+      vitals:{ hr:35, sbp:78, dbp:46, spo2:90, rr:18, temp:97.8, etco2:28, map:57 },
+      labs:{ potassium:{val:5.2}, creatinine:{val:1.2}, troponin:{val:0.8} },
+      interventions:["Atropine 0.5mg IV (often ineffective in 3° block)","Transcutaneous pacing immediately","Dopamine 2-10 mcg/kg/min if pacing unavailable","Cardiology consult for transvenous pacing","HOLD all AV-nodal blocking agents (BB, CCB, digoxin)"],
+      medications:[
+        {id:1,drug:"Atropine",dose:"0.5mg",route:"IV",freq:"Q3-5min x3",barcode:"ATR-05-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Dopamine",dose:"5 mcg/kg/min",route:"IV drip",freq:"Titrate",barcode:"DOP-005-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Cardiac", name:"SVT with Compromise", rhythm:"SVT",
+      vitals:{ hr:195, sbp:88, dbp:54, spo2:93, rr:24, temp:98.6, etco2:30, map:65 },
+      labs:{ potassium:{val:3.9}, troponin:{val:0.02} },
+      interventions:["Vagal maneuvers first (Valsalva, carotid massage)","Adenosine 6mg rapid IV push — largest antecubital vein + flush","Adenosine 12mg x2 if no response","Synchronized cardioversion if hemodynamically unstable","12-lead ECG to confirm rhythm before and after"],
+      medications:[
+        {id:1,drug:"Adenosine",dose:"6mg",route:"IV rapid push",freq:"Repeat 12mg x2 if needed",barcode:"ADE-006-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Cardiac", name:"Torsades de Pointes", rhythm:"TORSADES",
+      vitals:{ hr:210, sbp:60, dbp:30, spo2:70, rr:0, temp:97.6, etco2:10, map:40 },
+      labs:{ potassium:{val:2.2}, magnesium:{val:0.7}, co2:{val:18} },
+      interventions:["Magnesium sulfate 2g IV over 15min (FIRST LINE)","Correct potassium to >4.0 mEq/L","Identify and STOP all QT-prolonging medications","Unsynchronized defibrillation if pulseless","Overdrive pacing 90-120bpm if recurrent TdP","Isoproterenol drip for bradycardia-dependent TdP"],
+      medications:[
+        {id:1,drug:"Magnesium Sulfate",dose:"2g",route:"IV",freq:"Over 15 min",barcode:"MAG-2G-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"KCl",dose:"40 mEq",route:"IV drip",freq:"Over 4 hrs",barcode:"KCL-040-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    // PULMONARY
+    { category:"Pulmonary", name:"Acute Severe Asthma", rhythm:"STACH",
+      vitals:{ hr:128, sbp:138, dbp:86, spo2:88, rr:36, temp:99.2, etco2:50, map:103 },
+      labs:{ ph:{val:7.30}, paco2:{val:50}, pao2:{val:58}, hco3:{val:22}, wbc:{val:14.2} },
+      interventions:["Albuterol 2.5mg neb — continuous until improved","Ipratropium 0.5mg neb Q20min x3","Methylprednisolone 125mg IV (or prednisone 60mg PO)","Magnesium sulfate 2g IV over 20min","BiPAP if tiring (rising CO2 = impending respiratory failure)","Epinephrine 0.3mg IM if life-threatening"],
+      medications:[
+        {id:1,drug:"Albuterol",dose:"2.5mg",route:"Neb",freq:"Continuous",barcode:"ALB-25-NEB",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Ipratropium",dose:"0.5mg",route:"Neb",freq:"Q20min x3",barcode:"IPR-05-NEB",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Methylprednisolone",dose:"125mg",route:"IV",freq:"Once",barcode:"MET-125-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Magnesium Sulfate",dose:"2g",route:"IV",freq:"Over 20 min",barcode:"MAG-2G-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Pulmonary", name:"COPD Exacerbation", rhythm:"STACH",
+      vitals:{ hr:112, sbp:148, dbp:90, spo2:84, rr:32, temp:99.4, etco2:62, map:109 },
+      labs:{ ph:{val:7.28}, paco2:{val:72}, pao2:{val:52}, hco3:{val:32}, wbc:{val:13.8} },
+      interventions:["Controlled O2 target SpO2 88-92% ONLY — avoid high-flow","Albuterol + ipratropium DuoNeb Q4H","Methylprednisolone 40-60mg IV Q6H x5 days","BiPAP (first-line over intubation — reduces mortality)","Azithromycin or doxycycline for antibiotic coverage","AVOID high-flow O2 (removes hypoxic drive, worsens CO2 retention)"],
+      medications:[
+        {id:1,drug:"Albuterol/Ipratropium",dose:"3mg/0.5mg",route:"Neb",freq:"Q4H",barcode:"DUO-NEB",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Methylprednisolone",dose:"60mg",route:"IV",freq:"Q6H",barcode:"MET-060-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Azithromycin",dose:"500mg",route:"IV",freq:"Daily",barcode:"AZI-500-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Pulmonary", name:"Pulmonary Embolism", rhythm:"STACH",
+      vitals:{ hr:124, sbp:90, dbp:58, spo2:88, rr:26, temp:99.0, etco2:24, map:69 },
+      labs:{ troponin:{val:0.42}, bnp:{val:680}, ph:{val:7.44}, paco2:{val:32}, pao2:{val:62} },
+      interventions:["Heparin IV 80 units/kg bolus then 18 units/kg/hr drip","O2 titrate to SpO2 >92%","Alteplase 100mg IV over 2hrs if massive PE (BP<90, cardiac arrest)","CT pulmonary angiography to confirm","Echo for RV strain assessment","Vasopressors (norepinephrine) if persistent shock"],
+      medications:[
+        {id:1,drug:"Heparin",dose:"80 units/kg",route:"IV",freq:"Bolus then 18 units/kg/hr",barcode:"HEP-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Alteplase",dose:"100mg",route:"IV",freq:"Over 2 hrs — massive PE only",barcode:"ALT-100-IV",due:"If massive PE",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Norepinephrine",dose:"0.1 mcg/kg/min",route:"IV drip",freq:"Titrate MAP>65",barcode:"NOR-IV",due:"PRN shock",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Pulmonary", name:"Flash Pulmonary Edema", rhythm:"STACH",
+      vitals:{ hr:138, sbp:188, dbp:114, spo2:78, rr:40, temp:98.8, etco2:46, map:139 },
+      labs:{ bnp:{val:1840}, creatinine:{val:1.6}, sodium:{val:136} },
+      interventions:["CPAP/BiPAP immediately — most impactful single intervention","Furosemide 80-160mg IV (2× home dose)","Nitroglycerin IV drip (reduces preload and afterload)","Foley catheter for hourly urine output","Morphine 2mg IV — reduces anxiety and preload","Sit patient upright, legs dependent"],
+      medications:[
+        {id:1,drug:"Furosemide",dose:"80mg",route:"IV",freq:"Once",barcode:"FUR-080-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Nitroglycerin",dose:"20 mcg/min",route:"IV drip",freq:"Titrate",barcode:"NTG-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Morphine",dose:"2mg",route:"IV",freq:"Q5min PRN",barcode:"MOR-002-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Pulmonary", name:"Tension Pneumothorax", rhythm:"STACH",
+      vitals:{ hr:142, sbp:72, dbp:40, spo2:80, rr:34, temp:98.6, etco2:18, map:51 },
+      labs:{ ph:{val:7.22}, paco2:{val:54}, pao2:{val:44} },
+      interventions:["Immediate needle decompression — 2nd ICS MCL (NO time for CXR)","Chest tube insertion after needle decompression","O2 100% non-rebreather mask","Call trauma/surgery STAT","Reassess breath sounds and BP after decompression"],
+      medications:[
+        {id:1,drug:"O2 via NRB",dose:"15 L/min",route:"Mask",freq:"Continuous",barcode:"O2-NRB",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    // METABOLIC
+    { category:"Metabolic", name:"DKA", rhythm:"STACH",
+      vitals:{ hr:128, sbp:100, dbp:62, spo2:97, rr:28, temp:99.8, etco2:22, map:75 },
+      labs:{ glucose:{val:520}, ph:{val:7.14}, hco3:{val:8}, potassium:{val:5.8}, sodium:{val:132}, co2:{val:8} },
+      interventions:["NS 1L/hr x2hrs then 250-500mL/hr (correct volume FIRST)","Regular insulin 0.1 units/kg/hr drip — NO bolus (hypokalemia risk)","Hold insulin until K+ >3.5 mEq/L","K+ replacement when K+ <5.5 mEq/L","Monitor glucose Q1H — add D5 when glucose <250","Sodium bicarb ONLY if pH <6.9","Monitor anion gap Q2-4H"],
+      medications:[
+        {id:1,drug:"NS 0.9%",dose:"1L/hr",route:"IV",freq:"First 2 hrs",barcode:"NS-1L-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Regular Insulin",dose:"0.1 units/kg/hr",route:"IV drip",freq:"Continuous (start after K>3.5)",barcode:"INS-REG-IV",due:"After fluids",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:3,drug:"KCl 20 mEq",dose:"20 mEq/hr",route:"IV",freq:"When K<5.5",barcode:"KCL-020-IV",due:"PRN",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Metabolic", name:"HHS", rhythm:"STACH",
+      vitals:{ hr:122, sbp:96, dbp:58, spo2:96, rr:20, temp:100.2, etco2:36, map:71 },
+      labs:{ glucose:{val:980}, sodium:{val:148}, bun:{val:68}, creatinine:{val:2.4}, ph:{val:7.36}, hco3:{val:24} },
+      interventions:["NS 1L/hr x2h, then switch to 0.45% NS","Insulin drip at LOW dose 0.05 units/kg/hr (glucose drops faster in HHS)","Correct sodium slowly — risk of cerebral edema with rapid correction","Identify precipitant (infection, medication non-compliance, new DM)","Do NOT give bicarbonate (pH usually normal in HHS)"],
+      medications:[
+        {id:1,drug:"NS 0.9%",dose:"1L/hr",route:"IV",freq:"First 2 hrs",barcode:"NS-1L-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Regular Insulin",dose:"0.05 units/kg/hr",route:"IV drip",freq:"LOW dose continuous",barcode:"INS-REG-IV",due:"After fluids",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Metabolic", name:"Addisonian Crisis", rhythm:"STACH",
+      vitals:{ hr:122, sbp:70, dbp:44, spo2:96, rr:22, temp:100.4, etco2:30, map:53 },
+      labs:{ sodium:{val:128}, potassium:{val:5.9}, glucose:{val:48}, co2:{val:16} },
+      interventions:["Hydrocortisone 100mg IV STAT — FIRST intervention","NS 1L rapid IV bolus for hypotension","D50W 1 amp IV for hypoglycemia","Identify precipitating illness/stressor","Fludrocortisone once stable (not acute)","Do NOT give dexamethasone alone (no mineralocorticoid activity)"],
+      medications:[
+        {id:1,drug:"Hydrocortisone",dose:"100mg",route:"IV",freq:"Q8H",barcode:"HYD-100-IV",due:"NOW FIRST",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"NS 0.9%",dose:"1L",route:"IV",freq:"Bolus",barcode:"NS-1L-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Dextrose 50%",dose:"25g (50mL)",route:"IV push",freq:"Once",barcode:"D50-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Metabolic", name:"Thyroid Storm", rhythm:"AFIB",
+      vitals:{ hr:162, sbp:162, dbp:92, spo2:95, rr:24, temp:104.8, etco2:34, map:115 },
+      labs:{ wbc:{val:14.2}, glucose:{val:148}, sodium:{val:136} },
+      interventions:["PTU 500-1000mg PO/NG FIRST (blocks synthesis + T4→T3 conversion)","Propranolol 60-80mg PO Q4H (rate control + T4→T3 block)","Hydrocortisone 100mg IV Q8H (blocks T4→T3, treats adrenal insufficiency)","Lugol's iodine 5-10 drops PO TID — give 1 HOUR AFTER PTU","Cooling blanket + acetaminophen for hyperthermia (NO aspirin — displaces T4)","Cholestyramine to bind thyroid hormone in gut"],
+      medications:[
+        {id:1,drug:"PTU",dose:"500mg",route:"PO/NG",freq:"Loading dose — FIRST",barcode:"PTU-500-PO",due:"NOW first",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Propranolol",dose:"60mg",route:"PO",freq:"Q4H",barcode:"PRO-060-PO",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Hydrocortisone",dose:"100mg",route:"IV",freq:"Q8H",barcode:"HYD-100-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Lugol's Iodine",dose:"5 drops",route:"PO",freq:"TID (1hr after PTU)",barcode:"LUG-PO",due:"1hr post PTU",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Metabolic", name:"Severe Hypoglycemia", rhythm:"STACH",
+      vitals:{ hr:118, sbp:148, dbp:88, spo2:97, rr:18, temp:98.2, etco2:38, map:108 },
+      labs:{ glucose:{val:28}, sodium:{val:139}, potassium:{val:4.0} },
+      interventions:["D50W 1 amp (25g/50mL) IV push if IV access present","Glucagon 1mg IM if no IV access","D10W drip 100mL/hr maintenance after D50","Recheck glucose Q15min until >100 x2","Thiamine 100mg IV BEFORE dextrose if malnutrition suspected (Wernicke's prevention)","Identify cause: excess insulin, NPO, sulfonylurea, sepsis"],
+      medications:[
+        {id:1,drug:"Dextrose 50%",dose:"25g (50mL)",route:"IV push",freq:"Once",barcode:"D50-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Dextrose 10%",dose:"100mL/hr",route:"IV drip",freq:"Until glucose >100",barcode:"D10-IV",due:"After D50",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Thiamine",dose:"100mg",route:"IV",freq:"Once before dextrose",barcode:"THI-100-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Metabolic", name:"Myxedema Coma", rhythm:"SBRAD",
+      vitals:{ hr:38, sbp:78, dbp:50, spo2:88, rr:10, temp:94.0, etco2:58, map:59 },
+      labs:{ sodium:{val:122}, glucose:{val:54}, co2:{val:20}, creatinine:{val:1.8} },
+      interventions:["Hydrocortisone 100mg IV BEFORE thyroid hormone (rule out adrenal insufficiency)","Levothyroxine (T4) 200-400mcg IV loading dose","Liothyronine (T3) 10mcg IV Q8H for faster conversion","Gentle passive rewarming — NO active external heat (vasodilation → hypotension)","Intubation if airway compromised","Correct hyponatremia slowly"],
+      medications:[
+        {id:1,drug:"Hydrocortisone",dose:"100mg",route:"IV",freq:"Q8H — give FIRST",barcode:"HYD-100-IV",due:"NOW first",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Levothyroxine",dose:"300mcg",route:"IV",freq:"Loading then 50-100mcg/day",barcode:"LT4-300-IV",due:"After hydrocortisone",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Dextrose 50%",dose:"25g",route:"IV push",freq:"Once for hypoglycemia",barcode:"D50-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    // RENAL/ELECTROLYTE
+    { category:"Renal/Electrolyte", name:"Severe Hyperkalemia", rhythm:"SBRAD",
+      vitals:{ hr:48, sbp:88, dbp:54, spo2:95, rr:16, temp:98.2, etco2:36, map:65 },
+      labs:{ potassium:{val:7.2}, creatinine:{val:6.8}, co2:{val:14}, ph:{val:7.20} },
+      interventions:["Calcium gluconate 1g IV over 2-3 min FIRST (membrane stabilization)","Sodium bicarb 50mEq IV (shifts K+ intracellularly)","Regular insulin 10 units IV + D50 1 amp (shifts K+ intracellularly)","Albuterol 20mg neb (shifts K+ intracellularly — additive to insulin)","Kayexalate/patiromer to eliminate K+ from body","Emergent dialysis if severe/ESRD/refractory"],
+      medications:[
+        {id:1,drug:"Calcium Gluconate",dose:"1g (10mL of 10%)",route:"IV",freq:"Over 2-3 min — FIRST",barcode:"CAG-1G-IV",due:"NOW FIRST",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Regular Insulin + D50",dose:"10 units + 25g",route:"IV push",freq:"Once",barcode:"INS-D50-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Sodium Bicarbonate",dose:"50 mEq",route:"IV",freq:"Over 5 min",barcode:"NaHCO3-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Albuterol",dose:"20mg",route:"Neb",freq:"Over 10 min",barcode:"ALB-20-NEB",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Renal/Electrolyte", name:"Hyponatremia + Seizure", rhythm:"STACH",
+      vitals:{ hr:128, sbp:148, dbp:90, spo2:94, rr:20, temp:98.6, etco2:36, map:109 },
+      labs:{ sodium:{val:108}, potassium:{val:3.8}, creatinine:{val:1.0}, glucose:{val:92} },
+      interventions:["3% NaCl 100mL IV bolus over 10-20 min (symptomatic seizure)","Correct Na+ by 4-6 mEq/L in first hour only","Lorazepam 2mg IV for active seizure control","Max correction: 8-10 mEq/24hr (osmotic demyelination syndrome risk)","Find cause: SIADH, beer potomania, heart failure, cirrhosis","Fluid restriction once seizure controlled"],
+      medications:[
+        {id:1,drug:"3% NaCl",dose:"100mL",route:"IV",freq:"Bolus over 10-20 min",barcode:"NaCl3-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Lorazepam",dose:"2mg",route:"IV",freq:"May repeat once",barcode:"LOR-002-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Renal/Electrolyte", name:"Rhabdomyolysis", rhythm:"STACH",
+      vitals:{ hr:116, sbp:104, dbp:66, spo2:96, rr:18, temp:99.0, etco2:36, map:79 },
+      labs:{ creatinine:{val:3.2}, potassium:{val:5.6}, co2:{val:16}, ph:{val:7.28} },
+      interventions:["NS 250-500mL/hr aggressive IVF — goal UO >200-300mL/hr","Sodium bicarbonate to alkalinize urine (prevents myoglobin tubule precipitation)","Foley catheter for strict hourly UO","HOLD NSAIDs, ACE inhibitors, aminoglycosides, statins","Monitor K+, Ca2+, phosphate, creatinine Q4-6H","Dialysis if AKI refractory or life-threatening hyperkalemia"],
+      medications:[
+        {id:1,drug:"NS 0.9%",dose:"500mL/hr",route:"IV",freq:"Until UO >200mL/hr",barcode:"NS-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Sodium Bicarbonate",dose:"150 mEq in 1L D5W",route:"IV drip",freq:"100mL/hr",barcode:"NaHCO3-D5-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Renal/Electrolyte", name:"Hypercalcemia of Malignancy", rhythm:"SBRAD",
+      vitals:{ hr:52, sbp:104, dbp:62, spo2:96, rr:14, temp:98.6, etco2:36, map:76 },
+      labs:{ creatinine:{val:1.8}, sodium:{val:138}, potassium:{val:3.6} },
+      interventions:["NS 1L/hr aggressive hydration — most important first step","Furosemide 20-40mg IV ONLY after euvolemia restored (not before!)","Zoledronic acid 4mg IV over 15min (2-4 days to peak effect)","Calcitonin 4 units/kg SQ Q12H (fastest onset, tachyphylaxis after 48hrs)","Hemodialysis if severe hypercalcemia + renal failure","Glucocorticoids if lymphoma/sarcoidosis cause"],
+      medications:[
+        {id:1,drug:"NS 0.9%",dose:"1L/hr",route:"IV",freq:"First 2-4 hrs",barcode:"NS-1L-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Calcitonin",dose:"4 units/kg",route:"SQ/IM",freq:"Q12H",barcode:"CAL-SQ",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Zoledronic Acid",dose:"4mg",route:"IV",freq:"Over 15 min once euvolemic",barcode:"ZOL-4-IV",due:"After hydration",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Furosemide",dose:"40mg",route:"IV",freq:"Once euvolemic only",barcode:"FUR-040-IV",due:"After hydration",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    // NEURO
+    { category:"Neuro", name:"Ischemic Stroke (tPA)", rhythm:"NSR",
+      vitals:{ hr:88, sbp:168, dbp:96, spo2:97, rr:16, temp:98.6, etco2:38, map:120 },
+      labs:{ glucose:{val:112}, platelets:{val:210}, creatinine:{val:1.0} },
+      interventions:["Alteplase 0.9mg/kg IV (max 90mg) if <4.5hrs and no contraindications","BP: Labetalol to keep <185/110 BEFORE tPA — do not treat below 180/105","HOLD antiplatelets/anticoagulants 24hrs post-tPA","Glucose control: treat if >180 or <60","CT head immediately (rule out hemorrhage)","NPO until formal swallow evaluation"],
+      medications:[
+        {id:1,drug:"Alteplase (tPA)",dose:"0.9mg/kg (10% bolus + 90% over 1hr)",route:"IV",freq:"Once if eligible",barcode:"ALT-IV",due:"NOW if eligible",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Labetalol",dose:"10-20mg",route:"IV",freq:"Q10-20min PRN SBP>185",barcode:"LAB-020-IV",due:"PRN",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Neuro", name:"Status Epilepticus", rhythm:"STACH",
+      vitals:{ hr:142, sbp:158, dbp:94, spo2:88, rr:22, temp:100.8, etco2:32, map:115 },
+      labs:{ glucose:{val:84}, sodium:{val:136}, ph:{val:7.30} },
+      interventions:["Lorazepam 0.1mg/kg IV (4mg max) — FIRST LINE","Fosphenytoin 20mg PE/kg IV if lorazepam fails after 5 min","Phenobarbital 20mg/kg IV if 2nd line fails","Propofol or midazolam drip if refractory (intubate first)","Check glucose immediately — treat if hypoglycemic","EEG monitoring for non-convulsive status"],
+      medications:[
+        {id:1,drug:"Lorazepam",dose:"4mg",route:"IV",freq:"May repeat once in 5min",barcode:"LOR-004-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Fosphenytoin",dose:"20 mg PE/kg",route:"IV",freq:"Over 20-30 min — 2nd line",barcode:"FOS-IV",due:"If benzo fails",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Phenobarbital",dose:"20mg/kg",route:"IV",freq:"Over 30-60 min — 3rd line",barcode:"PHE-IV",due:"3rd line",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Neuro", name:"Opioid Overdose", rhythm:"SBRAD",
+      vitals:{ hr:50, sbp:88, dbp:54, spo2:80, rr:6, temp:97.2, etco2:68, map:65 },
+      labs:{ ph:{val:7.22}, paco2:{val:72}, pao2:{val:44}, hco3:{val:26} },
+      interventions:["Naloxone 0.4-2mg IV/IM/IN — titrate to ADEQUATE respirations (not full reversal — avoid withdrawal)","BVM ventilation if RR <8 while getting naloxone ready","Repeat naloxone Q2-3min if no response","Naloxone drip at 2/3 of effective dose per hour if recurrent sedation","Monitor for re-sedation (opioid t½ > naloxone t½ 30-90min)","Identify coingestants"],
+      medications:[
+        {id:1,drug:"Naloxone",dose:"0.4-2mg",route:"IV/IM/IN",freq:"Q2-3min PRN RR<12",barcode:"NAL-04-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Neuro", name:"Alcohol Withdrawal / DTs", rhythm:"STACH",
+      vitals:{ hr:142, sbp:182, dbp:110, spo2:96, rr:22, temp:101.4, etco2:34, map:134 },
+      labs:{ sodium:{val:132}, glucose:{val:64}, potassium:{val:3.2}, ph:{val:7.46} },
+      interventions:["Thiamine 100mg IV BEFORE any dextrose — prevents Wernicke's encephalopathy","Lorazepam CIWA protocol: Q1H scoring, treat if score >8-10","Folate 1mg IV daily","Multivitamin (MVI) IV daily","Dextrose (D5NS or D10) for hypoglycemia after thiamine","Continuous telemetry — risk of QTc prolongation and arrhythmias"],
+      medications:[
+        {id:1,drug:"Thiamine",dose:"100mg",route:"IV",freq:"Daily x3 (give BEFORE dextrose)",barcode:"THI-100-IV",due:"NOW before glucose",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Lorazepam",dose:"2-4mg",route:"IV/PO",freq:"Q1H per CIWA score >8",barcode:"LOR-IV",due:"Per CIWA",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Folate",dose:"1mg",route:"IV",freq:"Daily",barcode:"FOL-1-IV",due:"Daily",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:4,drug:"MVI",dose:"10mL",route:"IV",freq:"Daily",barcode:"MVI-IV",due:"Daily",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    // SEPSIS
+    { category:"Sepsis", name:"Septic Shock", rhythm:"STACH",
+      vitals:{ hr:132, sbp:74, dbp:44, spo2:91, rr:26, temp:103.2, etco2:28, map:54 },
+      labs:{ wbc:{val:22.4}, lactate:{val:6.8}, creatinine:{val:1.8}, glucose:{val:182} },
+      interventions:["30mL/kg NS over 30-60 min (1-2L typical)","Blood cultures x2 BEFORE antibiotics (but don't delay abx >1hr)","Pip-tazo 3.375g IV Q6H extended infusion + Vancomycin (broad coverage)","Norepinephrine drip via central line if MAP <65 after fluids","Lactate reassessment at 2hrs — goal clearance >10%","Foley catheter — goal UO >0.5mL/kg/hr"],
+      medications:[
+        {id:1,drug:"NS 0.9%",dose:"2100mL (30mL/kg for 70kg)",route:"IV",freq:"Over 30-60 min",barcode:"NS-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Piperacillin-Tazobactam",dose:"3.375g",route:"IV",freq:"Q6H extended infusion",barcode:"PIP-TAZ-IV",due:"Within 1hr",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Vancomycin",dose:"25mg/kg",route:"IV",freq:"Q8-12H AUC-based",barcode:"VAN-IV",due:"Within 1hr",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Norepinephrine",dose:"0.1-0.3 mcg/kg/min",route:"IV drip (central)",freq:"Titrate MAP >65",barcode:"NOR-IV",due:"If MAP<65 after fluids",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Sepsis", name:"Neutropenic Fever", rhythm:"STACH",
+      vitals:{ hr:118, sbp:102, dbp:64, spo2:95, rr:22, temp:102.6, etco2:34, map:77 },
+      labs:{ wbc:{val:0.8}, hgb:{val:8.2}, platelets:{val:42}, creatinine:{val:1.1} },
+      interventions:["Pan-cultures (blood x2, urine, wound, sputum) BEFORE antibiotics","Cefepime 2g IV Q8H — DO NOT delay >1hr for ANC <500","Add vancomycin if catheter infection, MRSA, or hemodynamic instability","G-CSF (filgrastim) if prolonged neutropenia","AVOID rectal temps, suppositories, enemas (mucosal barrier disruption)","Strict neutropenic precautions (private room, HEPA filter, no fresh flowers)"],
+      medications:[
+        {id:1,drug:"Cefepime",dose:"2g",route:"IV",freq:"Q8H — within 1hr",barcode:"CEF-2G-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Vancomycin",dose:"25mg/kg",route:"IV",freq:"Q8-12H if MRSA concern",barcode:"VAN-IV",due:"If indicated",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Filgrastim (G-CSF)",dose:"5 mcg/kg",route:"SQ",freq:"Daily until ANC >1000",barcode:"GCS-SQ",due:"Daily",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Sepsis", name:"Bacterial Meningitis", rhythm:"STACH",
+      vitals:{ hr:132, sbp:94, dbp:60, spo2:94, rr:24, temp:104.0, etco2:30, map:71 },
+      labs:{ wbc:{val:24.8}, sodium:{val:130}, glucose:{val:58}, creatinine:{val:1.0} },
+      interventions:["Dexamethasone 0.15mg/kg IV FIRST (reduces inflammation and complications)","Ceftriaxone 2g IV Q12H (within minutes of dexamethasone)","Vancomycin 25mg/kg IV Q8-12H (covers resistant pneumococcus)","Ampicillin 2g IV Q4H if >50yrs, immunocompromised (Listeria)","Acyclovir 10mg/kg IV Q8H if herpes encephalitis suspected","LP after CT if no contraindications (papilledema, focal neuro deficits, coagulopathy)"],
+      medications:[
+        {id:1,drug:"Dexamethasone",dose:"0.15mg/kg",route:"IV",freq:"Q6H x4 days — give FIRST",barcode:"DEX-IV",due:"NOW FIRST",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Ceftriaxone",dose:"2g",route:"IV",freq:"Q12H",barcode:"CEF-2G-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Vancomycin",dose:"25mg/kg",route:"IV",freq:"Q8-12H",barcode:"VAN-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Ampicillin",dose:"2g",route:"IV",freq:"Q4H if >50 or immunocompromised",barcode:"AMP-2G-IV",due:"If >50",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    // TOXICOLOGY
+    { category:"Toxicology", name:"Acetaminophen OD", rhythm:"NSR",
+      vitals:{ hr:98, sbp:118, dbp:74, spo2:97, rr:16, temp:98.8, etco2:38, map:89 },
+      labs:{ ph:{val:7.32}, creatinine:{val:1.4}, glucose:{val:88} },
+      interventions:["N-Acetylcysteine per Rumack-Matthew nomogram — check level 4hrs post-ingestion","NAC protocol: 150mg/kg IV over 1hr → 50mg/kg over 4hrs → 100mg/kg over 16hrs","Activated charcoal 1g/kg PO if <2hrs post-ingestion (only if protecting airway)","Monitor LFTs, INR, creatinine Q6-12H","Hepatology consult if INR rising >2","King's College Criteria for transplant evaluation"],
+      medications:[
+        {id:1,drug:"N-Acetylcysteine (NAC)",dose:"150mg/kg",route:"IV",freq:"Loading 1hr, then protocol",barcode:"NAC-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Activated Charcoal",dose:"50g",route:"PO/NG",freq:"Once if <2hrs",barcode:"ACT-CHAR-PO",due:"If <2hrs",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Toxicology", name:"TCA Overdose", rhythm:"VTACH",
+      vitals:{ hr:148, sbp:72, dbp:44, spo2:90, rr:18, temp:98.2, etco2:30, map:53 },
+      labs:{ ph:{val:7.18}, sodium:{val:138}, potassium:{val:4.8}, co2:{val:12} },
+      interventions:["Sodium bicarbonate 1-2 mEq/kg IV bolus (narrows QRS, treats hypotension)","Goal pH 7.45-7.55 with bicarb","Lorazepam 2mg IV for seizures","AVOID physostigmine (causes bradycardia, seizures)","AVOID flumazenil (lowers seizure threshold with TCA)","Norepinephrine for refractory hypotension — avoid dopamine"],
+      medications:[
+        {id:1,drug:"Sodium Bicarbonate",dose:"100 mEq",route:"IV bolus",freq:"Repeat until QRS <120ms",barcode:"NaHCO3-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Lorazepam",dose:"2mg",route:"IV",freq:"Q5min PRN seizure",barcode:"LOR-002-IV",due:"PRN",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Norepinephrine",dose:"0.1 mcg/kg/min",route:"IV drip",freq:"Titrate",barcode:"NOR-IV",due:"If refractory hypotension",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Toxicology", name:"Digoxin Toxicity", rhythm:"HB2_M1",
+      vitals:{ hr:44, sbp:96, dbp:60, spo2:95, rr:14, temp:98.0, etco2:36, map:72 },
+      labs:{ potassium:{val:5.8}, creatinine:{val:2.2}, sodium:{val:138} },
+      interventions:["Digoxin immune Fab (DigiFab) — dose based on dig level or #tablets","Do NOT aggressively correct hyperkalemia (resolves with Fab)","AVOID calcium gluconate (worsens digoxin toxicity — calcium paradox)","Atropine for symptomatic bradycardia (temporary bridge)","Pacemaker if Atropine fails","HOLD digoxin, beta blockers, diltiazem, amiodarone"],
+      medications:[
+        {id:1,drug:"Digoxin Immune Fab",dose:"10 vials empiric",route:"IV",freq:"Over 30 min",barcode:"DIG-FAB-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Atropine",dose:"0.5mg",route:"IV",freq:"Q3-5min PRN brady",barcode:"ATR-05-IV",due:"PRN",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Toxicology", name:"Beta Blocker OD", rhythm:"SBRAD",
+      vitals:{ hr:32, sbp:66, dbp:38, spo2:90, rr:16, temp:97.4, etco2:30, map:47 },
+      labs:{ glucose:{val:56}, potassium:{val:5.2}, sodium:{val:138}, ph:{val:7.24} },
+      interventions:["High-dose insulin euglycemic therapy (HIET): 1 unit/kg/hr regular insulin + D10W","Calcium gluconate 3g IV (positive inotropy)","Glucagon 5-10mg IV bolus then 2-5mg/hr drip (bypasses beta receptors)","Intralipid 20% 1.5mL/kg bolus if refractory","Transvenous pacing for bradycardia","ECMO as last resort"],
+      medications:[
+        {id:1,drug:"Regular Insulin (HIET)",dose:"1 unit/kg/hr",route:"IV drip",freq:"+ D10W continuous",barcode:"INS-HIET-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Calcium Gluconate",dose:"3g",route:"IV",freq:"Over 5-10 min",barcode:"CAG-3G-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Glucagon",dose:"5mg",route:"IV",freq:"Bolus then 2-5mg/hr",barcode:"GLU-5-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Intralipid 20%",dose:"1.5mL/kg",route:"IV bolus",freq:"Then 0.25mL/kg/min x1hr",barcode:"LIP-IV",due:"If refractory",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    // OB/PEDS
+    { category:"OB/Peds", name:"Preeclampsia Severe", rhythm:"NSR",
+      vitals:{ hr:92, sbp:168, dbp:114, spo2:97, rr:18, temp:98.8, etco2:38, map:132 },
+      labs:{ platelets:{val:88}, creatinine:{val:1.4}, sodium:{val:138} },
+      interventions:["Magnesium sulfate 4-6g IV over 20min (seizure prophylaxis — first intervention)","Maintenance: MgSO4 1-2g/hr continuous drip","Labetalol 20mg IV or Hydralazine 5mg IV if SBP >160 (goal <160/110)","Monitor reflexes Q1H, UO Q1H, mental status for Mg toxicity (toxic >5 mEq/L)","Calcium gluconate 1g at bedside as Mg antidote","OB consult for delivery planning"],
+      medications:[
+        {id:1,drug:"Magnesium Sulfate",dose:"4-6g",route:"IV",freq:"Load over 20min, then 2g/hr",barcode:"MAG-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Labetalol",dose:"20mg",route:"IV",freq:"Q10min if SBP>160",barcode:"LAB-020-IV",due:"PRN SBP>160",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Calcium Gluconate",dose:"1g",route:"IV",freq:"PRN Mg toxicity antidote",barcode:"CAG-1G-IV",due:"At bedside",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"OB/Peds", name:"Eclampsia (Seizing)", rhythm:"STACH",
+      vitals:{ hr:138, sbp:192, dbp:124, spo2:88, rr:20, temp:99.2, etco2:28, map:147 },
+      labs:{ platelets:{val:72}, sodium:{val:136}, creatinine:{val:1.6} },
+      interventions:["Magnesium sulfate 6g IV over 5-10min (stop seizure — FIRST)","Left lateral decubitus position (reduces aortocaval compression)","Suction airway + O2 by mask","Labetalol 20-40mg IV for acute BP control","Emergent OB/delivery team to bedside","Do NOT use diazepam first (fetal depression)"],
+      medications:[
+        {id:1,drug:"Magnesium Sulfate",dose:"6g",route:"IV",freq:"Over 5-10 min STAT",barcode:"MAG-6G-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Labetalol",dose:"40mg",route:"IV",freq:"Q10min PRN",barcode:"LAB-040-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"OB/Peds", name:"Pediatric Status Epilepticus", rhythm:"STACH",
+      vitals:{ hr:162, sbp:108, dbp:68, spo2:92, rr:24, temp:104.2, etco2:30, map:81 },
+      labs:{ glucose:{val:72}, sodium:{val:137}, ph:{val:7.32} },
+      interventions:["Lorazepam 0.1mg/kg IV (max 4mg) — weight-based FIRST LINE","Fosphenytoin 20mg PE/kg IV if no response in 5 min","Check glucose immediately — D25W 2mL/kg if hypoglycemic","Acetaminophen 15mg/kg PR/PO for fever reduction","Airway positioning, suction, O2 via NRB","EEG after stabilization to detect subclinical status"],
+      medications:[
+        {id:1,drug:"Lorazepam",dose:"0.1mg/kg IV (max 4mg)",route:"IV",freq:"May repeat once in 5-10 min",barcode:"LOR-PED-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Fosphenytoin",dose:"20 mg PE/kg",route:"IV",freq:"Over 10 min — 2nd line",barcode:"FOS-PED-IV",due:"2nd line",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Acetaminophen",dose:"15mg/kg",route:"PR/PO",freq:"Q4-6H PRN temp >101",barcode:"APAP-PED",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    // RESUSCITATION
+    { category:"Resuscitation", name:"Cardiac Arrest (VF)", rhythm:"VFIB",
+      vitals:{ hr:0, sbp:0, dbp:0, spo2:0, rr:0, temp:97.0, etco2:0, map:0 },
+      labs:{ ph:{val:7.10}, potassium:{val:5.8}, co2:{val:10} },
+      interventions:["CPR 30:2 — minimize interruptions, hard and fast 2-2.4 inches","Defibrillate 200J biphasic immediately","Epinephrine 1mg IV Q3-5min","Amiodarone 300mg IV push after 2nd failed shock","Intubate — do not stop CPR for >10 sec","Identify reversible H's and T's","EtCO2 >10 indicates adequate CPR"],
+      medications:[
+        {id:1,drug:"Epinephrine",dose:"1mg",route:"IV/IO",freq:"Q3-5min",barcode:"EPI-1MG-IV",due:"NOW Q3-5min",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Amiodarone",dose:"300mg",route:"IV push",freq:"After 2nd shock, then 150mg x1",barcode:"AMI-300-IV",due:"After 2nd shock",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Resuscitation", name:"Pulseless V-Tach", rhythm:"VTACH",
+      vitals:{ hr:165, sbp:0, dbp:0, spo2:0, rr:0, temp:98.0, etco2:0, map:0 },
+      labs:{ potassium:{val:3.2}, ph:{val:7.28}, magnesium:{val:1.6} },
+      interventions:["Unsynchronized defibrillation 200J (pulseless = defibrillate, not cardiovert)","CPR immediately after shock — do not check pulse first","Epinephrine 1mg IV Q3-5min","Amiodarone 300mg IV if VT persists","Correct K+ to >4.0 and Mg to >2.0","Identify reversible causes: ischemia, electrolytes, drugs"],
+      medications:[
+        {id:1,drug:"Epinephrine",dose:"1mg",route:"IV/IO",freq:"Q3-5min",barcode:"EPI-1MG-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Amiodarone",dose:"300mg",route:"IV push",freq:"After 2nd shock",barcode:"AMI-300-IV",due:"After 2nd shock",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"KCl",dose:"40 mEq",route:"IV drip",freq:"Over 4 hrs",barcode:"KCL-040-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Resuscitation", name:"PEA Arrest", rhythm:"IDIOVENTRICULAR",
+      vitals:{ hr:32, sbp:0, dbp:0, spo2:0, rr:0, temp:97.0, etco2:5, map:0 },
+      labs:{ ph:{val:7.08}, potassium:{val:6.2}, co2:{val:8}, creatinine:{val:3.4} },
+      interventions:["CPR — high quality, minimize interruptions","Epinephrine 1mg IV Q3-5min (no defibrillation for PEA)","Identify and treat H's and T's:","→ Hypovolemia: fluids | Hypoxia: O2/vent | H+ acidosis: bicarb","→ Tension PTX: needle decompress | Tamponade: pericardiocentesis","→ Thrombosis PE: thrombolytics | Hyperkalemia: calcium + insulin","EtCO2 <10 suggests poor CPR quality or futility"],
+      medications:[
+        {id:1,drug:"Epinephrine",dose:"1mg",route:"IV/IO",freq:"Q3-5min",barcode:"EPI-1MG-IV",due:"NOW Q3-5min",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Sodium Bicarbonate",dose:"1 mEq/kg",route:"IV",freq:"If pH<7.1 or hyperkalemia",barcode:"NaHCO3-IV",due:"If indicated",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    // CRITICAL CARE
+    { category:"Critical Care", name:"Anaphylaxis", rhythm:"STACH",
+      vitals:{ hr:138, sbp:72, dbp:40, spo2:88, rr:32, temp:98.8, etco2:24, map:51 },
+      labs:{ wbc:{val:12.4}, sodium:{val:138}, potassium:{val:3.8} },
+      interventions:["Epinephrine 0.3mg IM anterolateral thigh — FIRST, no delay","Repeat epinephrine Q5-15min PRN (up to 3 doses)","NS 1-2L rapid IV bolus for hypotension","Diphenhydramine 50mg IV (adjunct — NOT first line)","Methylprednisolone 125mg IV (prevents biphasic reaction 4-8hrs later)","Albuterol 2.5mg neb for bronchospasm","Lay patient flat, legs elevated — NOT sitting up"],
+      medications:[
+        {id:1,drug:"Epinephrine 1:1000",dose:"0.3mg (0.3mL)",route:"IM anterolateral thigh",freq:"Q5-15min x3 PRN — FIRST LINE",barcode:"EPI-03-IM",due:"NOW FIRST",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"NS 0.9%",dose:"1L",route:"IV",freq:"Rapid bolus",barcode:"NS-1L-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Diphenhydramine",dose:"50mg",route:"IV",freq:"Once (adjunct only)",barcode:"DPH-050-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Methylprednisolone",dose:"125mg",route:"IV",freq:"Once",barcode:"MET-125-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Critical Care", name:"Acute Liver Failure", rhythm:"STACH",
+      vitals:{ hr:118, sbp:96, dbp:58, spo2:95, rr:20, temp:100.2, etco2:32, map:71 },
+      labs:{ glucose:{val:48}, sodium:{val:128}, creatinine:{val:2.2}, ph:{val:7.30}, hco3:{val:16}, platelets:{val:62} },
+      interventions:["NAC IV if acetaminophen cause (even late — still beneficial)","D10W infusion for hypoglycemia (goal glucose 140-180)","Lactulose 30mL PO Q2H (goal 2-3 soft stools/day for encephalopathy)","Rifaximin 550mg BID (gut decontamination)","FFP for active bleeding or INR >2 before procedures","Transplant evaluation — King's College Criteria","Avoid hepatotoxins, sedatives, nephrotoxins"],
+      medications:[
+        {id:1,drug:"NAC",dose:"150mg/kg",route:"IV",freq:"If APAP cause",barcode:"NAC-IV",due:"If APAP",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Dextrose 10%",dose:"125mL/hr",route:"IV drip",freq:"Continuous",barcode:"D10-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Lactulose",dose:"30mL",route:"PO/NG",freq:"Q2H until 2-3 stools",barcode:"LAC-PO",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Fresh Frozen Plasma",dose:"2 units",route:"IV",freq:"Active bleeding/procedures",barcode:"FFP-IV",due:"PRN",status:"scheduled",check1:false,check2:false,scanned:false},
+      ]},
+    { category:"Critical Care", name:"Massive GI Bleed", rhythm:"STACH",
+      vitals:{ hr:138, sbp:78, dbp:48, spo2:94, rr:22, temp:98.4, etco2:28, map:58 },
+      labs:{ hgb:{val:5.8}, hct:{val:17.4}, platelets:{val:88}, creatinine:{val:1.6}, ph:{val:7.28} },
+      interventions:["Two large bore IVs (#16 or larger) — both antecubital","Massive transfusion protocol: 1:1:1 ratio (pRBC:FFP:Platelets)","Pantoprazole 80mg IV bolus then 8mg/hr drip","Octreotide 50mcg IV bolus then 50mcg/hr if variceal suspected","Type and cross-match for 6 units pRBC","GI consult for emergent endoscopy","Foley catheter for hourly UO"],
+      medications:[
+        {id:1,drug:"pRBC",dose:"2 units",route:"IV",freq:"Rapid, per MTP",barcode:"PRBC-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Pantoprazole",dose:"80mg",route:"IV",freq:"Bolus, then 8mg/hr drip",barcode:"PAN-080-IV",due:"NOW",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Octreotide",dose:"50 mcg",route:"IV",freq:"Bolus then 50mcg/hr",barcode:"OCT-050-IV",due:"If variceal",status:"scheduled",check1:false,check2:false,scanned:false},
+        {id:4,drug:"FFP",dose:"2 units",route:"IV",freq:"With each 2 units pRBC",barcode:"FFP-IV",due:"With pRBC",status:"due",check1:false,check2:false,scanned:false},
+      ]},
+    // BASELINE
+    { category:"Baseline", name:"Stable Post-Op Day 1", rhythm:"NSR",
+      vitals:{ hr:72, sbp:118, dbp:76, spo2:98, rr:14, temp:98.6, etco2:38, map:90 },
+      labs:{ sodium:{val:138}, potassium:{val:4.1}, creatinine:{val:1.0}, glucose:{val:104}, hgb:{val:13.4} },
+      interventions:["Routine VS Q4H","Pain assessment Q4H — multimodal analgesia","Incentive spirometry Q2H while awake","Ambulate BID minimum","DVT prophylaxis per protocol","Diet advancement per orders — advance as tolerated"],
+      medications:[
+        {id:1,drug:"Metoprolol",dose:"25mg",route:"PO",freq:"BID",barcode:"MET-025-PO",due:"0800",status:"due",check1:false,check2:false,scanned:false},
+        {id:2,drug:"Lisinopril",dose:"10mg",route:"PO",freq:"Daily",barcode:"LIS-010-PO",due:"0800",status:"due",check1:false,check2:false,scanned:false},
+        {id:3,drug:"Furosemide",dose:"40mg",route:"IV",freq:"BID",barcode:"FUR-040-IV",due:"0800",status:"due",check1:false,check2:false,scanned:false},
+        {id:4,drug:"Aspirin",dose:"81mg",route:"PO",freq:"Daily",barcode:"ASA-081-PO",due:"0800",status:"due",check1:false,check2:false,scanned:false},
+      ]},
   ];
+
+  const scenarioCategories = ["All", ...new Set(ALL_SCENARIOS.map(s => s.category))];
+  const filteredScenarios = scenarioCat === "All" ? ALL_SCENARIOS : ALL_SCENARIOS.filter(s => s.category === scenarioCat);
 
   const applyScenario = (s) => {
     const r = RHYTHMS[s.rhythm];
     onUpdate("scenario", s.name);
     onUpdate("rhythm", s.rhythm);
     if (r?.vitals) onUpdate("vitals", { ...vitals, ...r.vitals });
+    if (s.vitals) onUpdate("vitals", { ...(r?.vitals || vitals), ...s.vitals });
     const newLabs = { ...state.labs };
-    Object.entries(s.labs).forEach(([k, v]) => { newLabs[k] = { ...newLabs[k], ...v }; });
+    if (s.labs) Object.entries(s.labs).forEach(([k, v]) => { newLabs[k] = { ...newLabs[k], ...v }; });
     onUpdate("labs", newLabs);
+    if (s.medications) onUpdate("medications", s.medications);
+    setActiveScenario(s.name === activeScenario ? null : s.name);
   };
+
+  const currentScenarioData = ALL_SCENARIOS.find(s => s.name === activeScenario);
 
   // When rhythm is selected, auto-apply its physiologic vitals
   const selectRhythm = (key) => {
@@ -1659,16 +2390,22 @@ function InstructorPanel({ state, onUpdate }) {
   const setLab   = (key, val) => onUpdate("labs",   { ...state.labs, [key]: { ...state.labs[key], val: parseFloat(val) || val } });
 
   // Group rhythms by category
-  const categories = {};
+  const rhythmCategories = {};
   Object.entries(RHYTHMS).forEach(([key, r]) => {
-    if (!categories[r.category]) categories[r.category] = [];
-    categories[r.category].push({ key, ...r });
+    if (!rhythmCategories[r.category]) rhythmCategories[r.category] = [];
+    rhythmCategories[r.category].push({ key, ...r });
   });
 
   const severityBorder = { normal: "#00ff88", warning: "#ffcc00", critical: "#ff4444" };
   const severityBg     = { normal: "rgba(0,255,136,0.08)", warning: "rgba(255,200,0,0.08)", critical: "rgba(255,60,60,0.10)" };
 
-  // Quick deterioration events with full physiologic vitals
+  const catColors = {
+    Cardiac:"#ff6b6b", Pulmonary:"#74b9ff", Metabolic:"#fdcb6e",
+    "Renal/Electrolyte":"#a29bfe", Neuro:"#fd79a8", Sepsis:"#ff7675",
+    Toxicology:"#55efc4", "OB/Peds":"#fab1d3", Resuscitation:"#ff4444",
+    "Critical Care":"#e17055", Baseline:"#00b894"
+  };
+
   const quickEvents = [
     { label: "↓ BP Crisis",      color: "#ff6666", fn: () => onUpdate("vitals", { ...vitals, sbp: 72, dbp: 40, map: 51 }) },
     { label: "↓ Desat",          color: "#ff6666", fn: () => onUpdate("vitals", { ...vitals, spo2: 78, rr: 32, etco2: 48 }) },
@@ -1680,7 +2417,7 @@ function InstructorPanel({ state, onUpdate }) {
     { label: "↓ K+ → TdP",      color: "#ffaa44", fn: () => { setLab("potassium", 2.1); selectRhythm("TORSADES"); } },
     { label: "↑ Troponin",       color: "#ffaa44", fn: () => setLab("troponin", 4.2) },
     { label: "↑ Lactate",        color: "#ffaa44", fn: () => setLab("lactate", 5.8) },
-    { label: "Restore Normal",   color: "#00ff88", fn: () => applyScenario(scenarios[0]) },
+    { label: "Restore Normal",   color: "#00ff88", fn: () => applyScenario(ALL_SCENARIOS[ALL_SCENARIOS.length - 1]) },
   ];
 
   return (
@@ -1691,39 +2428,91 @@ function InstructorPanel({ state, onUpdate }) {
         <div style={{ color: "#555", fontSize: 11, marginTop: 4 }}>Scenario: <span style={{ color: "#ffcc44" }}>{scenario}</span></div>
       </div>
 
-      {/* Scenario Presets */}
+      {/* Scenario Library */}
       <div style={{ marginBottom: 18 }}>
-        <div style={{ color: "#6666aa", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>SCENARIO PRESETS</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {scenarios.map(s => (
-            <button key={s.name} onClick={() => applyScenario(s)} style={{
-              fontSize: 10, padding: "5px 10px", borderRadius: 3, cursor: "pointer",
-              border: scenario === s.name ? "1px solid #8888ff" : "1px solid #333355",
-              background: scenario === s.name ? "#2a2a5a" : "#151525",
-              color: scenario === s.name ? "#fff" : "#888"
-            }}>{s.name}</button>
+        <div style={{ color: "#6666aa", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>
+          SCENARIO LIBRARY — {ALL_SCENARIOS.length} scenarios
+        </div>
+        {/* Category filter tabs */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 10 }}>
+          {scenarioCategories.map(cat => (
+            <button key={cat} onClick={() => setScenarioCat(cat)} style={{
+              fontSize: 9, padding: "3px 8px", borderRadius: 10, cursor: "pointer",
+              border: `1px solid ${scenarioCat === cat ? (catColors[cat] || "#8888ff") : "#333355"}`,
+              background: scenarioCat === cat ? `${catColors[cat] || "#8888ff"}22` : "#111120",
+              color: scenarioCat === cat ? (catColors[cat] || "#8888ff") : "#666",
+              fontWeight: scenarioCat === cat ? "bold" : "normal"
+            }}>{cat} {cat !== "All" ? `(${ALL_SCENARIOS.filter(s=>s.category===cat).length})` : `(${ALL_SCENARIOS.length})`}</button>
           ))}
         </div>
+        {/* Scenario buttons */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {filteredScenarios.map(s => {
+            const isActive = scenario === s.name;
+            const col = catColors[s.category] || "#8888ff";
+            return (
+              <button key={s.name} onClick={() => applyScenario(s)} style={{
+                fontSize: 10, padding: "5px 10px", borderRadius: 3, cursor: "pointer",
+                border: `1px solid ${isActive ? col : col + "44"}`,
+                background: isActive ? col + "22" : "#111120",
+                color: isActive ? col : col + "cc",
+                fontWeight: isActive ? "bold" : "normal"
+              }}>{s.name}</button>
+            );
+          })}
+        </div>
+
+        {/* Scenario detail card */}
+        {currentScenarioData && (
+          <div style={{ marginTop: 12, background: "#111130", border: `1px solid ${catColors[currentScenarioData.category] || "#8888ff"}44`, borderRadius: 6, padding: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+              <div>
+                <span style={{ color: catColors[currentScenarioData.category] || "#8888ff", fontSize: 13, fontWeight: "bold" }}>{currentScenarioData.name}</span>
+                <span style={{ color: "#555", fontSize: 10, marginLeft: 10 }}>{currentScenarioData.category}</span>
+              </div>
+              <button onClick={() => setActiveScenario(null)} style={{ background: "none", border: "none", color: "#555", cursor: "pointer", fontSize: 14 }}>✕</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <div style={{ color: "#6666aa", fontSize: 9, letterSpacing: 2, marginBottom: 6 }}>EXPECTED INTERVENTIONS</div>
+                {currentScenarioData.interventions.map((i, idx) => (
+                  <div key={idx} style={{ display: "flex", gap: 6, marginBottom: 4, alignItems: "flex-start" }}>
+                    <span style={{ color: "#ffcc44", fontSize: 9, marginTop: 1, flexShrink: 0 }}>{idx + 1}.</span>
+                    <span style={{ fontSize: 10, color: "#ccc", lineHeight: 1.4 }}>{i}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div style={{ color: "#6666aa", fontSize: 9, letterSpacing: 2, marginBottom: 6 }}>MEDICATIONS LOADED INTO MAR</div>
+                {currentScenarioData.medications.map((m, idx) => (
+                  <div key={idx} style={{ fontSize: 10, color: "#aaa", marginBottom: 4, padding: "3px 6px", background: "#0a0a20", borderRadius: 3, border: "1px solid #222244" }}>
+                    <span style={{ color: "#fff" }}>{m.drug}</span>
+                    <span style={{ color: "#6666aa" }}> {m.dose} {m.route}</span>
+                    <span style={{ color: "#444", float: "right" }}>{m.due}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Rhythm Selector — categorized */}
       <div style={{ marginBottom: 18 }}>
-        <div style={{ color: "#6666aa", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>RHYTHM SELECTION — click to apply ECG + physiologic vitals</div>
-        {Object.entries(categories).map(([cat, rhythms]) => (
-          <div key={cat} style={{ marginBottom: 10 }}>
-            <div style={{ color: "#555", fontSize: 9, letterSpacing: 2, marginBottom: 5, textTransform: "uppercase" }}>── {cat}</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+        <div style={{ color: "#6666aa", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>RHYTHM SELECTION</div>
+        {Object.entries(rhythmCategories).map(([cat, rhythms]) => (
+          <div key={cat} style={{ marginBottom: 8 }}>
+            <div style={{ color: "#444", fontSize: 9, letterSpacing: 2, marginBottom: 4, textTransform: "uppercase" }}>── {cat}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {rhythms.map(r => {
                 const active = rhythm === r.key;
                 return (
                   <button key={r.key} onClick={() => selectRhythm(r.key)} style={{
-                    fontSize: 10, padding: "5px 10px", borderRadius: 3, cursor: "pointer",
+                    fontSize: 9, padding: "4px 8px", borderRadius: 3, cursor: "pointer",
                     border: `1px solid ${active ? r.color : severityBorder[r.severity] + "55"}`,
                     background: active ? severityBg[r.severity] : "#111120",
                     color: active ? r.color : severityBorder[r.severity],
-                    fontWeight: active ? "bold" : "normal",
-                    opacity: active ? 1 : 0.75,
-                    transition: "all 0.15s"
+                    fontWeight: active ? "bold" : "normal", opacity: active ? 1 : 0.7
                   }}>{r.label}</button>
                 );
               })}
@@ -1747,7 +2536,6 @@ function InstructorPanel({ state, onUpdate }) {
             ["etco2", "EtCO₂",        "mmHg", 0,   80],
           ].map(([key, label, unit, min, max]) => {
             const v = vitals[key];
-            // Color-code value if abnormal
             let valColor = "#fff";
             if (key === "hr"   && (v > 100 || v < 60))  valColor = v > 150 || v < 40 ? "#ff4444" : "#ffcc00";
             if (key === "sbp"  && (v < 90  || v > 160)) valColor = v < 70  || v > 180 ? "#ff4444" : "#ffcc00";
@@ -1797,20 +2585,399 @@ function InstructorPanel({ state, onUpdate }) {
           {quickEvents.map(({ label, color, fn }) => (
             <button key={label} onClick={fn} style={{
               fontSize: 10, padding: "6px 12px", borderRadius: 3, cursor: "pointer",
-              border: `1px solid ${color}55`,
-              background: `${color}14`,
+              border: `1px solid ${color}55`, background: `${color}14`,
               color: color, fontWeight: "bold"
             }}>{label}</button>
           ))}
         </div>
       </div>
+
+      {/* O2 Therapy */}
+      {O2Panel && <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #222244" }}><O2Panel /></div>}
+
+      {/* Standing Orders */}
+      {StandingOrdersPanel && <div style={{ marginTop: 4 }}><StandingOrdersPanel /></div>}
+
+      {/* Event Log */}
+      {EventLogPanel && <EventLogPanel />}
+
     </div>
   );
 }
 
-// ─── ROOT APP ───────────────────────────────────────────────────────────────
+
+
+// ─── OUTCOME ENGINE ──────────────────────────────────────────────────────────
+// Each key matches a drug name as it appears in scenario MAR.
+// Handler receives current state, returns { vitals?, labs?, rhythm?, note? }.
+// Applied by App after a short delay to simulate pharmacokinetics.
+
+const OUTCOME_MAP = {
+  // ── VASOPRESSORS / HEMODYNAMICS ───────────────────────────────────────────
+  "Norepinephrine": s => ({
+    vitals: { sbp: Math.min(s.vitals.sbp+28,112), dbp: Math.min(s.vitals.dbp+14,72), map: Math.min(s.vitals.map+20,82), hr: Math.max(s.vitals.hr-6,65) },
+    note: "Norepinephrine ↑ — vasopressor effect: MAP and BP improving"
+  }),
+  "Dopamine": s => ({
+    vitals: { sbp: Math.min(s.vitals.sbp+22,110), dbp: Math.min(s.vitals.dbp+10,68), hr: Math.min(s.vitals.hr+10,95), map: Math.min(s.vitals.map+16,80) },
+    note: "Dopamine ↑ — inotropic/vasopressor: HR and BP improving"
+  }),
+  "Dobutamine": s => ({
+    vitals: { hr: Math.min(s.vitals.hr+12,102), sbp: Math.min(s.vitals.sbp+18,108), spo2: Math.min(s.vitals.spo2+3,96), map: Math.min(s.vitals.map+12,78) },
+    note: "Dobutamine ↑ — improved cardiac output; SpO₂ and BP improving"
+  }),
+  "Nitroglycerin": s => ({
+    vitals: { sbp: Math.max(s.vitals.sbp-18,90), dbp: Math.max(s.vitals.dbp-8,55), map: Math.max(s.vitals.map-14,68), rr: Math.max(s.vitals.rr-4,14) },
+    note: "Nitroglycerin ↑ — venodilation: preload reduced, SOB improving"
+  }),
+  "Nicardipine": s => ({
+    vitals: { sbp: Math.max(s.vitals.sbp-38,148), dbp: Math.max(s.vitals.dbp-18,92), map: Math.max(s.vitals.map-28,108) },
+    note: "Nicardipine ↑ — BP trending toward goal <160"
+  }),
+  "Labetalol": s => ({
+    vitals: { sbp: Math.max(s.vitals.sbp-30,148), dbp: Math.max(s.vitals.dbp-14,90), hr: Math.max(s.vitals.hr-14,65), map: Math.max(s.vitals.map-22,110) },
+    note: "Labetalol ↑ — HR and BP both decreasing"
+  }),
+  "Epinephrine 1:1000": s => ({
+    vitals: { hr: Math.min(s.vitals.hr+18,112), sbp: Math.min(s.vitals.sbp+36,108), rr: Math.max(s.vitals.rr-6,18), spo2: Math.min(s.vitals.spo2+6,96) },
+    note: "Epi 1:1000 IM ↑ — anaphylaxis: BP rising, bronchospasm reversing"
+  }),
+  "Epinephrine": s => ({
+    vitals: { hr: Math.min(s.vitals.hr+20,102), sbp: Math.min(s.vitals.sbp+30,96), map: Math.min(s.vitals.map+22,66) },
+    note: "Epinephrine ↑ — vasopressor/inotropic effect"
+  }),
+  // ── RATE / RHYTHM DRUGS ──────────────────────────────────────────────────
+  "Atropine": s => ({
+    vitals: { hr: Math.min(s.vitals.hr+26,82), sbp: Math.min(s.vitals.sbp+12,100) },
+    rhythm: s.vitals.hr < 50 ? "SBRAD" : s.rhythm,
+    note: "Atropine ↑ — vagolytic: HR increasing"
+  }),
+  "Adenosine": s => ({
+    vitals: { hr: 72, sbp: Math.min(s.vitals.sbp+22,118) },
+    rhythm: "NSR",
+    note: "Adenosine — SVT terminated → Normal Sinus Rhythm restored ✓"
+  }),
+  "Amiodarone": s => ({
+    vitals: { hr: Math.max(s.vitals.hr-20,62) },
+    note: "Amiodarone ↑ — antiarrhythmic loading; monitor for hypotension and QT"
+  }),
+  "Diltiazem": s => ({
+    vitals: { hr: Math.max(s.vitals.hr-32,78) },
+    note: "Diltiazem ↑ — rate controlled; HR decreasing toward <100"
+  }),
+  "Metoprolol": s => ({
+    vitals: { hr: Math.max(s.vitals.hr-12,62), sbp: Math.max(s.vitals.sbp-8,106) },
+    note: "Metoprolol ↑ — beta-blockade: HR and BP mild reduction"
+  }),
+  "Digoxin Immune Fab": s => ({
+    vitals: { hr: Math.min(s.vitals.hr+16,72) },
+    labs: { potassium: { ...s.labs.potassium, val: Math.max(+(s.labs.potassium?.val||5.8)-0.8,4.4) }},
+    rhythm: "NSR",
+    note: "DigiFab ↑ — digoxin binding: HR normalizing. K+ redistributes — do NOT give extra K+"
+  }),
+  // ── DIURETICS ─────────────────────────────────────────────────────────────
+  "Furosemide": s => ({
+    vitals: { sbp: Math.max(s.vitals.sbp-14,106), rr: Math.max(s.vitals.rr-6,14), spo2: Math.min(s.vitals.spo2+5,97) },
+    labs: { potassium: { ...s.labs.potassium, val: Math.max(+(s.labs.potassium?.val||4.0)-0.4,3.1) }},
+    note: "Furosemide ↑ — diuresis: SpO₂ improving, K⁺ may trend down (monitor)"
+  }),
+  // ── BRONCHODILATORS ───────────────────────────────────────────────────────
+  "Albuterol": s => ({
+    vitals: { spo2: Math.min(s.vitals.spo2+7,96), rr: Math.max(s.vitals.rr-8,16), hr: Math.min(s.vitals.hr+8,122) },
+    note: "Albuterol ↑ — bronchodilation: SpO₂↑, RR↓; watch HR (β₁ side effect)"
+  }),
+  "Ipratropium": s => ({
+    vitals: { rr: Math.max(s.vitals.rr-4,18) },
+    note: "Ipratropium ↑ — anticholinergic bronchodilation underway"
+  }),
+  "Albuterol/Ipratropium": s => ({
+    vitals: { spo2: Math.min(s.vitals.spo2+5,94), rr: Math.max(s.vitals.rr-6,18), etco2: Math.max(s.vitals.etco2-8,42) },
+    note: "DuoNeb ↑ — combined bronchodilation: airflow improving"
+  }),
+  // ── STEROIDS ──────────────────────────────────────────────────────────────
+  "Methylprednisolone": s => ({
+    vitals: { rr: Math.max(s.vitals.rr-4,16), spo2: Math.min(s.vitals.spo2+3,95) },
+    labs: { glucose: { ...s.labs.glucose, val: Math.min(+(s.labs.glucose?.val||120)+42,230) }},
+    note: "Methylprednisolone ↑ — anti-inflammatory effect; glucose will rise — monitor Q2H"
+  }),
+  "Hydrocortisone": s => ({
+    vitals: { sbp: Math.min(s.vitals.sbp+20,102), hr: Math.max(s.vitals.hr-10,92) },
+    labs: { glucose: { ...s.labs.glucose, val: Math.min(+(s.labs.glucose?.val||80)+30,180) }},
+    note: "Hydrocortisone ↑ — adrenal replacement: BP improving"
+  }),
+  "Dexamethasone": s => ({
+    vitals: { temp: Math.max(s.vitals.temp-0.8,101.0), hr: Math.max(s.vitals.hr-8,108) },
+    note: "Dexamethasone ↑ — anti-inflammatory; reduces meningitis complications"
+  }),
+  // ── ELECTROLYTE REPLACEMENT ───────────────────────────────────────────────
+  "KCl 20 mEq": s => ({
+    labs: { potassium: { ...s.labs.potassium, val: Math.min(+(s.labs.potassium?.val||2.8)+0.6,4.0) }},
+    note: "KCl 20mEq ↑ — K⁺ repleting; recheck level in 2hrs"
+  }),
+  "KCl 40 mEq": s => ({
+    labs: { potassium: { ...s.labs.potassium, val: Math.min(+(s.labs.potassium?.val||2.5)+1.0,4.4) }},
+    rhythm: s.rhythm === "TORSADES" && +(s.labs.potassium?.val||2.5)+1.0 > 3.2 ? "NSR" : s.rhythm,
+    note: "KCl 40mEq ↑ — K⁺ repleting; if TdP, ensure Mg also given"
+  }),
+  "KCl": s => ({
+    labs: { potassium: { ...s.labs.potassium, val: Math.min(+(s.labs.potassium?.val||2.5)+0.8,4.2) }},
+    note: "KCl ↑ — K⁺ repleting; recheck in 2hrs"
+  }),
+  "Magnesium Sulfate": s => {
+    const newK = +(s.labs.potassium?.val||3.0);
+    const terminates = s.rhythm === "TORSADES" && newK > 3.0;
+    return {
+      vitals: terminates ? { hr: 78, sbp: Math.min(s.vitals.sbp+20,114), spo2: Math.min(s.vitals.spo2+4,96) } : s.vitals,
+      labs: { magnesium: { val: Math.min(+(s.labs.magnesium?.val||0.8)+1.2,2.0), ref: "1.7-2.2", unit: "mg/dL" }},
+      rhythm: terminates ? "NSR" : s.rhythm,
+      note: terminates
+        ? "Magnesium Sulfate ↑ — TdP TERMINATED → NSR! Ensure K⁺ repleted too ✓"
+        : "Magnesium Sulfate ↑ — Mg repleting; TdP suppression underway"
+    };
+  },
+  "Calcium Gluconate": s => ({
+    vitals: { hr: Math.min(s.vitals.hr+10,72), sbp: Math.min(s.vitals.sbp+14,98) },
+    note: "Calcium gluconate ↑ — membrane stabilization; cardiac conduction improving"
+  }),
+  "Sodium Bicarbonate": s => ({
+    labs: {
+      ph:  { ...s.labs.ph,  val: Math.min(+(s.labs.ph?.val||7.15)+0.08,7.40) },
+      co2: { ...s.labs.co2, val: Math.min(+(s.labs.co2?.val||10)+6,22) },
+      hco3:{ ...s.labs.hco3,val: Math.min(+(s.labs.hco3?.val||8)+6,20) },
+    },
+    note: "Bicarb ↑ — pH improving; monitor for overshoot and hypocalcemia"
+  }),
+  "3% NaCl": s => ({
+    labs: { sodium: { ...s.labs.sodium, val: Math.min(+(s.labs.sodium?.val||108)+5,128) }},
+    vitals: { hr: Math.max(s.vitals.hr-8,110) },
+    note: "3% NaCl ↑ — Na⁺ rising; max correction 4-6 mEq/L in first hour (avoid ODS)"
+  }),
+  // ── FLUIDS ────────────────────────────────────────────────────────────────
+  "Normal Saline 1L": s => ({
+    vitals: { sbp: Math.min(s.vitals.sbp+18,98), hr: Math.max(s.vitals.hr-10,90), map: Math.min(s.vitals.map+14,70) },
+    note: "NS 1L bolus ↑ — volume resuscitation: BP and HR improving"
+  }),
+  "NS 0.9%": s => ({
+    vitals: { sbp: Math.min(s.vitals.sbp+16,98), hr: Math.max(s.vitals.hr-8,90) },
+    note: "NS bolus ↑ — volume expanding: BP improving"
+  }),
+  "pRBC": s => ({
+    vitals: { hr: Math.max(s.vitals.hr-12,92), sbp: Math.min(s.vitals.sbp+14,94) },
+    labs: {
+      hgb: { ...s.labs.hgb, val: Math.min(+(s.labs.hgb?.val||6.0)+1.2,10.0) },
+      hct: { ...s.labs.hct, val: Math.min(+(s.labs.hct?.val||18)+3.6,30.0) },
+    },
+    note: "pRBC transfusing ↑ — Hgb rising; HR and BP improving"
+  }),
+  // ── GLUCOSE ───────────────────────────────────────────────────────────────
+  "Dextrose 50%": s => ({
+    labs: { glucose: { ...s.labs.glucose, val: Math.min(+(s.labs.glucose?.val||28)+130,180) }},
+    vitals: { hr: Math.max(s.vitals.hr-12,82), sbp: Math.min(s.vitals.sbp+8,138) },
+    note: "D50 ↑ — glucose rapidly rising; recheck fingerstick Q15min"
+  }),
+  "Dextrose 10%": s => ({
+    labs: { glucose: { ...s.labs.glucose, val: Math.min(+(s.labs.glucose?.val||60)+40,140) }},
+    note: "D10% ↑ — glucose stabilizing"
+  }),
+  "Regular Insulin": s => ({
+    labs: { glucose: { ...s.labs.glucose, val: Math.max(+(s.labs.glucose?.val||400)-80,200) }},
+    note: "Insulin drip ↑ — glucose declining; recheck Q1H; watch K⁺ closely"
+  }),
+  "Regular Insulin (HIET)": s => ({
+    vitals: { hr: Math.min(s.vitals.hr+8,56), sbp: Math.min(s.vitals.sbp+10,80) },
+    labs: { glucose: { ...s.labs.glucose, val: Math.max(+(s.labs.glucose?.val||56)-15,60) }},
+    note: "HIET ↑ — high-dose insulin: cardiac contractility improving; glucose Q30min"
+  }),
+  // ── ANTIDOTES ─────────────────────────────────────────────────────────────
+  "Naloxone": s => ({
+    vitals: { rr: Math.min(s.vitals.rr+7,14), spo2: Math.min(s.vitals.spo2+10,94), hr: Math.min(s.vitals.hr+8,72) },
+    labs: { paco2: { ...s.labs.paco2, val: Math.max(+(s.labs.paco2?.val||70)-20,45) }},
+    note: "Naloxone ↑ — opioid reversal: RR and SpO₂ improving; watch for re-sedation"
+  }),
+  "N-Acetylcysteine (NAC)": s => ({
+    note: "NAC ↑ — hepatoprotection initiated; LFTs trend over 24hrs; continue 21hr protocol"
+  }),
+  "Glucagon": s => ({
+    vitals: { hr: Math.min(s.vitals.hr+12,62), sbp: Math.min(s.vitals.sbp+14,82) },
+    note: "Glucagon ↑ — bypasses beta receptors: HR and contractility improving"
+  }),
+  "Alteplase (tPA)": s => ({
+    vitals: { sbp: Math.max(s.vitals.sbp-8,162) },
+    note: "tPA ↑ — thrombolysis active; strict BP <185/110; NO antiplatelets x24h; neuro Q15min"
+  }),
+  // ── ANTIBIOTICS ───────────────────────────────────────────────────────────
+  "Piperacillin-Tazobactam": s => ({
+    vitals: { temp: Math.max(s.vitals.temp-0.5,101.2) },
+    labs: { wbc: { ...s.labs.wbc, val: Math.max(+(s.labs.wbc?.val||22)-2.0,12.0) }},
+    note: "Pip-tazo ↑ — broad-spectrum coverage; WBC trends down over 24-48hrs"
+  }),
+  "Vancomycin": s => ({
+    labs: { wbc: { ...s.labs.wbc, val: Math.max(+(s.labs.wbc?.val||18)-1.5,10.0) }},
+    note: "Vancomycin ↑ — MRSA coverage; monitor AUC/MIC and creatinine"
+  }),
+  "Ceftriaxone": s => ({
+    vitals: { temp: Math.max(s.vitals.temp-0.6,100.8) },
+    note: "Ceftriaxone ↑ — antibiotic effect; defervescence expected over 24-48hrs"
+  }),
+  "Cefepime": s => ({
+    vitals: { temp: Math.max(s.vitals.temp-0.5,101.0) },
+    labs: { wbc: { ...s.labs.wbc, val: Math.max(+(s.labs.wbc?.val||14)-1.0,8.0) }},
+    note: "Cefepime ↑ — anti-pseudomonal; monitor for neurotoxicity (seizures)"
+  }),
+  // ── ENDOCRINE ─────────────────────────────────────────────────────────────
+  "Levothyroxine": s => ({
+    vitals: { hr: Math.min(s.vitals.hr+6,56), temp: Math.min(s.vitals.temp+0.8,96.8) },
+    note: "Levothyroxine ↑ — HR and temp slowly normalizing (24-48hr effect)"
+  }),
+  "Propranolol": s => ({
+    vitals: { hr: Math.max(s.vitals.hr-22,108), sbp: Math.max(s.vitals.sbp-16,144) },
+    note: "Propranolol ↑ — rate control + blocks T4→T3 conversion: HR trending ↓"
+  }),
+  "PTU": s => ({
+    vitals: { hr: Math.max(s.vitals.hr-10,140) },
+    note: "PTU ↑ — blocks synthesis; effect over 1-2hrs; T3 reduction takes days"
+  }),
+  "Lorazepam": s => ({
+    vitals: { hr: Math.max(s.vitals.hr-16,90), sbp: Math.max(s.vitals.sbp-10,140) },
+    note: "Lorazepam ↑ — seizure/agitation reducing; monitor respiratory rate"
+  }),
+  "Pantoprazole": s => ({
+    note: "Pantoprazole ↑ — gastric acid suppression; clinical effect in 1-2hrs"
+  }),
+};
+
+// ── Oxygen delivery outcomes ────────────────────────────────────────────────
+const O2_OUTCOMES = {
+  room_air:    { spo2Delta: 0,  rrDelta: 0,  note: "Room air — no supplemental O₂ change" },
+  nasal_2:     { spo2Delta: 4,  rrDelta: -1, note: "NC 2L ↑ — FiO₂ ~28%; SpO₂ improving" },
+  nasal_4:     { spo2Delta: 6,  rrDelta: -1, note: "NC 4L ↑ — FiO₂ ~36%; SpO₂ improving" },
+  nasal_6:     { spo2Delta: 8,  rrDelta: -2, note: "NC 6L ↑ — FiO₂ ~44%; SpO₂ improving" },
+  simple_mask: { spo2Delta: 9,  rrDelta: -2, note: "Simple mask 6-10L ↑ — FiO₂ ~40-60%; SpO₂ improving" },
+  venturi_28:  { spo2Delta: 3,  rrDelta: 0,  note: "Venturi 28% ↑ — controlled FiO₂; target SpO₂ 88-92% (COPD)" },
+  venturi_35:  { spo2Delta: 5,  rrDelta: -1, note: "Venturi 35% ↑ — controlled FiO₂" },
+  nrb:         { spo2Delta: 14, rrDelta: -4, note: "NRB 15L ↑ — FiO₂ ~90%; SpO₂ rapidly improving" },
+  hfnc_40:     { spo2Delta: 11, rrDelta: -5, note: "HFNC 40L/40% ↑ — high-flow; SpO₂ and WOB both improving" },
+  hfnc_60:     { spo2Delta: 16, rrDelta: -6, note: "HFNC 60L/60% ↑ — significant SpO₂ improvement; comfort ↑" },
+  cpap:        { spo2Delta: 14, rrDelta: -6, note: "CPAP ↑ — PEEP recruits alveoli; SpO₂ and RR improving" },
+  bipap:       { spo2Delta: 15, rrDelta: -7, note: "BiPAP ↑ — IPAP/EPAP; SpO₂, RR and WOB all improving" },
+};
+
 function App() {
-  const [state, setState] = useState(INITIAL_STATE);
+  const [state, setState] = useState({
+    ...INITIAL_STATE,
+    o2: { device: "room_air", applied: false },
+    eventLog: [],
+    standingOrders: {
+      k_repletion:  { enabled: true,  threshold: 3.5, dose: "KCl 40 mEq IV over 4hrs" },
+      mg_repletion: { enabled: true,  threshold: 1.8, dose: "Magnesium Sulfate 2g IV over 2hrs" },
+      glucose_low:  { enabled: true,  threshold: 70,  dose: "Dextrose 50% 1 amp IV push" },
+      glucose_high: { enabled: false, threshold: 180, dose: "Regular Insulin per sliding scale" },
+    },
+  });
+  const [activeView, setActiveView] = useState("all");
+  const outcomeTimers = useRef([]);
+  const prevLabsRef = useRef({});
+
+  const handleUpdate = useCallback((key, value) => {
+    setState(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  const handleMARUpdate = useCallback((medId, field, value) => {
+    setState(prev => ({
+      ...prev,
+      medications: prev.medications.map(m => m.id === medId ? { ...m, [field]: value } : m)
+    }));
+  }, []);
+
+  // ── Outcome engine: fires when a med is newly marked "given" ──────────────
+  useEffect(() => {
+    state.medications.forEach(med => {
+      if (med.status !== "given" || med._outcomeApplied) return;
+      const handler = OUTCOME_MAP[med.drug];
+      // Mark processed immediately (prevents double-fire)
+      setState(prev => ({
+        ...prev,
+        medications: prev.medications.map(m => m.id === med.id ? { ...m, _outcomeApplied: true } : m),
+        eventLog: [{ ts: new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"}), note: `💊 ${med.drug} ${med.dose} ${med.route} — administered`, color: "#74b9ff" }, ...prev.eventLog].slice(0,40)
+      }));
+      if (!handler) return;
+      // Physiologic response after 2-4 second sim delay
+      const tid = setTimeout(() => {
+        setState(prev => {
+          const out = handler(prev);
+          const ts = new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+          const newVitals = out.vitals ? { ...prev.vitals, ...out.vitals } : prev.vitals;
+          let newLabs = prev.labs;
+          if (out.labs) {
+            newLabs = { ...prev.labs };
+            Object.entries(out.labs).forEach(([k,v]) => { newLabs[k] = { ...prev.labs[k], ...v }; });
+          }
+          const newRhythm = out.rhythm || prev.rhythm;
+          const newLog = out.note
+            ? [{ ts, note: `📈 ${out.note}`, color: "#00ff88" }, ...prev.eventLog].slice(0,40)
+            : prev.eventLog;
+          return { ...prev, vitals: newVitals, labs: newLabs, rhythm: newRhythm, eventLog: newLog };
+        });
+      }, 2500 + Math.random()*1500);
+      outcomeTimers.current.push(tid);
+    });
+  }, [state.medications]);
+
+  // ── O2 outcome engine ─────────────────────────────────────────────────────
+  const prevO2Ref = useRef(null);
+  useEffect(() => {
+    if (!state.o2.applied) { prevO2Ref.current = null; return; }
+    const key = state.o2.device;
+    if (prevO2Ref.current === key) return; // already applied this device
+    prevO2Ref.current = key;
+    const cfg = O2_OUTCOMES[key];
+    if (!cfg || cfg.spo2Delta === 0) return;
+    const tid = setTimeout(() => {
+      setState(prev => {
+        const ts = new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+        return {
+          ...prev,
+          vitals: {
+            ...prev.vitals,
+            spo2: Math.min(prev.vitals.spo2 + cfg.spo2Delta, 99),
+            rr: Math.max(prev.vitals.rr + cfg.rrDelta, 12),
+          },
+          eventLog: [{ ts, note: `🫁 ${cfg.note}`, color: "#a29bfe" }, ...prev.eventLog].slice(0,40)
+        };
+      });
+    }, 3000);
+    outcomeTimers.current.push(tid);
+  }, [state.o2.applied, state.o2.device]);
+
+  // ── Standing order watcher ────────────────────────────────────────────────
+  useEffect(() => {
+    const so = state.standingOrders;
+    const labs = state.labs;
+    const prev = prevLabsRef.current;
+    const addSOLog = (note) => setState(p => ({
+      ...p, eventLog: [{ ts: new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"}), note, color: "#fdcb6e" }, ...p.eventLog].slice(0,40)
+    }));
+    const k = +(labs.potassium?.val||999), mg = +(labs.magnesium?.val||999), gl = +(labs.glucose?.val||999);
+    const pk = +(prev.potassium?.val||999), pmg = +(prev.magnesium?.val||999), pgl = +(prev.glucose?.val||999);
+    if (so.k_repletion.enabled  && k  < so.k_repletion.threshold  && k  < pk)  addSOLog(`⚡ STANDING ORDER: K⁺ ${k} < ${so.k_repletion.threshold} mEq/L → ${so.k_repletion.dose} order placed`);
+    if (so.mg_repletion.enabled && mg < so.mg_repletion.threshold && mg < pmg) addSOLog(`⚡ STANDING ORDER: Mg ${mg} < ${so.mg_repletion.threshold} mg/dL → ${so.mg_repletion.dose} order placed`);
+    if (so.glucose_low.enabled  && gl < so.glucose_low.threshold  && gl < pgl) addSOLog(`⚡ STANDING ORDER: Glucose ${gl} < ${so.glucose_low.threshold} → ${so.glucose_low.dose} order placed`);
+    if (so.glucose_high.enabled && gl > so.glucose_high.threshold && gl > pgl) addSOLog(`⚡ STANDING ORDER: Glucose ${gl} > ${so.glucose_high.threshold} → ${so.glucose_high.dose} order placed`);
+    prevLabsRef.current = labs;
+  }, [state.labs, state.standingOrders]);
+
+  // ── Alarm computation ─────────────────────────────────────────────────────
+  useEffect(() => {
+    const alarms = [];
+    const { vitals, rhythm } = state;
+    if (vitals.hr > 150 || vitals.hr < 40) alarms.push(`HR ${vitals.hr} bpm — out of range`);
+    if (vitals.sbp < 90) alarms.push(`BP ${vitals.sbp}/${vitals.dbp} — hypotension`);
+    if (vitals.spo2 < 92) alarms.push(`SpO₂ ${vitals.spo2}% — desaturation`);
+    if (rhythm === "VFIB")    alarms.push("V-FIB DETECTED — Call code");
+    if (rhythm === "ASYSTOLE") alarms.push("ASYSTOLE — No pulse");
+    if (rhythm === "VTACH")   alarms.push("V-TACH — Prepare for cardioversion");
+    setState(prev => ({ ...prev, alarms }));
+  }, [state.vitals, state.rhythm]);
   const [activeView, setActiveView] = useState("all");
 
   const handleUpdate = useCallback((key, value) => {
@@ -1839,45 +3006,163 @@ function App() {
 
   const views = ["all", "instructor", "student", "monitor"];
 
+  // ── O2 Panel component (passed as prop to InstructorPanel) ─────────────────
+  const O2Panel = () => {
+    const DEVICES = [
+      { key:"room_air",    icon:"🌬️", label:"Room Air",      fio2:"21%"     },
+      { key:"nasal_2",     icon:"👃", label:"NC 2L",         fio2:"28%"     },
+      { key:"nasal_4",     icon:"👃", label:"NC 4L",         fio2:"36%"     },
+      { key:"nasal_6",     icon:"👃", label:"NC 6L",         fio2:"44%"     },
+      { key:"simple_mask", icon:"😷", label:"Simple Mask",   fio2:"40-60%"  },
+      { key:"venturi_28",  icon:"🎭", label:"Venturi 28%",   fio2:"28% ctrl"},
+      { key:"venturi_35",  icon:"🎭", label:"Venturi 35%",   fio2:"35% ctrl"},
+      { key:"nrb",         icon:"💨", label:"NRB 15L",       fio2:"~90%"    },
+      { key:"hfnc_40",     icon:"🌊", label:"HFNC 40L/40%", fio2:"40% HF"  },
+      { key:"hfnc_60",     icon:"🌊", label:"HFNC 60L/60%", fio2:"60% HF"  },
+      { key:"cpap",        icon:"🔄", label:"CPAP",          fio2:"Variable"},
+      { key:"bipap",       icon:"🔄", label:"BiPAP",         fio2:"Variable"},
+    ];
+    const cur = state.o2;
+    const curLabel = DEVICES.find(d=>d.key===cur.device)?.label || cur.device;
+    return (
+      <div style={{ background:"#060f20", border:"1px solid #0d2a50", borderRadius:6, padding:10, marginBottom:12 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+          <span style={{ color:"#4d9ef5", fontSize:10, fontWeight:"bold", letterSpacing:2 }}>🫁 OXYGEN THERAPY</span>
+          <span style={{ fontSize:10, fontWeight:"bold", color: cur.applied ? "#00ff88" : "#ff5555" }}>
+            {cur.applied ? `✓ ON — ${curLabel}` : "⊘ OFF"}
+          </span>
+        </div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:3, marginBottom:8 }}>
+          {DEVICES.map(d => (
+            <button key={d.key} onClick={() => handleUpdate("o2", { ...cur, device:d.key, applied:false })}
+              style={{ fontSize:9, padding:"3px 7px", borderRadius:3, cursor:"pointer",
+                border:`1px solid ${cur.device===d.key?"#2d6abf":"#0d2a50"}`,
+                background: cur.device===d.key ? "#0d2a50" : "#030810",
+                color: cur.device===d.key ? "#74b9ff" : "#2d5080",
+                fontWeight: cur.device===d.key ? "bold" : "normal" }}>
+              {d.icon} {d.label}
+              <span style={{ color:"#1a3050", fontSize:7, marginLeft:3 }}>{d.fio2}</span>
+            </button>
+          ))}
+        </div>
+        <button onClick={() => {
+          const nowOn = !cur.applied;
+          handleUpdate("o2", { ...cur, applied: nowOn });
+          if (nowOn) {
+            setState(prev => ({
+              ...prev,
+              o2: { ...prev.o2, applied: true },
+              eventLog: [{ ts: new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"}),
+                note: `🫁 O₂ applied: ${curLabel} — awaiting SpO₂ response`, color:"#a29bfe" },
+                ...prev.eventLog].slice(0,40)
+            }));
+          }
+        }} style={{
+          fontSize:11, padding:"5px 18px", borderRadius:4, cursor:"pointer", fontWeight:"bold",
+          border:`1px solid ${cur.applied?"#aa3333":"#006633"}`,
+          background: cur.applied ? "#1a0505" : "#001a0d",
+          color: cur.applied ? "#ff6666" : "#00dd66"
+        }}>
+          {cur.applied ? "⏹ Remove O₂" : "▶ Apply O₂"}
+        </button>
+      </div>
+    );
+  };
+
+  // ── Standing Orders Panel ─────────────────────────────────────────────────
+  const StandingOrdersPanel = () => {
+    const so = state.standingOrders;
+    const rows = [
+      { key:"k_repletion",  label:"K⁺ Repletion",     labKey:"potassium", unit:"mEq/L", dir:"<", color:"#f0c040" },
+      { key:"mg_repletion", label:"Mg Repletion",      labKey:"magnesium", unit:"mg/dL", dir:"<", color:"#b388ff" },
+      { key:"glucose_low",  label:"Hypoglycemia Tx",   labKey:"glucose",   unit:"mg/dL", dir:"<", color:"#ff8a65" },
+      { key:"glucose_high", label:"Hyperglycemia Tx",  labKey:"glucose",   unit:"mg/dL", dir:">", color:"#ffcc44" },
+    ];
+    return (
+      <div style={{ background:"#0a140a", border:"1px solid #0d280d", borderRadius:6, padding:10, marginBottom:12 }}>
+        <div style={{ color:"#00bb55", fontSize:10, fontWeight:"bold", letterSpacing:2, marginBottom:8 }}>📋 STANDING ORDERS — AUTO-REPLETION</div>
+        {rows.map(row => {
+          const ord = so[row.key];
+          const curVal = +(state.labs[row.labKey]?.val || 0);
+          const triggered = ord.enabled && curVal > 0 && (row.dir==="<" ? curVal < ord.threshold : curVal > ord.threshold);
+          return (
+            <div key={row.key} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5, padding:"3px 6px",
+              background: triggered ? "#0d1f0d" : "#050a05",
+              border:`1px solid ${triggered?"#1a4a1a":"#0a180a"}`, borderRadius:3 }}>
+              <button onClick={() => handleUpdate("standingOrders", { ...so, [row.key]:{ ...ord, enabled:!ord.enabled } })}
+                style={{ fontSize:9, padding:"2px 5px", borderRadius:2, cursor:"pointer", border:"none",
+                  background: ord.enabled ? "#006633" : "#222", color:"white", minWidth:30 }}>
+                {ord.enabled ? "ON" : "OFF"}
+              </button>
+              <span style={{ color:row.color, fontSize:10, width:108, flexShrink:0 }}>{row.label}</span>
+              <span style={{ color:"#444", fontSize:9 }}>{row.dir}</span>
+              <input type="number" value={ord.threshold} step={row.key.includes("glucose") ? 5 : 0.1}
+                onChange={e => handleUpdate("standingOrders", { ...so, [row.key]:{ ...ord, threshold:+e.target.value } })}
+                style={{ width:48, fontSize:10, padding:"1px 3px", background:"#111", border:"1px solid #333", color:"#ccc", borderRadius:2 }} />
+              <span style={{ color:"#333", fontSize:9, flexShrink:0 }}>{row.unit}</span>
+              <span style={{ color:"#334", fontSize:9, flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{ord.dose}</span>
+              {triggered && <span style={{ color:"#00ff88", fontSize:9, fontWeight:"bold", flexShrink:0 }}>⚡ ACTIVE</span>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ── Event Log ─────────────────────────────────────────────────────────────
+  const EventLogPanel = () => (
+    <div style={{ background:"#08080f", border:"1px solid #15152a", borderRadius:6, padding:10, marginTop:12, maxHeight:172, overflowY:"auto" }}>
+      <div style={{ color:"#44446a", fontSize:9, letterSpacing:2, marginBottom:6, fontWeight:"bold" }}>SIMULATION EVENT LOG</div>
+      {state.eventLog.length === 0
+        ? <div style={{ color:"#222", fontSize:10, fontStyle:"italic" }}>No events yet — give a medication or apply O₂ to see live outcomes</div>
+        : state.eventLog.map((ev,i) => (
+          <div key={i} style={{ display:"flex", gap:8, marginBottom:2, fontSize:10 }}>
+            <span style={{ color:"#333", fontFamily:"monospace", minWidth:72 }}>{ev.ts}</span>
+            <span style={{ color:ev.color }}>{ev.note}</span>
+          </div>
+        ))
+      }
+    </div>
+  );
+
   return (
     <div style={{ fontFamily: "sans-serif" }}>
-      {/* View Switcher */}
-      <div style={{ background: "#0d1117", padding: "8px 16px", display: "flex", gap: 8, alignItems: "center", borderBottom: "2px solid #30363d" }}>
-        <span style={{ color: "#58a6ff", fontSize: 12, fontWeight: "bold", marginRight: 8 }}>SimLab EMR</span>
+      <div style={{ background:"#0d1117", padding:"8px 16px", display:"flex", gap:8, alignItems:"center", borderBottom:"2px solid #30363d" }}>
+        <span style={{ color:"#58a6ff", fontSize:12, fontWeight:"bold", marginRight:8 }}>SimLab EMR</span>
         {views.map(v => (
           <button key={v} onClick={() => setActiveView(v)} style={{
-            fontSize: 11, padding: "4px 12px", borderRadius: 4, cursor: "pointer", border: "none",
-            background: activeView === v ? "#58a6ff" : "#21262d", color: activeView === v ? "#000" : "#8b949e",
-            fontWeight: activeView === v ? "bold" : "normal", textTransform: "capitalize"
+            fontSize:11, padding:"4px 12px", borderRadius:4, cursor:"pointer", border:"none",
+            background: activeView===v ? "#58a6ff" : "#21262d",
+            color: activeView===v ? "#000" : "#8b949e",
+            fontWeight: activeView===v ? "bold" : "normal", textTransform:"capitalize"
           }}>
-            {v === "all" ? "All Views" : v === "instructor" ? "Instructor" : v === "student" ? "Student EMR" : "Bedside Monitor"}
+            {v==="all" ? "All Views" : v==="instructor" ? "Instructor" : v==="student" ? "Student EMR" : "Bedside Monitor"}
           </button>
         ))}
-        <span style={{ marginLeft: "auto", color: "#555", fontSize: 10 }}>All screens share live data</span>
+        <span style={{ marginLeft:"auto", color:"#555", fontSize:10 }}>All screens share live data</span>
       </div>
 
-      {/* Render views */}
       {activeView === "all" ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "auto auto", gap: 0 }}>
-          <div style={{ borderRight: "2px solid #333", borderBottom: "2px solid #333" }}>
-            <div style={{ background: "#161b22", padding: "4px 12px", fontSize: 10, color: "#58a6ff", letterSpacing: 2, fontFamily: "monospace" }}>INSTRUCTOR TERMINAL</div>
-            <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "138%", pointerEvents: "all" }}>
-              <InstructorPanel state={state} onUpdate={handleUpdate} />
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:0 }}>
+          <div style={{ borderRight:"2px solid #333", borderBottom:"2px solid #333" }}>
+            <div style={{ background:"#161b22", padding:"4px 12px", fontSize:10, color:"#58a6ff", letterSpacing:2, fontFamily:"monospace" }}>INSTRUCTOR TERMINAL</div>
+            <div style={{ transform:"scale(0.72)", transformOrigin:"top left", width:"138%", pointerEvents:"all" }}>
+              <InstructorPanel state={state} onUpdate={handleUpdate} O2Panel={O2Panel} StandingOrdersPanel={StandingOrdersPanel} EventLogPanel={EventLogPanel} />
             </div>
           </div>
-          <div style={{ borderBottom: "2px solid #333" }}>
-            <div style={{ background: "#161b22", padding: "4px 12px", fontSize: 10, color: "#58a6ff", letterSpacing: 2, fontFamily: "monospace" }}>STUDENT EMR TERMINAL</div>
-            <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "138%", pointerEvents: "all" }}>
+          <div style={{ borderBottom:"2px solid #333" }}>
+            <div style={{ background:"#161b22", padding:"4px 12px", fontSize:10, color:"#58a6ff", letterSpacing:2, fontFamily:"monospace" }}>STUDENT EMR TERMINAL</div>
+            <div style={{ transform:"scale(0.72)", transformOrigin:"top left", width:"138%", pointerEvents:"all" }}>
               <StudentEMR state={state} onMARUpdate={handleMARUpdate} />
             </div>
           </div>
-          <div style={{ gridColumn: "1 / -1" }}>
-            <div style={{ background: "#161b22", padding: "4px 12px", fontSize: 10, color: "#00ff88", letterSpacing: 2, fontFamily: "monospace" }}>BEDSIDE MONITOR (HDMI OUTPUT)</div>
+          <div style={{ gridColumn:"1 / -1" }}>
+            <div style={{ background:"#161b22", padding:"4px 12px", fontSize:10, color:"#00ff88", letterSpacing:2, fontFamily:"monospace" }}>BEDSIDE MONITOR</div>
             <BedsideMonitor state={state} />
           </div>
         </div>
       ) : activeView === "instructor" ? (
-        <InstructorPanel state={state} onUpdate={handleUpdate} />
+        <InstructorPanel state={state} onUpdate={handleUpdate} O2Panel={O2Panel} StandingOrdersPanel={StandingOrdersPanel} EventLogPanel={EventLogPanel} />
       ) : activeView === "student" ? (
         <StudentEMR state={state} onMARUpdate={handleMARUpdate} />
       ) : (
