@@ -2978,32 +2978,6 @@ function App() {
     if (rhythm === "VTACH")   alarms.push("V-TACH — Prepare for cardioversion");
     setState(prev => ({ ...prev, alarms }));
   }, [state.vitals, state.rhythm]);
-  const [activeView, setActiveView] = useState("all");
-
-  const handleUpdate = useCallback((key, value) => {
-    setState(prev => ({ ...prev, [key]: value }));
-  }, []);
-
-  const handleMARUpdate = useCallback((medId, field, value) => {
-    setState(prev => ({
-      ...prev,
-      medications: prev.medications.map(m => m.id === medId ? { ...m, [field]: value } : m)
-    }));
-  }, []);
-
-  // Compute alarms
-  useEffect(() => {
-    const alarms = [];
-    const { vitals, rhythm } = state;
-    if (vitals.hr > 150 || vitals.hr < 40) alarms.push(`HR ${vitals.hr} bpm — out of range`);
-    if (vitals.sbp < 90) alarms.push(`BP ${vitals.sbp}/${vitals.dbp} — hypotension`);
-    if (vitals.spo2 < 92) alarms.push(`SpO₂ ${vitals.spo2}% — desaturation`);
-    if (rhythm === "VFIB") alarms.push("V-FIB DETECTED — Call code");
-    if (rhythm === "ASYSTOLE") alarms.push("ASYSTOLE — No pulse");
-    if (rhythm === "VTACH") alarms.push("V-TACH — Prepare for cardioversion");
-    setState(prev => ({ ...prev, alarms }));
-  }, [state.vitals, state.rhythm]);
-
   const views = ["all", "instructor", "student", "monitor"];
 
   // ── O2 Panel component (passed as prop to InstructorPanel) ─────────────────
