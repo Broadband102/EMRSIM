@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -18,9 +19,13 @@
   <div id="root"></div>
 
   <!-- React + ReactDOM -->
+
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
   <!-- Babel for in-browser JSX transform -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 
   <script type="text/babel">
@@ -191,317 +196,430 @@ function useAlarmAudio(rhythm, vitals, muted) {
 // severity: "normal" | "warning" | "critical"
 
 const RHYTHMS = {
-  // ── NORMAL ──────────────────────────────────────────────────────────────
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // NORMAL
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   NSR: {
     label: "Normal Sinus Rhythm", rate: 72, color: "#00ff88", irregular: false,
     category: "Normal", severity: "normal",
     vitals: { hr: 72, sbp: 118, dbp: 76, spo2: 98, rr: 14, temp: 98.6, etco2: 38, map: 90 },
-    // Textbook 72bpm NSR: PR=160ms, QRS=80ms, QT=360ms, TP=400ms
-    // P:0.00-0.10  PR-seg:0.10-0.20  QRS:0.20-0.28  ST:0.28-0.36  T:0.36-0.56  TP:0.56-1.0
+    // 72bpm = 833ms/beat. At 100px/s: beat = 83px
+    // P wave: 80ms = 0.096 units. PR total: 160ms = 0.192. QRS: 80ms = 0.096.
+    // ST: 120ms = 0.144. T wave: 160ms = 0.192. TP: ~240ms = 0.288 → ratio OK
+    // All amplitudes normalized: R peak = 2.5 (tall), P = 0.22, T = 0.45
     segments: [
-      // Flat baseline
-      { t: "L", pts: [[0,0],[0.04,0]] },
-      // P wave — rounded, upright, symmetric, 0.10 wide, amplitude 0.22
-      { t: "B", pts: [[0.04,0],[0.06,0.10],[0.08,0.22],[0.09,0.24]] },
-      { t: "B", pts: [[0.09,0.24],[0.10,0.22],[0.12,0.10],[0.13,0.02]] },
-      { t: "B", pts: [[0.13,0.02],[0.135,0.01],[0.140,0],[0.145,0]] },
-      // PR segment — isoelectric, 160ms total PR - 80ms P = 80ms segment
-      { t: "L", pts: [[0.145,0],[0.215,0]] },
-      // QRS — Q small dip, R tall narrow spike, S small dip, return
-      { t: "B", pts: [[0.215,0],[0.220,-0.07],[0.225,-0.12],[0.228,-0.14]] },
-      { t: "B", pts: [[0.228,-0.14],[0.233,0.6],[0.238,1.8],[0.241,2.5]] },
-      { t: "B", pts: [[0.241,2.5],[0.244,1.2],[0.249,-0.25],[0.253,-0.38]] },
-      { t: "B", pts: [[0.253,-0.38],[0.257,-0.20],[0.261,-0.04],[0.265,0]] },
-      // ST segment — flat isoelectric
-      { t: "L", pts: [[0.265,0],[0.285,0.01]] },
-      // T wave — asymmetric: gradual rise, rounded peak, slightly faster fall
-      { t: "B", pts: [[0.285,0.01],[0.300,0.08],[0.320,0.30],[0.338,0.44]] },
-      { t: "B", pts: [[0.338,0.44],[0.348,0.40],[0.360,0.24],[0.372,0.08]] },
-      { t: "B", pts: [[0.372,0.08],[0.378,0.03],[0.383,0.01],[0.388,0]] },
-      // Long TP segment back to next P
-      { t: "L", pts: [[0.388,0],[1.0,0]] },
+      // Flat TP baseline leading into P
+      { t: "L", pts: [[0,0],[0.050,0]] },
+      // P wave: smooth dome, 80ms, upright, no notch in lead II equivalent
+      // Slight asymmetry: upstroke faster than downstroke
+      { t: "B", pts: [[0.050,0],[0.066,0.08],[0.082,0.20],[0.096,0.22]] },
+      { t: "B", pts: [[0.096,0.22],[0.110,0.20],[0.124,0.10],[0.134,0.02]] },
+      { t: "B", pts: [[0.134,0.02],[0.138,0.01],[0.142,0],[0.146,0]] },
+      // PR segment: flat isoelectric (160ms total - 96ms P = 64ms segment = 0.077)
+      { t: "L", pts: [[0.146,0],[0.192,0]] },
+      // QRS: 80ms = 0.096 units. Small Q, tall narrow R, small S
+      { t: "B", pts: [[0.192,0],[0.196,-0.06],[0.199,-0.11],[0.201,-0.14]] },
+      // R wave: sharp, narrow peak
+      { t: "B", pts: [[0.201,-0.14],[0.207,0.80],[0.213,2.10],[0.216,2.50]] },
+      // R down-slope and S wave
+      { t: "B", pts: [[0.216,2.50],[0.220,1.40],[0.226,-0.18],[0.230,-0.38]] },
+      { t: "B", pts: [[0.230,-0.38],[0.234,-0.22],[0.238,-0.06],[0.242,0]] },
+      // J-point and ST segment: isoelectric
+      { t: "L", pts: [[0.242,0],[0.260,0.01]] },
+      // T wave: asymmetric, gradual upstroke, rounded apex, faster fall
+      // 160ms = 0.192 units
+      { t: "B", pts: [[0.260,0.01],[0.276,0.06],[0.298,0.24],[0.316,0.40]] },
+      { t: "B", pts: [[0.316,0.40],[0.326,0.45],[0.336,0.42],[0.348,0.30]] },
+      { t: "B", pts: [[0.348,0.30],[0.360,0.14],[0.370,0.04],[0.378,0.01]] },
+      { t: "B", pts: [[0.378,0.01],[0.382,0],[0.386,0],[0.390,0]] },
+      // TP segment: long flat baseline
+      { t: "L", pts: [[0.390,0],[1.000,0]] },
     ],
   },
 
-  // ── SINUS DYSRHYTHMIAS ───────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // SINUS RHYTHMS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   SBRAD: {
     label: "Sinus Bradycardia", rate: 40, color: "#ffcc00", irregular: false,
     category: "Sinus", severity: "warning",
-    vitals: { hr: 40, sbp: 96, dbp: 58, spo2: 96, rr: 14, temp: 98.2, etco2: 36, map: 71 },
-    // 40bpm: long TP segment dominates. P/QRS/T morphology same as NSR.
+    vitals: { hr: 40, sbp: 94, dbp: 58, spo2: 96, rr: 12, temp: 98.2, etco2: 35, map: 70 },
+    // 40bpm = 1500ms/beat. PQRST identical to NSR, MASSIVE TP segment.
+    // At 100px/s: 150px/beat.
+    // P/QRS/T occupy same absolute ms → as fractions they are small (÷1500ms)
+    // P=80ms=0.053, PR=160ms=0.107, QRS=80ms=0.053, ST=120ms=0.080, T=160ms=0.107, TP=0.600
     segments: [
-      { t: "L", pts: [[0,0],[0.030,0]] },
-      { t: "B", pts: [[0.030,0],[0.040,0.10],[0.052,0.22],[0.058,0.24]] },
-      { t: "B", pts: [[0.058,0.24],[0.064,0.22],[0.072,0.10],[0.078,0.01]] },
-      { t: "L", pts: [[0.078,0],[0.122,0]] },
-      { t: "B", pts: [[0.122,0],[0.127,-0.08],[0.131,-0.13],[0.134,-0.16]] },
-      { t: "B", pts: [[0.134,-0.16],[0.138,0.6],[0.143,1.8],[0.146,2.5]] },
-      { t: "B", pts: [[0.146,2.5],[0.149,1.2],[0.154,-0.25],[0.158,-0.40]] },
-      { t: "B", pts: [[0.158,-0.40],[0.162,-0.20],[0.166,-0.04],[0.170,0]] },
-      { t: "L", pts: [[0.170,0],[0.190,0.01]] },
-      { t: "B", pts: [[0.190,0.01],[0.204,0.08],[0.220,0.30],[0.234,0.44]] },
-      { t: "B", pts: [[0.234,0.44],[0.244,0.38],[0.256,0.18],[0.266,0.04]] },
-      { t: "L", pts: [[0.266,0],[1.0,0]] },
-    ],
-  },
-  STACH: {
-    label: "Sinus Tachycardia", rate: 132, color: "#ffcc00", irregular: false,
-    category: "Sinus", severity: "warning",
-    // HR >100 = tachycardia by definition; we set 132 so it's clearly above threshold
-    vitals: { hr: 132, sbp: 108, dbp: 68, spo2: 96, rr: 22, temp: 100.4, etco2: 34, map: 81 },
-    segments: [
-      { t: "L", pts: [[0,0],[0.05,0]] },
-      { t: "B", pts: [[0.05,0],[0.08,0.16],[0.11,0.20],[0.14,0.16]] },
-      { t: "B", pts: [[0.14,0.16],[0.17,0.08],[0.19,0],[0.21,0]] },
-      { t: "L", pts: [[0.21,0],[0.26,0]] },
-      { t: "B", pts: [[0.26,0],[0.28,-0.10],[0.29,-0.16],[0.30,-0.20]] },
-      { t: "B", pts: [[0.30,-0.20],[0.305,0.4],[0.31,1.5],[0.315,2.3]] },
-      { t: "B", pts: [[0.315,2.3],[0.32,0.9],[0.33,-0.32],[0.34,-0.38]] },
-      { t: "B", pts: [[0.34,-0.38],[0.35,-0.18],[0.37,0],[0.40,0.04]] },
-      { t: "L", pts: [[0.40,0.04],[0.48,0.06]] },
-      { t: "B", pts: [[0.48,0.06],[0.52,0.10],[0.55,0.34],[0.58,0.42]] },
-      { t: "B", pts: [[0.58,0.42],[0.61,0.34],[0.65,0.10],[0.68,0]] },
-      { t: "L", pts: [[0.68,0],[1.0,0]] },
-    ],
-  },
-  SINUS_ARREST: {
-    label: "Sinus Arrest", rate: 38, color: "#ffcc00", irregular: true,
-    category: "Sinus", severity: "warning",
-    vitals: { hr: 38, sbp: 88, dbp: 52, spo2: 94, rr: 12, temp: 97.8, etco2: 32, map: 64 },
-    // Normal beats with long pause (no P, no QRS) then resumes
-    segments: [
-      { t: "L", pts: [[0,0],[0.06,0]] },
-      { t: "B", pts: [[0.06,0],[0.08,0.18],[0.10,0.22],[0.12,0.18]] },
-      { t: "B", pts: [[0.12,0.18],[0.14,0.08],[0.16,0],[0.18,0]] },
-      { t: "L", pts: [[0.18,0],[0.22,0]] },
-      { t: "B", pts: [[0.22,0],[0.23,-0.10],[0.235,-0.18],[0.24,-0.22]] },
-      { t: "B", pts: [[0.24,-0.22],[0.245,0.5],[0.25,1.6],[0.255,2.4]] },
-      { t: "B", pts: [[0.255,2.4],[0.26,0.9],[0.27,-0.32],[0.28,-0.38]] },
-      { t: "B", pts: [[0.28,-0.38],[0.29,-0.16],[0.31,0],[0.33,0.04]] },
-      { t: "L", pts: [[0.33,0.04],[0.39,0.05]] },
-      { t: "B", pts: [[0.39,0.05],[0.41,0.10],[0.44,0.36],[0.46,0.44]] },
-      { t: "B", pts: [[0.46,0.44],[0.48,0.36],[0.51,0.10],[0.53,0]] },
-      // Long flat pause — no P, no QRS (sinus arrest)
-      { t: "L", pts: [[0.53,0],[1.0,0]] },
+      { t: "L", pts: [[0,0],[0.028,0]] },
+      // P wave identical shape to NSR
+      { t: "B", pts: [[0.028,0],[0.036,0.08],[0.044,0.20],[0.050,0.22]] },
+      { t: "B", pts: [[0.050,0.22],[0.056,0.20],[0.062,0.10],[0.067,0.02]] },
+      { t: "L", pts: [[0.067,0],[0.107,0]] },
+      // QRS — identical narrow morphology
+      { t: "B", pts: [[0.107,0],[0.110,-0.06],[0.112,-0.11],[0.113,-0.14]] },
+      { t: "B", pts: [[0.113,-0.14],[0.117,0.80],[0.120,2.10],[0.122,2.50]] },
+      { t: "B", pts: [[0.122,2.50],[0.125,1.40],[0.128,-0.18],[0.131,-0.38]] },
+      { t: "B", pts: [[0.131,-0.38],[0.134,-0.22],[0.137,-0.06],[0.139,0]] },
+      { t: "L", pts: [[0.139,0],[0.153,0.01]] },
+      // T wave
+      { t: "B", pts: [[0.153,0.01],[0.161,0.06],[0.172,0.24],[0.181,0.40]] },
+      { t: "B", pts: [[0.181,0.40],[0.186,0.45],[0.192,0.40],[0.200,0.28]] },
+      { t: "B", pts: [[0.200,0.28],[0.208,0.12],[0.215,0.03],[0.220,0]] },
+      // Long TP — this is the hallmark of bradycardia
+      { t: "L", pts: [[0.220,0],[1.000,0]] },
     ],
   },
 
-  // ── ATRIAL DYSRHYTHMIAS ──────────────────────────────────────────────────
+  STACH: {
+    label: "Sinus Tachycardia", rate: 130, color: "#ffcc00", irregular: false,
+    category: "Sinus", severity: "warning",
+    vitals: { hr: 130, sbp: 106, dbp: 66, spo2: 96, rr: 22, temp: 100.2, etco2: 33, map: 79 },
+    // 130bpm = 462ms/beat.
+    // PR shortens slightly at fast rates (sympathetic tone).
+    // P wave RISES from the descending limb of prior T wave (P-on-T phenomenon).
+    // QRS remains narrow. T wave truncated. TP nearly zero.
+    // P=70ms=0.151, PR=130ms=0.281, QRS=80ms=0.173, ST=60ms=0.130, T=120ms=0.260, TP≈0
+    segments: [
+      // No TP — P rises immediately from prior T tail
+      { t: "L", pts: [[0,0],[0.010,0]] },
+      // P wave: slightly peaked from sympathetic drive
+      { t: "B", pts: [[0.010,0],[0.026,0.09],[0.042,0.20],[0.052,0.22]] },
+      { t: "B", pts: [[0.052,0.22],[0.062,0.18],[0.074,0.06],[0.081,0.01]] },
+      { t: "B", pts: [[0.081,0.01],[0.085,0],[0.088,0],[0.092,0]] },
+      // Short PR segment
+      { t: "L", pts: [[0.092,0],[0.130,0]] },
+      // QRS — narrow, same morphology
+      { t: "B", pts: [[0.130,0],[0.133,-0.06],[0.136,-0.11],[0.137,-0.14]] },
+      { t: "B", pts: [[0.137,-0.14],[0.141,0.80],[0.145,2.10],[0.147,2.50]] },
+      { t: "B", pts: [[0.147,2.50],[0.150,1.40],[0.154,-0.18],[0.157,-0.36]] },
+      { t: "B", pts: [[0.157,-0.36],[0.161,-0.20],[0.164,-0.05],[0.167,0]] },
+      // Short ST
+      { t: "L", pts: [[0.167,0],[0.182,0.01]] },
+      // T wave: shortened, same shape
+      { t: "B", pts: [[0.182,0.01],[0.195,0.08],[0.212,0.28],[0.224,0.38]] },
+      { t: "B", pts: [[0.224,0.38],[0.232,0.36],[0.240,0.24],[0.250,0.10]] },
+      { t: "B", pts: [[0.250,0.10],[0.256,0.03],[0.260,0.01],[0.264,0]] },
+      // Minimal TP — next P starts rising almost immediately
+      { t: "L", pts: [[0.264,0],[1.000,0]] },
+    ],
+  },
+
+  SINUS_ARREST: {
+    label: "Sinus Arrest", rate: 40, color: "#ffcc00", irregular: true,
+    category: "Sinus", severity: "warning",
+    vitals: { hr: 40, sbp: 86, dbp: 52, spo2: 94, rr: 12, temp: 97.8, etco2: 31, map: 63 },
+    // Pattern: two normal NSR beats, then long pause (NOT a multiple of PP interval),
+    // then resumes. The pause duration is irregular — cannot be measured as 2×PP or 3×PP.
+    // This distinguishes sinus arrest (SA node fails) from SA exit block.
+    segments: [
+      // BEAT 1 — normal sinus beat
+      { t: "L", pts: [[0,0],[0.04,0]] },
+      { t: "B", pts: [[0.04,0],[0.053,0.08],[0.066,0.20],[0.076,0.22]] },
+      { t: "B", pts: [[0.076,0.22],[0.086,0.18],[0.096,0.06],[0.103,0]] },
+      { t: "L", pts: [[0.103,0],[0.138,0]] },
+      { t: "B", pts: [[0.138,0],[0.141,-0.06],[0.144,-0.12],[0.145,-0.14]] },
+      { t: "B", pts: [[0.145,-0.14],[0.149,0.80],[0.153,2.10],[0.155,2.50]] },
+      { t: "B", pts: [[0.155,2.50],[0.158,1.40],[0.162,-0.18],[0.165,-0.36]] },
+      { t: "B", pts: [[0.165,-0.36],[0.168,-0.20],[0.172,-0.05],[0.175,0]] },
+      { t: "L", pts: [[0.175,0],[0.190,0.01]] },
+      { t: "B", pts: [[0.190,0.01],[0.200,0.07],[0.212,0.26],[0.222,0.38]] },
+      { t: "B", pts: [[0.222,0.38],[0.228,0.38],[0.236,0.26],[0.244,0.08]] },
+      { t: "B", pts: [[0.244,0.08],[0.250,0.02],[0.254,0],[0.258,0]] },
+      // BEAT 2 — same (now at ~0.258 normalized)
+      // Compressed to fit — using same proportions
+      { t: "L", pts: [[0.258,0],[0.298,0]] },
+      { t: "B", pts: [[0.298,0],[0.311,0.08],[0.324,0.20],[0.334,0.22]] },
+      { t: "B", pts: [[0.334,0.22],[0.344,0.18],[0.354,0.06],[0.361,0]] },
+      { t: "L", pts: [[0.361,0],[0.396,0]] },
+      { t: "B", pts: [[0.396,0],[0.399,-0.06],[0.402,-0.12],[0.403,-0.14]] },
+      { t: "B", pts: [[0.403,-0.14],[0.407,0.80],[0.411,2.10],[0.413,2.50]] },
+      { t: "B", pts: [[0.413,2.50],[0.416,1.40],[0.420,-0.18],[0.423,-0.36]] },
+      { t: "B", pts: [[0.423,-0.36],[0.426,-0.20],[0.430,-0.05],[0.433,0]] },
+      { t: "L", pts: [[0.433,0],[0.448,0.01]] },
+      { t: "B", pts: [[0.448,0.01],[0.458,0.07],[0.470,0.26],[0.480,0.38]] },
+      { t: "B", pts: [[0.480,0.38],[0.486,0.38],[0.494,0.24],[0.502,0.07]] },
+      { t: "B", pts: [[0.502,0.07],[0.508,0.02],[0.512,0],[0.516,0]] },
+      // LONG FLAT PAUSE — SA node fails. No P, no QRS.
+      // Duration is NOT a multiple of the PP interval
+      { t: "L", pts: [[0.516,0],[1.000,0]] },
+    ],
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ATRIAL RHYTHMS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   PAC: {
     label: "PACs", rate: 72, color: "#ffcc00", irregular: true,
     category: "Atrial", severity: "warning",
     vitals: { hr: 72, sbp: 116, dbp: 74, spo2: 97, rr: 14, temp: 98.6, etco2: 38, map: 88 },
-    // NSR beat → early PAC (P' different morphology) → compensatory pause
+    // Pattern: NSR beat → early P' (different morphology) → narrow QRS → FULL compensatory pause
+    // P' comes early (premature), P' morphology is biphasic or notched (ectopic focus)
+    // PR of PAC is shorter than sinus PR (atrial ectopic closer to AV node)
+    // Full compensatory pause: distance from last sinus P to first post-PAC P = 2×PP
     segments: [
-      { t: "L", pts: [[0,0],[0.05,0]] },
-      { t: "B", pts: [[0.05,0],[0.07,0.18],[0.09,0.22],[0.11,0.18]] },
-      { t: "B", pts: [[0.11,0.18],[0.13,0.08],[0.15,0],[0.17,0]] },
-      { t: "L", pts: [[0.17,0],[0.21,0]] },
-      { t: "B", pts: [[0.21,0],[0.22,-0.10],[0.225,-0.18],[0.23,-0.22]] },
-      { t: "B", pts: [[0.23,-0.22],[0.235,0.5],[0.24,1.6],[0.245,2.4]] },
-      { t: "B", pts: [[0.245,2.4],[0.25,0.9],[0.26,-0.32],[0.27,-0.38]] },
-      { t: "B", pts: [[0.27,-0.38],[0.28,-0.16],[0.30,0],[0.32,0.04]] },
-      { t: "L", pts: [[0.32,0.04],[0.37,0.05]] },
-      { t: "B", pts: [[0.37,0.05],[0.39,0.10],[0.41,0.34],[0.43,0.42]] },
-      { t: "B", pts: [[0.43,0.42],[0.45,0.34],[0.48,0.10],[0.50,0]] },
-      // PAC — early beat, P' is biphasic/inverted
-      { t: "L", pts: [[0.50,0],[0.53,0]] },
-      { t: "B", pts: [[0.53,0],[0.54,-0.12],[0.555,-0.08],[0.57,0.10]] },
-      { t: "B", pts: [[0.57,0.10],[0.575,0.06],[0.58,0],[0.59,0]] },
-      { t: "L", pts: [[0.59,0],[0.62,0]] },
-      { t: "B", pts: [[0.62,0],[0.625,-0.08],[0.63,-0.14],[0.635,-0.18]] },
-      { t: "B", pts: [[0.635,-0.18],[0.64,0.4],[0.645,1.4],[0.65,2.1]] },
-      { t: "B", pts: [[0.65,2.1],[0.655,0.8],[0.665,-0.28],[0.675,-0.32]] },
-      { t: "B", pts: [[0.675,-0.32],[0.685,-0.14],[0.70,0],[0.72,0.03]] },
-      { t: "L", pts: [[0.72,0.03],[0.77,0.04]] },
-      { t: "B", pts: [[0.77,0.04],[0.79,0.08],[0.82,0.26],[0.84,0.32]] },
-      { t: "B", pts: [[0.84,0.32],[0.86,0.26],[0.89,0.08],[0.91,0]] },
-      { t: "L", pts: [[0.91,0],[1.0,0]] },
+      // BEAT 1 — normal sinus
+      { t: "L", pts: [[0,0],[0.036,0]] },
+      { t: "B", pts: [[0.036,0],[0.048,0.08],[0.060,0.20],[0.069,0.22]] },
+      { t: "B", pts: [[0.069,0.22],[0.078,0.18],[0.088,0.06],[0.094,0]] },
+      { t: "L", pts: [[0.094,0],[0.125,0]] },
+      { t: "B", pts: [[0.125,0],[0.128,-0.06],[0.131,-0.12],[0.132,-0.14]] },
+      { t: "B", pts: [[0.132,-0.14],[0.136,0.80],[0.140,2.10],[0.142,2.50]] },
+      { t: "B", pts: [[0.142,2.50],[0.145,1.40],[0.149,-0.18],[0.152,-0.36]] },
+      { t: "B", pts: [[0.152,-0.36],[0.156,-0.20],[0.159,-0.05],[0.162,0]] },
+      { t: "L", pts: [[0.162,0],[0.176,0.01]] },
+      { t: "B", pts: [[0.176,0.01],[0.185,0.07],[0.196,0.26],[0.205,0.38]] },
+      { t: "B", pts: [[0.205,0.38],[0.211,0.38],[0.219,0.24],[0.227,0.07]] },
+      { t: "B", pts: [[0.227,0.07],[0.233,0.02],[0.237,0],[0.241,0]] },
+
+      // PAC — arrives EARLY (0.290 instead of expected 0.325 for regular beat)
+      // P' wave: biphasic — initial positive then negative deflection (inverted/ectopic)
+      { t: "L", pts: [[0.241,0],[0.274,0]] },
+      { t: "B", pts: [[0.274,0],[0.282,0.10],[0.288,0.14],[0.292,0.10]] },
+      { t: "B", pts: [[0.292,0.10],[0.296,0.02],[0.300,-0.08],[0.306,-0.14]] },
+      { t: "B", pts: [[0.306,-0.14],[0.310,-0.08],[0.314,-0.01],[0.318,0]] },
+      // Shorter PR (ectopic closer to AV node)
+      { t: "L", pts: [[0.318,0],[0.344,0]] },
+      // Narrow QRS — conducted normally through ventricles
+      { t: "B", pts: [[0.344,0],[0.347,-0.06],[0.350,-0.11],[0.351,-0.14]] },
+      { t: "B", pts: [[0.351,-0.14],[0.355,0.80],[0.359,2.10],[0.361,2.50]] },
+      { t: "B", pts: [[0.361,2.50],[0.364,1.40],[0.368,-0.18],[0.371,-0.36]] },
+      { t: "B", pts: [[0.371,-0.36],[0.375,-0.20],[0.378,-0.05],[0.381,0]] },
+      { t: "L", pts: [[0.381,0],[0.395,0.01]] },
+      { t: "B", pts: [[0.395,0.01],[0.404,0.07],[0.415,0.24],[0.423,0.36]] },
+      { t: "B", pts: [[0.423,0.36],[0.430,0.34],[0.438,0.20],[0.445,0.05]] },
+      { t: "B", pts: [[0.445,0.05],[0.450,0.01],[0.454,0],[0.458,0]] },
+      // FULL COMPENSATORY PAUSE — slightly longer than normal RR
+      { t: "L", pts: [[0.458,0],[1.000,0]] },
     ],
   },
+
   AFIB: {
     label: "Atrial Fibrillation", rate: 110, color: "#ffcc00", irregular: true,
     category: "Atrial", severity: "warning",
     vitals: { hr: 110, sbp: 108, dbp: 68, spo2: 95, rr: 18, temp: 98.6, etco2: 36, map: 81 },
+    // AFIB hallmarks:
+    // 1. NO P waves — replaced by fibrillatory baseline (350-600bpm chaotic)
+    // 2. IRREGULARLY IRREGULAR RR intervals
+    // 3. Narrow QRS (conducted normally unless aberrant)
+    // 4. Fibrillatory waves: fine (<0.5mm) or coarse (>0.5mm) undulations
+    // nextBeat() handles irregular RR. This template = the QRS+T portion.
+    // The "N" (noise) segments before/after QRS render the fib baseline.
     segments: [
-      { t: "N", pts: [[0,0],[0.28,0]], amp: 0.08 },
-      { t: "B", pts: [[0.28,0],[0.29,-0.10],[0.295,-0.18],[0.30,-0.22]] },
-      { t: "B", pts: [[0.30,-0.22],[0.305,0.5],[0.31,1.55],[0.315,2.3]] },
-      { t: "B", pts: [[0.315,2.3],[0.32,0.9],[0.33,-0.32],[0.34,-0.38]] },
-      { t: "B", pts: [[0.34,-0.38],[0.35,-0.18],[0.37,0],[0.40,0.03]] },
-      { t: "L", pts: [[0.40,0.03],[0.47,0.04]] },
-      { t: "B", pts: [[0.47,0.04],[0.50,0.08],[0.54,0.30],[0.57,0.38]] },
-      { t: "B", pts: [[0.57,0.38],[0.60,0.30],[0.64,0.08],[0.67,0]] },
-      { t: "N", pts: [[0.67,0],[1.0,0]], amp: 0.08 },
+      // Fibrillatory baseline before QRS — chaotic fine oscillations
+      { t: "N", pts: [[0,0],[0.22,0]], amp: 0.07, freq: 18 },
+      // QRS — narrow, identical to sinus (same conduction)
+      { t: "B", pts: [[0.22,0],[0.225,-0.06],[0.228,-0.11],[0.229,-0.13]] },
+      { t: "B", pts: [[0.229,-0.13],[0.233,0.80],[0.237,2.10],[0.239,2.50]] },
+      { t: "B", pts: [[0.239,2.50],[0.242,1.40],[0.246,-0.18],[0.249,-0.36]] },
+      { t: "B", pts: [[0.249,-0.36],[0.252,-0.20],[0.256,-0.05],[0.259,0]] },
+      // ST isoelectric
+      { t: "L", pts: [[0.259,0],[0.274,0.01]] },
+      // T wave
+      { t: "B", pts: [[0.274,0.01],[0.284,0.07],[0.296,0.24],[0.306,0.36]] },
+      { t: "B", pts: [[0.306,0.36],[0.312,0.34],[0.320,0.20],[0.328,0.05]] },
+      { t: "B", pts: [[0.328,0.05],[0.332,0.01],[0.336,0],[0.340,0]] },
+      // Fibrillatory baseline after QRS/T
+      { t: "N", pts: [[0.340,0],[1.000,0]], amp: 0.07, freq: 18 },
     ],
   },
+
   AFLUTTER: {
     label: "Atrial Flutter", rate: 75, color: "#ffcc00", irregular: false,
     category: "Atrial", severity: "warning",
     vitals: { hr: 75, sbp: 110, dbp: 70, spo2: 95, rr: 18, temp: 98.6, etco2: 36, map: 83 },
-    // Classic sawtooth flutter waves at ~300bpm, 4:1 conduction → ventricular rate ~75
+    // CLASSIC 4:1 atrial flutter → ventricular rate 75bpm
+    // Atrial rate 300bpm → flutter wave every 200ms = 0.150 beat-fraction (at 75bpm beat=800ms)
+    // Flutter waves: NEGATIVE sawtooth in inferior leads (typical/counterclockwise)
+    // Gradual negative slope then SHARP positive return — like a ramp saw
+    // NO isoelectric line between flutter waves — continuous undulation
+    // QRS at beats 1 and 2 of this 4-flutter-wave-per-QRS template
     segments: [
-      // Sawtooth flutter waves (4 per QRS)
-      { t: "B", pts: [[0,0],[0.02,0.20],[0.05,0.22],[0.07,0]] },
-      { t: "B", pts: [[0.07,0],[0.09,-0.10],[0.10,-0.12],[0.12,0]] },
-      { t: "B", pts: [[0.12,0],[0.14,0.20],[0.17,0.22],[0.19,0]] },
-      { t: "B", pts: [[0.19,0],[0.21,-0.10],[0.22,-0.12],[0.24,0]] },
-      // QRS
-      { t: "B", pts: [[0.24,0],[0.25,-0.10],[0.255,-0.18],[0.26,-0.22]] },
-      { t: "B", pts: [[0.26,-0.22],[0.265,0.5],[0.27,1.6],[0.275,2.4]] },
-      { t: "B", pts: [[0.275,2.4],[0.28,0.9],[0.29,-0.32],[0.30,-0.38]] },
-      { t: "B", pts: [[0.30,-0.38],[0.31,-0.16],[0.33,0],[0.35,0.03]] },
-      // More flutter waves post-QRS
-      { t: "B", pts: [[0.35,0],[0.37,0.18],[0.40,0.20],[0.42,0]] },
-      { t: "B", pts: [[0.42,0],[0.44,-0.10],[0.45,-0.12],[0.47,0]] },
-      { t: "B", pts: [[0.47,0],[0.49,0.18],[0.52,0.20],[0.54,0]] },
-      { t: "B", pts: [[0.54,0],[0.56,-0.10],[0.57,-0.12],[0.59,0]] },
-      // Second QRS
-      { t: "B", pts: [[0.59,0],[0.60,-0.10],[0.605,-0.18],[0.61,-0.22]] },
-      { t: "B", pts: [[0.61,-0.22],[0.615,0.5],[0.62,1.6],[0.625,2.4]] },
-      { t: "B", pts: [[0.625,2.4],[0.63,0.9],[0.64,-0.32],[0.65,-0.38]] },
-      { t: "B", pts: [[0.65,-0.38],[0.66,-0.16],[0.68,0],[0.70,0.03]] },
-      { t: "B", pts: [[0.70,0],[0.72,0.18],[0.75,0.20],[0.77,0]] },
-      { t: "B", pts: [[0.77,0],[0.79,-0.10],[0.80,-0.12],[0.82,0]] },
-      { t: "B", pts: [[0.82,0],[0.84,0.18],[0.87,0.20],[0.89,0]] },
-      { t: "B", pts: [[0.89,0],[0.91,-0.10],[0.92,-0.12],[0.94,0]] },
-      { t: "L", pts: [[0.94,0],[1.0,0]] },
+      // Flutter wave 1: negative deflection, gradual down then sharp up
+      { t: "B", pts: [[0.000,0],[0.040,-0.12],[0.080,-0.18],[0.114,-0.20]] },
+      { t: "B", pts: [[0.114,-0.20],[0.126,-0.14],[0.136,-0.04],[0.150,0.04]] },
+      { t: "B", pts: [[0.150,0.04],[0.156,0.06],[0.160,0.04],[0.164,0]] },
+      // Flutter wave 2
+      { t: "B", pts: [[0.164,0],[0.204,-0.12],[0.244,-0.18],[0.278,-0.20]] },
+      { t: "B", pts: [[0.278,-0.20],[0.290,-0.14],[0.300,-0.04],[0.314,0.04]] },
+      { t: "B", pts: [[0.314,0.04],[0.320,0.06],[0.324,0.04],[0.328,0]] },
+      // QRS 1 — interrupts flutter waves, narrow
+      { t: "B", pts: [[0.328,-0.02],[0.331,-0.06],[0.333,-0.10],[0.334,-0.13]] },
+      { t: "B", pts: [[0.334,-0.13],[0.338,0.70],[0.342,1.90],[0.344,2.30]] },
+      { t: "B", pts: [[0.344,2.30],[0.347,1.30],[0.351,-0.16],[0.354,-0.30]] },
+      { t: "B", pts: [[0.354,-0.30],[0.357,-0.16],[0.360,-0.04],[0.363,0]] },
+      // Flutter waves 3 and 4 continue immediately after QRS (NO ST/T as such)
+      { t: "B", pts: [[0.363,0],[0.403,-0.12],[0.443,-0.18],[0.477,-0.20]] },
+      { t: "B", pts: [[0.477,-0.20],[0.489,-0.14],[0.499,-0.04],[0.513,0.04]] },
+      { t: "B", pts: [[0.513,0.04],[0.519,0.06],[0.523,0.04],[0.527,0]] },
+      { t: "B", pts: [[0.527,0],[0.567,-0.12],[0.607,-0.18],[0.641,-0.20]] },
+      { t: "B", pts: [[0.641,-0.20],[0.653,-0.14],[0.663,-0.04],[0.677,0.04]] },
+      { t: "B", pts: [[0.677,0.04],[0.683,0.06],[0.687,0.04],[0.691,0]] },
+      // QRS 2 — second ventricular beat
+      { t: "B", pts: [[0.691,-0.02],[0.694,-0.06],[0.696,-0.10],[0.697,-0.13]] },
+      { t: "B", pts: [[0.697,-0.13],[0.701,0.70],[0.705,1.90],[0.707,2.30]] },
+      { t: "B", pts: [[0.707,2.30],[0.710,1.30],[0.714,-0.16],[0.717,-0.30]] },
+      { t: "B", pts: [[0.717,-0.30],[0.720,-0.16],[0.723,-0.04],[0.726,0]] },
+      // Continue flutter after 2nd QRS
+      { t: "B", pts: [[0.726,0],[0.766,-0.12],[0.806,-0.18],[0.840,-0.20]] },
+      { t: "B", pts: [[0.840,-0.20],[0.852,-0.14],[0.862,-0.04],[0.876,0.04]] },
+      { t: "B", pts: [[0.876,0.04],[0.882,0.06],[0.886,0.04],[0.890,0]] },
+      { t: "B", pts: [[0.890,0],[0.930,-0.12],[0.965,-0.18],[0.985,-0.20]] },
+      { t: "B", pts: [[0.985,-0.20],[0.993,-0.14],[0.998,-0.04],[1.000,0]] },
     ],
   },
+
   WANDERING_PM: {
     label: "Wandering Pacemaker", rate: 65, color: "#ffcc00", irregular: true,
     category: "Atrial", severity: "warning",
     vitals: { hr: 65, sbp: 112, dbp: 70, spo2: 97, rr: 14, temp: 98.4, etco2: 37, map: 84 },
-    // P wave morphology changes beat to beat (upright → flat → inverted)
+    // ≥3 different P wave morphologies in same lead, rate 60-100
+    // PR interval varies (pacemaker site varies distance from AV node)
+    // QRS narrow and unchanged throughout
+    // Beat 1: Upright P (high RA), Beat 2: Flat/biphasic P (mid-atrial), Beat 3: Inverted P (low atrial/junctional)
     segments: [
-      { t: "L", pts: [[0,0],[0.06,0]] },
-      { t: "B", pts: [[0.06,0],[0.08,0.20],[0.10,0.24],[0.12,0.20]] },
-      { t: "B", pts: [[0.12,0.20],[0.14,0.10],[0.16,0],[0.18,0]] },
-      { t: "L", pts: [[0.18,0],[0.22,0]] },
-      { t: "B", pts: [[0.22,0],[0.23,-0.10],[0.235,-0.18],[0.24,-0.22]] },
-      { t: "B", pts: [[0.24,-0.22],[0.245,0.5],[0.25,1.6],[0.255,2.4]] },
-      { t: "B", pts: [[0.255,2.4],[0.26,0.9],[0.27,-0.32],[0.28,-0.38]] },
-      { t: "B", pts: [[0.28,-0.38],[0.29,-0.16],[0.31,0],[0.33,0.04]] },
-      { t: "L", pts: [[0.33,0.04],[0.39,0.05]] },
-      { t: "B", pts: [[0.39,0.05],[0.41,0.10],[0.44,0.34],[0.46,0.42]] },
-      { t: "B", pts: [[0.46,0.42],[0.48,0.34],[0.51,0.10],[0.53,0]] },
-      { t: "L", pts: [[0.53,0],[1.0,0]] },
+      // BEAT 1: Upright P wave, normal PR
+      { t: "L", pts: [[0,0],[0.038,0]] },
+      { t: "B", pts: [[0.038,0],[0.052,0.10],[0.064,0.22],[0.072,0.24]] },
+      { t: "B", pts: [[0.072,0.24],[0.080,0.22],[0.090,0.10],[0.098,0.01]] },
+      { t: "L", pts: [[0.098,0],[0.130,0]] },
+      { t: "B", pts: [[0.130,0],[0.133,-0.06],[0.136,-0.11],[0.137,-0.14]] },
+      { t: "B", pts: [[0.137,-0.14],[0.141,0.80],[0.145,2.10],[0.147,2.50]] },
+      { t: "B", pts: [[0.147,2.50],[0.150,1.40],[0.154,-0.18],[0.157,-0.34]] },
+      { t: "B", pts: [[0.157,-0.34],[0.160,-0.18],[0.163,-0.04],[0.166,0]] },
+      { t: "L", pts: [[0.166,0],[0.180,0.01]] },
+      { t: "B", pts: [[0.180,0.01],[0.190,0.07],[0.200,0.24],[0.209,0.36]] },
+      { t: "B", pts: [[0.209,0.36],[0.216,0.34],[0.224,0.18],[0.232,0.04]] },
+      { t: "B", pts: [[0.232,0.04],[0.237,0.01],[0.241,0],[0.245,0]] },
+
+      // BEAT 2: Biphasic P wave (different atrial site, shorter PR)
+      { t: "L", pts: [[0.245,0],[0.368,0]] },
+      { t: "B", pts: [[0.368,0],[0.376,0.12],[0.380,0.14],[0.384,0.08]] },
+      { t: "B", pts: [[0.384,0.08],[0.388,-0.04],[0.392,-0.10],[0.396,-0.06]] },
+      { t: "B", pts: [[0.396,-0.06],[0.400,-0.02],[0.404,0],[0.408,0]] },
+      // Shorter PR (ectopic site closer to AV node)
+      { t: "L", pts: [[0.408,0],[0.432,0]] },
+      { t: "B", pts: [[0.432,0],[0.435,-0.06],[0.438,-0.11],[0.439,-0.14]] },
+      { t: "B", pts: [[0.439,-0.14],[0.443,0.80],[0.447,2.10],[0.449,2.50]] },
+      { t: "B", pts: [[0.449,2.50],[0.452,1.40],[0.456,-0.18],[0.459,-0.34]] },
+      { t: "B", pts: [[0.459,-0.34],[0.462,-0.18],[0.465,-0.04],[0.468,0]] },
+      { t: "L", pts: [[0.468,0],[0.482,0.01]] },
+      { t: "B", pts: [[0.482,0.01],[0.492,0.07],[0.502,0.22],[0.510,0.34]] },
+      { t: "B", pts: [[0.510,0.34],[0.517,0.32],[0.526,0.16],[0.534,0.04]] },
+      { t: "B", pts: [[0.534,0.04],[0.539,0.01],[0.543,0],[0.547,0]] },
+
+      // BEAT 3: Inverted P wave (low atrial/junctional — retrograde)
+      { t: "L", pts: [[0.547,0],[0.664,0]] },
+      // Inverted P: dips below baseline
+      { t: "B", pts: [[0.664,0],[0.672,-0.06],[0.678,-0.12],[0.682,-0.14]] },
+      { t: "B", pts: [[0.682,-0.14],[0.686,-0.10],[0.692,-0.02],[0.697,0]] },
+      // Very short PR (nearly junctional)
+      { t: "L", pts: [[0.697,0],[0.714,0]] },
+      { t: "B", pts: [[0.714,0],[0.717,-0.06],[0.720,-0.11],[0.721,-0.14]] },
+      { t: "B", pts: [[0.721,-0.14],[0.725,0.80],[0.729,2.10],[0.731,2.50]] },
+      { t: "B", pts: [[0.731,2.50],[0.734,1.40],[0.738,-0.18],[0.741,-0.34]] },
+      { t: "B", pts: [[0.741,-0.34],[0.744,-0.18],[0.747,-0.04],[0.750,0]] },
+      { t: "L", pts: [[0.750,0],[0.764,0.01]] },
+      { t: "B", pts: [[0.764,0.01],[0.774,0.07],[0.784,0.22],[0.792,0.34]] },
+      { t: "B", pts: [[0.792,0.34],[0.799,0.32],[0.808,0.16],[0.816,0.04]] },
+      { t: "B", pts: [[0.816,0.04],[0.821,0.01],[0.825,0],[0.829,0]] },
+      { t: "L", pts: [[0.829,0],[1.000,0]] },
     ],
   },
 
-  // ── JUNCTIONAL ───────────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // JUNCTIONAL RHYTHMS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   JUNCTIONAL: {
     label: "Junctional Rhythm", rate: 48, color: "#ffcc00", irregular: false,
     category: "Junctional", severity: "warning",
-    vitals: { hr: 48, sbp: 92, dbp: 56, spo2: 95, rr: 14, temp: 98.2, etco2: 34, map: 68 },
-    // No P wave before QRS (or retrograde inverted P in PR or after QRS)
+    vitals: { hr: 48, sbp: 90, dbp: 56, spo2: 95, rr: 14, temp: 98.2, etco2: 34, map: 67 },
+    // 48bpm = 1250ms/beat.
+    // NO visible P wave before QRS, OR retrograde inverted P AFTER QRS (in ST segment)
+    // Retrograde atrial activation: P is NEGATIVE in lead II, short RP interval (<200ms)
+    // QRS: NARROW (ventricles activated normally via His-Purkinje)
+    // Retrograde P appears as small negative deflection in ST segment
     segments: [
-      { t: "L", pts: [[0,0],[0.20,0]] },
-      // Retrograde P (inverted, just before QRS)
-      { t: "B", pts: [[0.20,0],[0.22,-0.10],[0.24,-0.14],[0.26,-0.10]] },
-      { t: "B", pts: [[0.26,-0.10],[0.28,-0.04],[0.30,0],[0.32,0]] },
-      // QRS normal width
-      { t: "B", pts: [[0.32,0],[0.33,-0.08],[0.335,-0.14],[0.34,-0.18]] },
-      { t: "B", pts: [[0.34,-0.18],[0.345,0.5],[0.35,1.6],[0.355,2.3]] },
-      { t: "B", pts: [[0.355,2.3],[0.36,0.9],[0.37,-0.30],[0.38,-0.36]] },
-      { t: "B", pts: [[0.38,-0.36],[0.39,-0.14],[0.41,0],[0.43,0.03]] },
-      { t: "L", pts: [[0.43,0.03],[0.50,0.04]] },
-      { t: "B", pts: [[0.50,0.04],[0.53,0.08],[0.56,0.30],[0.59,0.38]] },
-      { t: "B", pts: [[0.59,0.38],[0.62,0.30],[0.66,0.08],[0.69,0]] },
-      { t: "L", pts: [[0.69,0],[1.0,0]] },
+      // Long flat baseline (slow rate, long TP)
+      { t: "L", pts: [[0,0],[0.220,0]] },
+      // QRS — narrow, clean, no preceding P
+      { t: "B", pts: [[0.220,0],[0.223,-0.06],[0.226,-0.11],[0.227,-0.14]] },
+      { t: "B", pts: [[0.227,-0.14],[0.231,0.80],[0.235,2.10],[0.237,2.50]] },
+      { t: "B", pts: [[0.237,2.50],[0.240,1.40],[0.244,-0.18],[0.247,-0.36]] },
+      { t: "B", pts: [[0.247,-0.36],[0.250,-0.20],[0.253,-0.05],[0.256,0]] },
+      // Short isoelectric after QRS then retrograde P
+      { t: "L", pts: [[0.256,0],[0.268,0.01]] },
+      // Retrograde P: inverted (negative), small, in ST segment
+      // Short RP interval: represents retrograde atrial activation after junctional depolarization
+      { t: "B", pts: [[0.268,0.01],[0.276,-0.04],[0.284,-0.12],[0.290,-0.14]] },
+      { t: "B", pts: [[0.290,-0.14],[0.296,-0.10],[0.302,-0.02],[0.306,0]] },
+      // T wave — starts after retrograde P
+      { t: "L", pts: [[0.306,0],[0.318,0.01]] },
+      { t: "B", pts: [[0.318,0.01],[0.328,0.07],[0.342,0.24],[0.352,0.36]] },
+      { t: "B", pts: [[0.352,0.36],[0.358,0.34],[0.367,0.20],[0.376,0.06]] },
+      { t: "B", pts: [[0.376,0.06],[0.381,0.01],[0.385,0],[0.389,0]] },
+      // Long TP
+      { t: "L", pts: [[0.389,0],[1.000,0]] },
     ],
   },
+
   ACCEL_JUNCTIONAL: {
     label: "Accel. Junctional", rate: 78, color: "#ffcc00", irregular: false,
     category: "Junctional", severity: "warning",
     vitals: { hr: 78, sbp: 112, dbp: 70, spo2: 96, rr: 15, temp: 98.6, etco2: 37, map: 84 },
+    // 78bpm = 769ms/beat. Accelerated junctional: rate 60-100 (faster than escape rate).
+    // Retrograde P wave may appear BEFORE QRS with very short PR (<120ms),
+    // or buried in QRS, or just after. Here: retrograde P just before QRS (short PR).
+    // QRS: narrow, normal.
     segments: [
-      { t: "L", pts: [[0,0],[0.10,0]] },
-      { t: "B", pts: [[0.10,0],[0.12,-0.10],[0.13,-0.13],[0.14,-0.10]] },
-      { t: "B", pts: [[0.14,-0.10],[0.16,-0.04],[0.18,0],[0.20,0]] },
-      { t: "L", pts: [[0.20,0],[0.22,0]] },
-      { t: "B", pts: [[0.22,0],[0.23,-0.08],[0.235,-0.14],[0.24,-0.18]] },
-      { t: "B", pts: [[0.24,-0.18],[0.245,0.5],[0.25,1.6],[0.255,2.3]] },
-      { t: "B", pts: [[0.255,2.3],[0.26,0.9],[0.27,-0.30],[0.28,-0.36]] },
-      { t: "B", pts: [[0.28,-0.36],[0.29,-0.14],[0.31,0],[0.33,0.03]] },
-      { t: "L", pts: [[0.33,0.03],[0.40,0.04]] },
-      { t: "B", pts: [[0.40,0.04],[0.43,0.08],[0.46,0.30],[0.49,0.38]] },
-      { t: "B", pts: [[0.49,0.38],[0.52,0.30],[0.56,0.08],[0.59,0]] },
-      { t: "L", pts: [[0.59,0],[1.0,0]] },
+      { t: "L", pts: [[0,0],[0.136,0]] },
+      // Retrograde P BEFORE QRS — short PR (<120ms)
+      { t: "B", pts: [[0.136,0],[0.144,-0.05],[0.152,-0.12],[0.158,-0.13]] },
+      { t: "B", pts: [[0.158,-0.13],[0.164,-0.08],[0.170,-0.01],[0.174,0]] },
+      // Very short PR segment
+      { t: "L", pts: [[0.174,0],[0.188,0]] },
+      // QRS — narrow
+      { t: "B", pts: [[0.188,0],[0.191,-0.06],[0.194,-0.11],[0.195,-0.14]] },
+      { t: "B", pts: [[0.195,-0.14],[0.199,0.80],[0.203,2.10],[0.205,2.50]] },
+      { t: "B", pts: [[0.205,2.50],[0.208,1.40],[0.212,-0.18],[0.215,-0.36]] },
+      { t: "B", pts: [[0.215,-0.36],[0.218,-0.20],[0.221,-0.05],[0.224,0]] },
+      { t: "L", pts: [[0.224,0],[0.238,0.01]] },
+      // T wave
+      { t: "B", pts: [[0.238,0.01],[0.248,0.07],[0.260,0.24],[0.270,0.36]] },
+      { t: "B", pts: [[0.270,0.36],[0.276,0.34],[0.284,0.18],[0.292,0.04]] },
+      { t: "B", pts: [[0.292,0.04],[0.297,0.01],[0.301,0],[0.305,0]] },
+      { t: "L", pts: [[0.305,0],[1.000,0]] },
     ],
   },
 
-  // ── HEART BLOCKS ─────────────────────────────────────────────────────────
-  //
-  // CLINICAL REFERENCE — Key distinguishing features for new grads:
-  //
-  //  1° HB  — PR >200ms (>1 large box), CONSTANT, every P conducts, narrow QRS
-  //           Hallmark: just a very long flat PR segment before QRS. Rate normal.
-  //
-  //  2° M1  — (Wenckebach) PR progressively LENGTHENS beat-by-beat until one
-  //  (Mobitz I) P wave is completely BLOCKED (no QRS). Pattern repeats.
-  //           RR intervals shorten as PR lengthens (grouped beating).
-  //           QRS is narrow. AV nodal disease. Usually benign.
-  //           Ratio shown: 4:3 (4 P waves, 3 QRS) — classic teaching example.
-  //
-  //  2° M2  — (Mobitz II) PR is FIXED and NORMAL on conducted beats, then
-  //  (Mobitz II) suddenly a P wave is blocked WITHOUT any warning PR change.
-  //           QRS often WIDE (infranodal disease below bundle of His).
-  //           Dangerous — can deteriorate suddenly to 3° block or asystole.
-  //           Ratio shown: 3:2 (3 P waves, 2 QRS).
-  //
-  //  2:1    — Every OTHER P wave is blocked. Cannot distinguish Mobitz I vs II
-  //  Block    from 2:1 alone (need longer strip). PR is constant. QRS may be wide.
-  //           Ventricular rate = atrial rate / 2. Treated as Mobitz II (high risk).
-  //
-  //  Hi-Gr  — Multiple consecutive P waves blocked (3:1 or 4:1).
-  //  Block    Very slow ventricular rate. Severe disease. Near-complete block.
-  //           Always requires pacing. Wide QRS, marked bradycardia.
-  //
-  //  3° HB  — COMPLETE AV dissociation. P waves and QRS are TOTALLY independent.
-  //  (Complete) Atrial rate ~70-80bpm, ventricular escape 20-40bpm. MORE P waves than QRS.
-  //           P waves march through, OVER, and BURIED IN QRS/T waves — no relationship.
-  //           QRS WIDE (ventricular escape) or narrow (junctional escape if His bundle).
-  //           The "trick": occasional PR may look correct — it is purely coincidental.
-  //
-  // ─────────────────────────────────────────────────────────────────────────
-
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // HEART BLOCKS
+  // Clinical reference preserved from prior version — now with better proportions
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   HB1: {
     label: "1° AV Block", rate: 68, color: "#ffdd00", irregular: false,
     category: "Blocks", severity: "warning",
     vitals: { hr: 68, sbp: 118, dbp: 74, spo2: 97, rr: 14, temp: 98.6, etco2: 38, map: 89 },
-    // ── Clinical: PR interval is markedly prolonged (~320ms = 0.32s).
-    //    Every P conducts to QRS. QRS is narrow. T wave normal. Baseline is flat.
-    //    The distinguishing feature is ONLY the long flat PR segment.
-    //    Rate and rhythm are otherwise perfectly regular.
+    // PR >200ms (here ~320ms). Every P conducts. Narrow QRS. Rate normal.
+    // 68bpm = 882ms/beat
+    // P=80ms=0.091, PR_total=320ms=0.363, QRS=80ms=0.091, ST=100ms=0.113, T=160ms=0.181, TP=0.273
     segments: [
-      // Flat baseline before P wave
-      { t: "L", pts: [[0,0],[0.05,0]] },
-      // P wave — rounded, upright, 0.08s wide, amplitude ~0.18
-      { t: "B", pts: [[0.05,0],[0.08,0.12],[0.10,0.20],[0.12,0.24]] },
-      { t: "B", pts: [[0.12,0.24],[0.14,0.20],[0.16,0.10],[0.18,0.04]] },
-      { t: "B", pts: [[0.18,0.04],[0.19,0.02],[0.20,0],[0.21,0]] },
-      // ─── LONG PR SEGMENT (320ms) ───────────────────────────────────────
-      // This is the key teaching moment: 320ms ≈ 1.6 large boxes at 25mm/s
-      // Visually: a noticeably long flat line before the QRS
-      { t: "L", pts: [[0.21,0],[0.38,0]] },
-      // QRS: narrow normal complex — small Q, tall R, small S
-      //   Q wave: brief downstroke
-      { t: "B", pts: [[0.38,0],[0.385,-0.06],[0.390,-0.10],[0.392,-0.14]] },
-      //   R wave: fast upstroke to peak
-      { t: "B", pts: [[0.392,-0.14],[0.396,0.80],[0.400,2.0],[0.404,2.4]] },
-      //   R down to S
-      { t: "B", pts: [[0.404,2.4],[0.408,1.2],[0.412,-0.20],[0.416,-0.36]] },
-      //   S wave return to baseline
-      { t: "B", pts: [[0.416,-0.36],[0.420,-0.18],[0.424,-0.04],[0.428,0]] },
-      // ST segment — isoelectric (short, narrow QRS so short ST)
-      { t: "L", pts: [[0.428,0],[0.46,0.02]] },
-      // T wave — slightly asymmetric: gradual upstroke, faster downstroke, amplitude ~0.40
-      { t: "B", pts: [[0.46,0.02],[0.49,0.14],[0.52,0.38],[0.55,0.44]] },
-      { t: "B", pts: [[0.55,0.44],[0.57,0.38],[0.59,0.18],[0.61,0.04]] },
-      { t: "B", pts: [[0.61,0.04],[0.62,0.02],[0.63,0],[0.64,0]] },
-      // TP segment — flat back to baseline before next cycle
-      { t: "L", pts: [[0.64,0],[1.0,0]] },
+      { t: "L", pts: [[0,0],[0.040,0]] },
+      { t: "B", pts: [[0.040,0],[0.053,0.08],[0.066,0.20],[0.076,0.22]] },
+      { t: "B", pts: [[0.076,0.22],[0.085,0.18],[0.095,0.06],[0.102,0.01]] },
+      { t: "B", pts: [[0.102,0.01],[0.106,0],[0.109,0],[0.112,0]] },
+      // ── LONG PR SEGMENT: 320ms - 80ms P = 240ms = 0.272 beat-fraction ──
+      { t: "L", pts: [[0.112,0],[0.363,0]] },
+      // QRS — narrow
+      { t: "B", pts: [[0.363,0],[0.367,-0.06],[0.370,-0.11],[0.371,-0.14]] },
+      { t: "B", pts: [[0.371,-0.14],[0.375,0.80],[0.379,2.10],[0.381,2.50]] },
+      { t: "B", pts: [[0.381,2.50],[0.384,1.40],[0.388,-0.18],[0.391,-0.36]] },
+      { t: "B", pts: [[0.391,-0.36],[0.394,-0.20],[0.397,-0.05],[0.400,0]] },
+      { t: "L", pts: [[0.400,0],[0.420,0.01]] },
+      // T wave
+      { t: "B", pts: [[0.420,0.01],[0.430,0.07],[0.444,0.26],[0.454,0.38]] },
+      { t: "B", pts: [[0.454,0.38],[0.460,0.38],[0.469,0.24],[0.478,0.07]] },
+      { t: "B", pts: [[0.478,0.07],[0.484,0.02],[0.488,0],[0.492,0]] },
+      { t: "L", pts: [[0.492,0],[1.000,0]] },
     ],
   },
 
@@ -509,79 +627,61 @@ const RHYTHMS = {
     label: "2° Block Mobitz I (Wenckebach)", rate: 56, color: "#ff9900", irregular: true,
     category: "Blocks", severity: "warning",
     vitals: { hr: 52, sbp: 104, dbp: 66, spo2: 96, rr: 14, temp: 98.2, etco2: 36, map: 79 },
-    // ── Clinical: 4:3 Wenckebach cycle (4 P waves, 3 conducted QRS).
-    //    Beat 1: normal PR (~160ms)
-    //    Beat 2: PR lengthens (~240ms) — RR interval SHORTENS
-    //    Beat 3: PR lengthens further (~320ms) — RR interval SHORTENS more
-    //    Beat 4: P wave fires, NO QRS (blocked). LONG PAUSE.
-    //    Then pattern RESETS. Grouped beating is the hallmark.
-    //    QRS is narrow throughout (AV nodal disease, not infranodal).
-    //    Teaching point: RR DECREASES as PR INCREASES, then long pause.
+    // 4:3 Wenckebach. Beat display normalized to fit 3 conducted + 1 blocked.
+    // PR1=160ms, PR2=240ms, PR3=320ms, P4 blocked.
+    // RR intervals: RR1>RR2>RR3 (RR shortens), then LONG pause after block.
+    // QRS: narrow throughout (AV nodal disease).
     segments: [
-      // ─── BEAT 1: Normal PR ~160ms ────────────────────────────────────────
-      { t: "L", pts: [[0,0],[0.02,0]] },
-      // P1 — upright, round, normal
-      { t: "B", pts: [[0.02,0],[0.04,0.12],[0.055,0.22],[0.065,0.22]] },
-      { t: "B", pts: [[0.065,0.22],[0.075,0.18],[0.088,0.06],[0.095,0]] },
-      // PR segment #1 — normal length
-      { t: "L", pts: [[0.095,0],[0.145,0]] },
-      // QRS1 — narrow, clean: Q, R, S
-      { t: "B", pts: [[0.145,0],[0.149,-0.08],[0.152,-0.14],[0.154,-0.16]] },
-      { t: "B", pts: [[0.154,-0.16],[0.158,0.80],[0.162,2.1],[0.165,2.5]] },
-      { t: "B", pts: [[0.165,2.5],[0.168,1.1],[0.172,-0.28],[0.175,-0.40]] },
-      { t: "B", pts: [[0.175,-0.40],[0.179,-0.20],[0.183,-0.04],[0.186,0]] },
-      // ST1 + T1
-      { t: "L", pts: [[0.186,0],[0.206,0.02]] },
-      { t: "B", pts: [[0.206,0.02],[0.218,0.12],[0.230,0.36],[0.240,0.42]] },
-      { t: "B", pts: [[0.240,0.42],[0.250,0.34],[0.262,0.12],[0.272,0.02]] },
-      { t: "B", pts: [[0.272,0.02],[0.276,0.01],[0.280,0],[0.285,0]] },
+      // ── BEAT 1: PR=160ms ─────────────────────────────
+      { t: "L", pts: [[0,0],[0.014,0]] },
+      { t: "B", pts: [[0.014,0],[0.022,0.08],[0.030,0.18],[0.036,0.20]] },
+      { t: "B", pts: [[0.036,0.20],[0.042,0.17],[0.050,0.06],[0.056,0]] },
+      { t: "L", pts: [[0.056,0],[0.090,0]] },
+      { t: "B", pts: [[0.090,0],[0.093,-0.06],[0.096,-0.11],[0.097,-0.14]] },
+      { t: "B", pts: [[0.097,-0.14],[0.101,0.80],[0.105,2.10],[0.107,2.50]] },
+      { t: "B", pts: [[0.107,2.50],[0.110,1.40],[0.114,-0.18],[0.117,-0.36]] },
+      { t: "B", pts: [[0.117,-0.36],[0.120,-0.20],[0.123,-0.05],[0.126,0]] },
+      { t: "L", pts: [[0.126,0],[0.138,0.01]] },
+      { t: "B", pts: [[0.138,0.01],[0.145,0.06],[0.153,0.20],[0.159,0.30]] },
+      { t: "B", pts: [[0.159,0.30],[0.163,0.32],[0.168,0.22],[0.174,0.07]] },
+      { t: "B", pts: [[0.174,0.07],[0.178,0.01],[0.181,0],[0.184,0]] },
 
-      // ─── BEAT 2: PR lengthens to ~240ms ──────────────────────────────────
-      // (note: RR1→2 is slightly shorter than normal — grouped beating feature)
-      { t: "L", pts: [[0.285,0],[0.295,0]] },
-      // P2 — same morphology, same rate
-      { t: "B", pts: [[0.295,0],[0.315,0.12],[0.330,0.22],[0.340,0.22]] },
-      { t: "B", pts: [[0.340,0.22],[0.350,0.18],[0.360,0.06],[0.368,0]] },
-      // PR2 — noticeably LONGER than PR1 (teaching: measure this)
-      { t: "L", pts: [[0.368,0],[0.440,0]] },
-      // QRS2 — same narrow QRS
-      { t: "B", pts: [[0.440,0],[0.444,-0.08],[0.447,-0.14],[0.449,-0.16]] },
-      { t: "B", pts: [[0.449,-0.16],[0.453,0.80],[0.457,2.1],[0.460,2.5]] },
-      { t: "B", pts: [[0.460,2.5],[0.463,1.1],[0.467,-0.28],[0.470,-0.40]] },
-      { t: "B", pts: [[0.470,-0.40],[0.474,-0.20],[0.478,-0.04],[0.481,0]] },
-      // ST2 + T2
-      { t: "L", pts: [[0.481,0],[0.499,0.02]] },
-      { t: "B", pts: [[0.499,0.02],[0.511,0.12],[0.523,0.36],[0.533,0.40]] },
-      { t: "B", pts: [[0.533,0.40],[0.543,0.32],[0.555,0.10],[0.565,0.02]] },
-      { t: "B", pts: [[0.565,0.02],[0.570,0],[0.575,0],[0.580,0]] },
+      // ── BEAT 2: PR=240ms (LENGTHENED) ────────────────
+      { t: "L", pts: [[0.184,0],[0.198,0]] },
+      { t: "B", pts: [[0.198,0],[0.206,0.08],[0.214,0.18],[0.220,0.20]] },
+      { t: "B", pts: [[0.220,0.20],[0.226,0.17],[0.234,0.06],[0.240,0]] },
+      // Longer PR segment
+      { t: "L", pts: [[0.240,0],[0.292,0]] },
+      { t: "B", pts: [[0.292,0],[0.295,-0.06],[0.298,-0.11],[0.299,-0.14]] },
+      { t: "B", pts: [[0.299,-0.14],[0.303,0.80],[0.307,2.10],[0.309,2.50]] },
+      { t: "B", pts: [[0.309,2.50],[0.312,1.40],[0.316,-0.18],[0.319,-0.36]] },
+      { t: "B", pts: [[0.319,-0.36],[0.322,-0.20],[0.325,-0.05],[0.328,0]] },
+      { t: "L", pts: [[0.328,0],[0.340,0.01]] },
+      { t: "B", pts: [[0.340,0.01],[0.347,0.06],[0.355,0.20],[0.361,0.30]] },
+      { t: "B", pts: [[0.361,0.30],[0.365,0.32],[0.370,0.22],[0.376,0.07]] },
+      { t: "B", pts: [[0.376,0.07],[0.380,0.01],[0.383,0],[0.386,0]] },
 
-      // ─── BEAT 3: PR lengthens further to ~320ms ──────────────────────────
-      { t: "L", pts: [[0.580,0],[0.590,0]] },
-      // P3 — same morphology (P-P interval remains constant throughout)
-      { t: "B", pts: [[0.590,0],[0.610,0.12],[0.624,0.22],[0.634,0.22]] },
-      { t: "B", pts: [[0.634,0.22],[0.644,0.18],[0.654,0.06],[0.661,0]] },
-      // PR3 — very long, clearly visible flat line (teaching moment)
-      { t: "L", pts: [[0.661,0],[0.758,0]] },
-      // QRS3 — still narrow (AV nodal block, not infranodal)
-      { t: "B", pts: [[0.758,0],[0.762,-0.08],[0.765,-0.14],[0.767,-0.16]] },
-      { t: "B", pts: [[0.767,-0.16],[0.771,0.80],[0.775,2.1],[0.778,2.5]] },
-      { t: "B", pts: [[0.778,2.5],[0.781,1.1],[0.785,-0.28],[0.788,-0.40]] },
-      { t: "B", pts: [[0.788,-0.40],[0.792,-0.20],[0.796,-0.04],[0.799,0]] },
-      // ST3 + T3
-      { t: "L", pts: [[0.799,0],[0.815,0.02]] },
-      { t: "B", pts: [[0.815,0.02],[0.825,0.12],[0.835,0.34],[0.843,0.38]] },
-      { t: "B", pts: [[0.843,0.38],[0.852,0.30],[0.862,0.10],[0.870,0.01]] },
-      { t: "B", pts: [[0.870,0.01],[0.874,0],[0.878,0],[0.882,0]] },
+      // ── BEAT 3: PR=320ms (LONGEST) ───────────────────
+      { t: "L", pts: [[0.386,0],[0.398,0]] },
+      { t: "B", pts: [[0.398,0],[0.406,0.08],[0.414,0.18],[0.420,0.20]] },
+      { t: "B", pts: [[0.420,0.20],[0.426,0.17],[0.434,0.06],[0.440,0]] },
+      // Very long PR segment
+      { t: "L", pts: [[0.440,0],[0.508,0]] },
+      { t: "B", pts: [[0.508,0],[0.511,-0.06],[0.514,-0.11],[0.515,-0.14]] },
+      { t: "B", pts: [[0.515,-0.14],[0.519,0.80],[0.523,2.10],[0.525,2.50]] },
+      { t: "B", pts: [[0.525,2.50],[0.528,1.40],[0.532,-0.18],[0.535,-0.36]] },
+      { t: "B", pts: [[0.535,-0.36],[0.538,-0.20],[0.541,-0.05],[0.544,0]] },
+      { t: "L", pts: [[0.544,0],[0.556,0.01]] },
+      { t: "B", pts: [[0.556,0.01],[0.563,0.06],[0.571,0.20],[0.577,0.30]] },
+      { t: "B", pts: [[0.577,0.30],[0.581,0.32],[0.586,0.22],[0.592,0.07]] },
+      { t: "B", pts: [[0.592,0.07],[0.596,0.01],[0.599,0],[0.602,0]] },
 
-      // ─── BEAT 4 (BLOCKED P): P fires — NO QRS follows ────────────────────
-      // This is the blocked beat. Long pause. P-P interval stays constant.
-      // After this, pattern RESETS with short PR again.
-      { t: "L", pts: [[0.882,0],[0.890,0]] },
-      // P4 — NORMAL P wave morphology, same as others. Just NO QRS after it.
-      { t: "B", pts: [[0.890,0],[0.910,0.12],[0.924,0.22],[0.934,0.22]] },
-      { t: "B", pts: [[0.934,0.22],[0.944,0.18],[0.953,0.06],[0.960,0]] },
-      // The LONG pause after dropped beat — no QRS, just flat line to end
-      { t: "L", pts: [[0.960,0],[1.0,0]] },
+      // ── BEAT 4 (BLOCKED P): P fires — NO QRS ─────────
+      { t: "L", pts: [[0.602,0],[0.614,0]] },
+      { t: "B", pts: [[0.614,0],[0.622,0.08],[0.630,0.18],[0.636,0.20]] },
+      { t: "B", pts: [[0.636,0.20],[0.642,0.17],[0.650,0.06],[0.656,0]] },
+      // LONG PAUSE — no QRS after this P
+      { t: "L", pts: [[0.656,0],[1.000,0]] },
     ],
   },
 
@@ -589,67 +689,47 @@ const RHYTHMS = {
     label: "2° Block Mobitz II", rate: 46, color: "#ff6600", irregular: true,
     category: "Blocks", severity: "critical",
     vitals: { hr: 44, sbp: 88, dbp: 56, spo2: 94, rr: 14, temp: 98.0, etco2: 33, map: 67 },
-    // ── Clinical: 3:2 Mobitz II cycle (3 P waves, 2 conducted QRS).
-    //    PRs on conducted beats are IDENTICAL (constant) — this is the key.
-    //    Normal or SLIGHTLY prolonged PR (usually 0.16-0.22s).
-    //    Then sudden P wave with NO QRS — no lengthening warning.
-    //    QRS is WIDE (≥0.12s) because block is BELOW AV node (infranodal),
-    //    in the bundle of His or bundle branches. Dangerous — may → 3° block.
-    //    Teaching point: SAME PR on conducted beats, then sudden block. Wide QRS.
+    // 3:2 Mobitz II. Two conducted beats (IDENTICAL PR), then one blocked P.
+    // PR is constant at ~200ms. QRS is WIDE (≥120ms). T discordant.
     segments: [
-      // ─── BEAT 1: Conducted — normal PR, WIDE QRS ─────────────────────────
-      { t: "L", pts: [[0,0],[0.025,0]] },
-      // P1 — normal upright P wave
-      { t: "B", pts: [[0.025,0],[0.045,0.12],[0.060,0.22],[0.070,0.22]] },
-      { t: "B", pts: [[0.070,0.22],[0.080,0.16],[0.092,0.04],[0.100,0]] },
-      // PR — constant, mildly prolonged (~0.20s)
-      { t: "L", pts: [[0.100,0],[0.155,0]] },
-      // QRS1 — WIDE (≥0.12s), notched, slurred — infranodal disease
-      //   Initial r, then slurred wide R, then deep S (left bundle branch pattern)
-      { t: "B", pts: [[0.155,0],[0.158,-0.04],[0.161,-0.06],[0.163,-0.08]] },
-      // Slurred wide upstroke
-      { t: "B", pts: [[0.163,-0.08],[0.170,0.30],[0.178,1.40],[0.184,2.20]] },
-      // Wide peak, slightly notched
-      { t: "B", pts: [[0.184,2.20],[0.188,2.40],[0.192,2.20],[0.197,1.80]] },
-      // Slurred descent
-      { t: "B", pts: [[0.197,1.80],[0.204,0.60],[0.212,-0.30],[0.218,-0.46]] },
-      // S wave — wider than normal, slow return
-      { t: "B", pts: [[0.218,-0.46],[0.224,-0.28],[0.230,-0.08],[0.236,0]] },
-      // ST slightly elevated (discordant ST/T in bundle branch block)
-      { t: "L", pts: [[0.236,0],[0.258,0.04]] },
-      // T wave — DISCORDANT (opposite to main QRS deflection — classic BBB)
-      // Since QRS is positive, T is inverted/negative
-      { t: "B", pts: [[0.258,0.04],[0.268,-0.04],[0.282,-0.28],[0.292,-0.38]] },
-      { t: "B", pts: [[0.292,-0.38],[0.302,-0.28],[0.314,-0.08],[0.322,-0.01]] },
-      { t: "B", pts: [[0.322,-0.01],[0.326,0],[0.330,0],[0.335,0]] },
+      // ── BEAT 1: Conducted, PR=200ms, WIDE QRS ─────────────
+      { t: "L", pts: [[0,0],[0.018,0]] },
+      { t: "B", pts: [[0.018,0],[0.030,0.08],[0.042,0.18],[0.050,0.20]] },
+      { t: "B", pts: [[0.050,0.20],[0.058,0.17],[0.067,0.06],[0.073,0]] },
+      { t: "L", pts: [[0.073,0],[0.116,0]] },
+      // WIDE QRS: slurred upstroke (LBBB-like bundle branch disease)
+      { t: "B", pts: [[0.116,0],[0.119,-0.03],[0.122,-0.07],[0.124,-0.10]] },
+      { t: "B", pts: [[0.124,-0.10],[0.130,0.40],[0.138,1.40],[0.144,2.10]] },
+      { t: "B", pts: [[0.144,2.10],[0.148,2.40],[0.152,2.20],[0.156,1.80]] },
+      { t: "B", pts: [[0.156,1.80],[0.162,0.80],[0.170,-0.20],[0.176,-0.40]] },
+      { t: "B", pts: [[0.176,-0.40],[0.182,-0.24],[0.188,-0.06],[0.193,0]] },
+      { t: "L", pts: [[0.193,0],[0.212,0.03]] },
+      // Discordant T (opposite QRS direction — inverted)
+      { t: "B", pts: [[0.212,0.03],[0.220,-0.04],[0.232,-0.22],[0.240,-0.32]] },
+      { t: "B", pts: [[0.240,-0.32],[0.248,-0.26],[0.258,-0.10],[0.266,-0.01]] },
+      { t: "B", pts: [[0.266,-0.01],[0.270,0],[0.274,0],[0.278,0]] },
 
-      // ─── BEAT 2: Conducted — IDENTICAL PR, IDENTICAL wide QRS ────────────
-      { t: "L", pts: [[0.335,0],[0.352,0]] },
-      // P2 — EXACTLY same morphology, exactly same PR interval (teaching: measure both)
-      { t: "B", pts: [[0.352,0],[0.372,0.12],[0.386,0.22],[0.396,0.22]] },
-      { t: "B", pts: [[0.396,0.22],[0.406,0.16],[0.418,0.04],[0.426,0]] },
-      // PR2 — SAME as PR1 (key diagnostic criterion: constant PR)
-      { t: "L", pts: [[0.426,0],[0.481,0]] },
-      // QRS2 — identical wide, slurred QRS
-      { t: "B", pts: [[0.481,0],[0.484,-0.04],[0.487,-0.06],[0.489,-0.08]] },
-      { t: "B", pts: [[0.489,-0.08],[0.496,0.30],[0.504,1.40],[0.510,2.20]] },
-      { t: "B", pts: [[0.510,2.20],[0.514,2.40],[0.518,2.20],[0.523,1.80]] },
-      { t: "B", pts: [[0.523,1.80],[0.530,0.60],[0.538,-0.30],[0.544,-0.46]] },
-      { t: "B", pts: [[0.544,-0.46],[0.550,-0.28],[0.556,-0.08],[0.562,0]] },
-      { t: "L", pts: [[0.562,0],[0.584,0.04]] },
-      // T2 — discordant again
-      { t: "B", pts: [[0.584,0.04],[0.594,-0.04],[0.608,-0.28],[0.618,-0.38]] },
-      { t: "B", pts: [[0.618,-0.38],[0.628,-0.28],[0.640,-0.08],[0.648,-0.01]] },
-      { t: "B", pts: [[0.648,-0.01],[0.652,0],[0.656,0],[0.661,0]] },
+      // ── BEAT 2: IDENTICAL PR, IDENTICAL wide QRS ──────────
+      { t: "L", pts: [[0.278,0],[0.296,0]] },
+      { t: "B", pts: [[0.296,0],[0.308,0.08],[0.320,0.18],[0.328,0.20]] },
+      { t: "B", pts: [[0.328,0.20],[0.336,0.17],[0.345,0.06],[0.351,0]] },
+      { t: "L", pts: [[0.351,0],[0.394,0]] },
+      { t: "B", pts: [[0.394,0],[0.397,-0.03],[0.400,-0.07],[0.402,-0.10]] },
+      { t: "B", pts: [[0.402,-0.10],[0.408,0.40],[0.416,1.40],[0.422,2.10]] },
+      { t: "B", pts: [[0.422,2.10],[0.426,2.40],[0.430,2.20],[0.434,1.80]] },
+      { t: "B", pts: [[0.434,1.80],[0.440,0.80],[0.448,-0.20],[0.454,-0.40]] },
+      { t: "B", pts: [[0.454,-0.40],[0.460,-0.24],[0.466,-0.06],[0.471,0]] },
+      { t: "L", pts: [[0.471,0],[0.490,0.03]] },
+      { t: "B", pts: [[0.490,0.03],[0.498,-0.04],[0.510,-0.22],[0.518,-0.32]] },
+      { t: "B", pts: [[0.518,-0.32],[0.526,-0.26],[0.536,-0.10],[0.544,-0.01]] },
+      { t: "B", pts: [[0.544,-0.01],[0.548,0],[0.552,0],[0.556,0]] },
 
-      // ─── BEAT 3 (BLOCKED): P fires, NO QRS — SUDDEN, no warning ─────────
-      // The key: NO change in preceding PR intervals. Completely unexpected.
-      { t: "L", pts: [[0.661,0],[0.678,0]] },
-      // P3 — normal P wave. Same as P1 and P2.
-      { t: "B", pts: [[0.678,0],[0.698,0.12],[0.712,0.22],[0.722,0.22]] },
-      { t: "B", pts: [[0.722,0.22],[0.732,0.16],[0.744,0.04],[0.752,0]] },
-      // FLAT — no QRS. Long compensatory pause. Very dangerous clinically.
-      { t: "L", pts: [[0.752,0],[1.0,0]] },
+      // ── BEAT 3 (BLOCKED): P fires, NO QRS — sudden, no warning ──
+      { t: "L", pts: [[0.556,0],[0.574,0]] },
+      { t: "B", pts: [[0.574,0],[0.586,0.08],[0.598,0.18],[0.606,0.20]] },
+      { t: "B", pts: [[0.606,0.20],[0.614,0.17],[0.623,0.06],[0.629,0]] },
+      // LONG PAUSE — dangerous, could degenerate to 3° block or asystole
+      { t: "L", pts: [[0.629,0],[1.000,0]] },
     ],
   },
 
@@ -657,66 +737,67 @@ const RHYTHMS = {
     label: "2° Block 2:1", rate: 40, color: "#ff6600", irregular: false,
     category: "Blocks", severity: "critical",
     vitals: { hr: 40, sbp: 90, dbp: 56, spo2: 94, rr: 14, temp: 98.0, etco2: 32, map: 67 },
-    // ── Clinical: 2:1 AV block — every OTHER P wave is blocked.
-    //    Ventricular rate = exactly HALF the atrial rate.
-    //    Cannot distinguish Mobitz I vs II from 2:1 alone (need longer strip).
-    //    Treated as Mobitz II (dangerous) until proven otherwise.
-    //    PR is constant on all CONDUCTED beats. QRS may be wide.
-    //    Teaching point: count P waves — twice as many as QRS.
-    //    Blocked P waves appear at regular intervals between QRS complexes.
+    // Every OTHER P blocked. Ventricular rate = atrial rate ÷ 2.
+    // THREE full P-QRS-P cycles shown: P1 conducts, P2 blocked, P3 conducts, P4 blocked, P5 starts...
+    // PR constant on conducted beats. Cannot distinguish Mobitz I/II → treat as high risk.
     segments: [
-      // P1 — conducted, normal PR, narrow-to-wide QRS
-      { t: "L", pts: [[0,0],[0.02,0]] },
-      { t: "B", pts: [[0.02,0],[0.04,0.12],[0.055,0.22],[0.065,0.20]] },
-      { t: "B", pts: [[0.065,0.20],[0.075,0.14],[0.086,0.03],[0.093,0]] },
-      // PR interval — constant
-      { t: "L", pts: [[0.093,0],[0.145,0]] },
-      // QRS1 — mildly wide (0.11s), slightly slurred
-      { t: "B", pts: [[0.145,0],[0.148,-0.06],[0.151,-0.12],[0.153,-0.16]] },
-      { t: "B", pts: [[0.153,-0.16],[0.157,0.70],[0.161,1.90],[0.164,2.40]] },
-      { t: "B", pts: [[0.164,2.40],[0.168,1.20],[0.173,-0.22],[0.177,-0.38]] },
-      { t: "B", pts: [[0.177,-0.38],[0.181,-0.18],[0.185,-0.03],[0.188,0]] },
-      { t: "L", pts: [[0.188,0],[0.210,0.02]] },
-      // T wave
-      { t: "B", pts: [[0.210,0.02],[0.220,0.10],[0.232,0.30],[0.240,0.36]] },
-      { t: "B", pts: [[0.240,0.36],[0.250,0.28],[0.262,0.08],[0.270,0.01]] },
-      { t: "B", pts: [[0.270,0.01],[0.274,0],[0.278,0],[0.283,0]] },
+      // P1 — conducted
+      { t: "L", pts: [[0,0],[0.014,0]] },
+      { t: "B", pts: [[0.014,0],[0.026,0.08],[0.037,0.18],[0.044,0.20]] },
+      { t: "B", pts: [[0.044,0.20],[0.051,0.17],[0.059,0.05],[0.065,0]] },
+      { t: "L", pts: [[0.065,0],[0.100,0]] },
+      // QRS — mildly wide
+      { t: "B", pts: [[0.100,0],[0.103,-0.05],[0.106,-0.10],[0.107,-0.13]] },
+      { t: "B", pts: [[0.107,-0.13],[0.111,0.70],[0.115,1.90],[0.117,2.30]] },
+      { t: "B", pts: [[0.117,2.30],[0.120,1.20],[0.124,-0.16],[0.127,-0.30]] },
+      { t: "B", pts: [[0.127,-0.30],[0.130,-0.16],[0.133,-0.04],[0.136,0]] },
+      { t: "L", pts: [[0.136,0],[0.152,0.01]] },
+      { t: "B", pts: [[0.152,0.01],[0.160,0.06],[0.170,0.20],[0.178,0.30]] },
+      { t: "B", pts: [[0.178,0.30],[0.183,0.28],[0.190,0.14],[0.196,0.03]] },
+      { t: "B", pts: [[0.196,0.03],[0.200,0.01],[0.203,0],[0.206,0]] },
 
-      // P2 — BLOCKED: no QRS follows (appears at regular P-P interval)
-      { t: "L", pts: [[0.283,0],[0.295,0]] },
-      // This P wave sits alone in the middle of the pause — very visible
-      { t: "B", pts: [[0.295,0],[0.315,0.12],[0.330,0.22],[0.340,0.20]] },
-      { t: "B", pts: [[0.340,0.20],[0.350,0.14],[0.361,0.03],[0.368,0]] },
-      // FLAT — no QRS follows this P
-      { t: "L", pts: [[0.368,0],[0.440,0]] },
+      // P2 — BLOCKED (exact same P-P interval — arrives at predicted time)
+      { t: "L", pts: [[0.206,0],[0.220,0]] },
+      { t: "B", pts: [[0.220,0],[0.232,0.08],[0.243,0.18],[0.250,0.20]] },
+      { t: "B", pts: [[0.250,0.20],[0.257,0.17],[0.265,0.05],[0.271,0]] },
+      // NO QRS — flat line  
+      { t: "L", pts: [[0.271,0],[0.360,0]] },
 
-      // P3 — conducted again, SAME PR as P1 (constant PR)
-      { t: "B", pts: [[0.440,0],[0.460,0.12],[0.475,0.22],[0.485,0.20]] },
-      { t: "B", pts: [[0.485,0.20],[0.495,0.14],[0.506,0.03],[0.513,0]] },
-      // PR — identical to first conducted beat
-      { t: "L", pts: [[0.513,0],[0.565,0]] },
-      // QRS3 — identical morphology to QRS1
-      { t: "B", pts: [[0.565,0],[0.568,-0.06],[0.571,-0.12],[0.573,-0.16]] },
-      { t: "B", pts: [[0.573,-0.16],[0.577,0.70],[0.581,1.90],[0.584,2.40]] },
-      { t: "B", pts: [[0.584,2.40],[0.588,1.20],[0.593,-0.22],[0.597,-0.38]] },
-      { t: "B", pts: [[0.597,-0.38],[0.601,-0.18],[0.605,-0.03],[0.608,0]] },
-      { t: "L", pts: [[0.608,0],[0.630,0.02]] },
-      { t: "B", pts: [[0.630,0.02],[0.640,0.10],[0.652,0.30],[0.660,0.36]] },
-      { t: "B", pts: [[0.660,0.36],[0.670,0.28],[0.682,0.08],[0.690,0.01]] },
-      { t: "B", pts: [[0.690,0.01],[0.694,0],[0.698,0],[0.703,0]] },
+      // P3 — conducted (identical PR to P1)
+      { t: "B", pts: [[0.360,0],[0.372,0.08],[0.383,0.18],[0.390,0.20]] },
+      { t: "B", pts: [[0.390,0.20],[0.397,0.17],[0.405,0.05],[0.411,0]] },
+      { t: "L", pts: [[0.411,0],[0.446,0]] },
+      { t: "B", pts: [[0.446,0],[0.449,-0.05],[0.452,-0.10],[0.453,-0.13]] },
+      { t: "B", pts: [[0.453,-0.13],[0.457,0.70],[0.461,1.90],[0.463,2.30]] },
+      { t: "B", pts: [[0.463,2.30],[0.466,1.20],[0.470,-0.16],[0.473,-0.30]] },
+      { t: "B", pts: [[0.473,-0.30],[0.476,-0.16],[0.479,-0.04],[0.482,0]] },
+      { t: "L", pts: [[0.482,0],[0.498,0.01]] },
+      { t: "B", pts: [[0.498,0.01],[0.506,0.06],[0.516,0.20],[0.524,0.30]] },
+      { t: "B", pts: [[0.524,0.30],[0.529,0.28],[0.536,0.14],[0.542,0.03]] },
+      { t: "B", pts: [[0.542,0.03],[0.546,0.01],[0.549,0],[0.552,0]] },
 
-      // P4 — BLOCKED again (same pattern)
-      { t: "L", pts: [[0.703,0],[0.712,0]] },
-      { t: "B", pts: [[0.712,0],[0.732,0.12],[0.747,0.22],[0.757,0.20]] },
-      { t: "B", pts: [[0.757,0.20],[0.767,0.14],[0.778,0.03],[0.785,0]] },
-      { t: "L", pts: [[0.785,0],[0.860,0]] },
+      // P4 — BLOCKED again
+      { t: "L", pts: [[0.552,0],[0.566,0]] },
+      { t: "B", pts: [[0.566,0],[0.578,0.08],[0.589,0.18],[0.596,0.20]] },
+      { t: "B", pts: [[0.596,0.20],[0.603,0.17],[0.611,0.05],[0.617,0]] },
+      { t: "L", pts: [[0.617,0],[0.706,0]] },
 
-      // P5 — conducted, same PR again (demonstrating constant PR)
-      { t: "B", pts: [[0.860,0],[0.880,0.12],[0.894,0.22],[0.904,0.20]] },
-      { t: "B", pts: [[0.904,0.20],[0.914,0.14],[0.925,0.03],[0.932,0]] },
-      { t: "L", pts: [[0.932,0],[0.984,0]] },
-      { t: "B", pts: [[0.984,0],[0.988,-0.06],[0.991,-0.10],[0.993,-0.12]] },
-      { t: "B", pts: [[0.993,-0.12],[0.997,0.60],[1.0,1.60]] },
+      // P5 — conducted start (shows constant PR)
+      { t: "B", pts: [[0.706,0],[0.718,0.08],[0.729,0.18],[0.736,0.20]] },
+      { t: "B", pts: [[0.736,0.20],[0.743,0.17],[0.751,0.05],[0.757,0]] },
+      { t: "L", pts: [[0.757,0],[0.792,0]] },
+      { t: "B", pts: [[0.792,0],[0.795,-0.05],[0.798,-0.10],[0.799,-0.13]] },
+      { t: "B", pts: [[0.799,-0.13],[0.803,0.70],[0.807,1.90],[0.809,2.30]] },
+      { t: "B", pts: [[0.809,2.30],[0.812,1.20],[0.816,-0.16],[0.819,-0.30]] },
+      { t: "B", pts: [[0.819,-0.30],[0.822,-0.16],[0.825,-0.04],[0.828,0]] },
+      { t: "L", pts: [[0.828,0],[0.844,0.01]] },
+      { t: "B", pts: [[0.844,0.01],[0.852,0.06],[0.862,0.20],[0.870,0.28]] },
+      { t: "B", pts: [[0.870,0.28],[0.876,0.26],[0.884,0.12],[0.890,0.02]] },
+      { t: "L", pts: [[0.890,0],[0.906,0]] },
+      // P6 blocked — partially visible at end
+      { t: "B", pts: [[0.906,0],[0.918,0.08],[0.929,0.18],[0.936,0.20]] },
+      { t: "B", pts: [[0.936,0.20],[0.943,0.17],[0.951,0.05],[0.957,0]] },
+      { t: "L", pts: [[0.957,0],[1.000,0]] },
     ],
   },
 
@@ -724,63 +805,63 @@ const RHYTHMS = {
     label: "High-Grade AV Block", rate: 28, color: "#ff4400", irregular: false,
     category: "Blocks", severity: "critical",
     vitals: { hr: 28, sbp: 74, dbp: 44, spo2: 92, rr: 18, temp: 97.8, etco2: 26, map: 54 },
-    // ── Clinical: 4:1 High-grade block — 3 consecutive P waves blocked for
-    //    every 1 conducted QRS. Ventricular rate dangerously low (~28bpm).
-    //    PR is constant on conducted beats. Wide QRS.
-    //    Requires immediate pacing — atropine usually ineffective.
-    //    Teaching point: multiple P waves between QRS complexes. Count them.
+    // 4:1 block: 3 consecutive P waves blocked per QRS. Rate ~28bpm.
+    // Wide QRS (infranodal disease). Atropine largely ineffective. Needs pacing.
     segments: [
-      // P1 — CONDUCTED beat with long PR and wide QRS
-      { t: "L", pts: [[0,0],[0.01,0]] },
-      { t: "B", pts: [[0.01,0],[0.03,0.12],[0.043,0.22],[0.052,0.20]] },
-      { t: "B", pts: [[0.052,0.20],[0.060,0.14],[0.070,0.03],[0.076,0]] },
-      { t: "L", pts: [[0.076,0],[0.120,0]] },
+      // P1 — CONDUCTED
+      { t: "L", pts: [[0,0],[0.008,0]] },
+      { t: "B", pts: [[0.008,0],[0.017,0.08],[0.026,0.18],[0.032,0.20]] },
+      { t: "B", pts: [[0.032,0.20],[0.038,0.17],[0.045,0.05],[0.050,0]] },
+      { t: "L", pts: [[0.050,0],[0.080,0]] },
       // Wide QRS
-      { t: "B", pts: [[0.120,0],[0.123,-0.05],[0.127,-0.12],[0.129,-0.16]] },
-      { t: "B", pts: [[0.129,-0.16],[0.134,0.60],[0.139,1.80],[0.143,2.30]] },
-      { t: "B", pts: [[0.143,2.30],[0.147,2.50],[0.151,2.20],[0.156,1.60]] },
-      { t: "B", pts: [[0.156,1.60],[0.162,0.40],[0.168,-0.36],[0.173,-0.50]] },
-      { t: "B", pts: [[0.173,-0.50],[0.178,-0.28],[0.183,-0.06],[0.187,0]] },
-      { t: "L", pts: [[0.187,0],[0.210,0.03]] },
-      // T wave — broad in escape beats
-      { t: "B", pts: [[0.210,0.03],[0.222,0.10],[0.236,0.30],[0.248,0.38]] },
-      { t: "B", pts: [[0.248,0.38],[0.260,0.28],[0.274,0.08],[0.284,0.01]] },
-      { t: "B", pts: [[0.284,0.01],[0.288,0],[0.292,0],[0.297,0]] },
+      { t: "B", pts: [[0.080,0],[0.083,-0.03],[0.087,-0.08],[0.089,-0.12]] },
+      { t: "B", pts: [[0.089,-0.12],[0.094,0.50],[0.100,1.60],[0.105,2.30]] },
+      { t: "B", pts: [[0.105,2.30],[0.109,2.50],[0.113,2.20],[0.118,1.60]] },
+      { t: "B", pts: [[0.118,1.60],[0.124,0.40],[0.130,-0.36],[0.135,-0.48]] },
+      { t: "B", pts: [[0.135,-0.48],[0.140,-0.28],[0.145,-0.06],[0.149,0]] },
+      { t: "L", pts: [[0.149,0],[0.170,0.03]] },
+      // Broad T
+      { t: "B", pts: [[0.170,0.03],[0.181,0.08],[0.194,0.24],[0.204,0.32]] },
+      { t: "B", pts: [[0.204,0.32],[0.213,0.28],[0.224,0.10],[0.232,0.02]] },
+      { t: "L", pts: [[0.232,0],[0.254,0]] },
 
-      // P2 — BLOCKED (1st of 3 blocked P waves)
-      { t: "L", pts: [[0.297,0],[0.312,0]] },
-      { t: "B", pts: [[0.312,0],[0.330,0.12],[0.344,0.22],[0.353,0.20]] },
-      { t: "B", pts: [[0.353,0.20],[0.362,0.14],[0.372,0.03],[0.379,0]] },
-      { t: "L", pts: [[0.379,0],[0.412,0]] },
+      // P2 — BLOCKED (1 of 3)
+      { t: "B", pts: [[0.254,0],[0.263,0.08],[0.272,0.18],[0.278,0.20]] },
+      { t: "B", pts: [[0.278,0.20],[0.284,0.17],[0.291,0.05],[0.297,0]] },
+      { t: "L", pts: [[0.297,0],[0.322,0]] },
+      // P3 — BLOCKED (2 of 3)
+      { t: "B", pts: [[0.322,0],[0.331,0.08],[0.340,0.18],[0.346,0.20]] },
+      { t: "B", pts: [[0.346,0.20],[0.352,0.17],[0.359,0.05],[0.365,0]] },
+      { t: "L", pts: [[0.365,0],[0.390,0]] },
+      // P4 — BLOCKED (3 of 3)
+      { t: "B", pts: [[0.390,0],[0.399,0.08],[0.408,0.18],[0.414,0.20]] },
+      { t: "B", pts: [[0.414,0.20],[0.420,0.17],[0.427,0.05],[0.433,0]] },
+      { t: "L", pts: [[0.433,0],[0.458,0]] },
 
-      // P3 — BLOCKED (2nd blocked P)
-      { t: "B", pts: [[0.412,0],[0.430,0.12],[0.444,0.22],[0.453,0.20]] },
-      { t: "B", pts: [[0.453,0.20],[0.462,0.14],[0.472,0.03],[0.479,0]] },
-      { t: "L", pts: [[0.479,0],[0.512,0]] },
-
-      // P4 — BLOCKED (3rd blocked P — dramatic flat pause)
-      { t: "B", pts: [[0.512,0],[0.530,0.12],[0.544,0.22],[0.553,0.20]] },
-      { t: "B", pts: [[0.553,0.20],[0.562,0.14],[0.572,0.03],[0.579,0]] },
-      { t: "L", pts: [[0.579,0],[0.612,0]] },
-
-      // P5 — CONDUCTED again (same PR as P1, starts new 4:1 cycle)
-      { t: "B", pts: [[0.612,0],[0.630,0.12],[0.644,0.22],[0.653,0.20]] },
-      { t: "B", pts: [[0.653,0.20],[0.662,0.14],[0.672,0.03],[0.679,0]] },
-      { t: "L", pts: [[0.679,0],[0.722,0]] },
-      // Wide QRS again — identical to first
-      { t: "B", pts: [[0.722,0],[0.725,-0.05],[0.729,-0.12],[0.731,-0.16]] },
-      { t: "B", pts: [[0.731,-0.16],[0.736,0.60],[0.741,1.80],[0.745,2.30]] },
-      { t: "B", pts: [[0.745,2.30],[0.749,2.50],[0.753,2.20],[0.758,1.60]] },
-      { t: "B", pts: [[0.758,1.60],[0.764,0.40],[0.770,-0.36],[0.775,-0.50]] },
-      { t: "B", pts: [[0.775,-0.50],[0.780,-0.28],[0.785,-0.06],[0.789,0]] },
-      { t: "L", pts: [[0.789,0],[0.810,0.03]] },
-      { t: "B", pts: [[0.810,0.03],[0.822,0.10],[0.836,0.30],[0.848,0.36]] },
-      { t: "B", pts: [[0.848,0.36],[0.860,0.28],[0.874,0.08],[0.884,0.01]] },
-      { t: "L", pts: [[0.884,0],[0.910,0]] },
-      // P6 — BLOCKED (first of next 3)
-      { t: "B", pts: [[0.910,0],[0.928,0.12],[0.942,0.22],[0.951,0.20]] },
-      { t: "B", pts: [[0.951,0.20],[0.960,0.14],[0.970,0.03],[0.977,0]] },
-      { t: "L", pts: [[0.977,0],[1.0,0]] },
+      // P5 — CONDUCTED again (same PR as P1)
+      { t: "B", pts: [[0.458,0],[0.467,0.08],[0.476,0.18],[0.482,0.20]] },
+      { t: "B", pts: [[0.482,0.20],[0.488,0.17],[0.495,0.05],[0.501,0]] },
+      { t: "L", pts: [[0.501,0],[0.531,0]] },
+      // Wide QRS — identical
+      { t: "B", pts: [[0.531,0],[0.534,-0.03],[0.538,-0.08],[0.540,-0.12]] },
+      { t: "B", pts: [[0.540,-0.12],[0.545,0.50],[0.551,1.60],[0.556,2.30]] },
+      { t: "B", pts: [[0.556,2.30],[0.560,2.50],[0.564,2.20],[0.569,1.60]] },
+      { t: "B", pts: [[0.569,1.60],[0.575,0.40],[0.581,-0.36],[0.586,-0.48]] },
+      { t: "B", pts: [[0.586,-0.48],[0.591,-0.28],[0.596,-0.06],[0.600,0]] },
+      { t: "L", pts: [[0.600,0],[0.620,0.03]] },
+      { t: "B", pts: [[0.620,0.03],[0.631,0.08],[0.644,0.24],[0.654,0.32]] },
+      { t: "B", pts: [[0.654,0.32],[0.663,0.28],[0.674,0.10],[0.682,0.02]] },
+      { t: "L", pts: [[0.682,0],[0.704,0]] },
+      // P6 blocked
+      { t: "B", pts: [[0.704,0],[0.713,0.08],[0.722,0.18],[0.728,0.20]] },
+      { t: "B", pts: [[0.728,0.20],[0.734,0.17],[0.741,0.05],[0.747,0]] },
+      { t: "L", pts: [[0.747,0],[0.772,0]] },
+      { t: "B", pts: [[0.772,0],[0.781,0.08],[0.790,0.18],[0.796,0.20]] },
+      { t: "B", pts: [[0.796,0.20],[0.802,0.17],[0.809,0.05],[0.815,0]] },
+      { t: "L", pts: [[0.815,0],[0.840,0]] },
+      { t: "B", pts: [[0.840,0],[0.849,0.08],[0.858,0.18],[0.864,0.20]] },
+      { t: "B", pts: [[0.864,0.20],[0.870,0.17],[0.877,0.05],[0.883,0]] },
+      { t: "L", pts: [[0.883,0],[1.000,0]] },
     ],
   },
 
@@ -788,195 +869,260 @@ const RHYTHMS = {
     label: "3° Heart Block (Complete)", rate: 32, color: "#ff2222", irregular: false,
     category: "Blocks", severity: "critical",
     vitals: { hr: 32, sbp: 74, dbp: 44, spo2: 90, rr: 18, temp: 97.6, etco2: 26, map: 54 },
-    // ── Clinical: COMPLETE AV dissociation. Static segments here are just used
-    //    as the VENTRICULAR ESCAPE QRS+T template. The real magic is in nextBeat():
-    //    P waves are generated by a SEPARATE oscillator at ~75bpm and overlaid
-    //    onto the ventricular beats — they march right through QRS complexes.
-    //    Rate: atria ~75bpm, ventricles ~32bpm → ~2.3:1 P:QRS ratio.
-    //    QRS: WIDE and BIZARRE (ventricular escape, not junctional).
-    //    P waves: normal morphology, regular rate, but NO relationship to QRS.
-    //    Teaching point: P-P regular. R-R regular. But PR has NO pattern.
-    //    Cannon A-waves in JVP. Variation in S1 intensity.
+    // VENTRICULAR ESCAPE TEMPLATE ONLY.
+    // nextBeat() overlays P waves at independent atrial rate (~75bpm).
+    // Wide bizarre ventricular escape QRS, broad discordant T.
     segments: [
-      // Ventricular escape QRS template — WIDE, bizarre morphology
-      // Pre-QRS flat
-      { t: "L", pts: [[0,0],[0.08,0]] },
-      // Wide, slurred upstroke (no P before it — P oscillator runs independently)
-      { t: "B", pts: [[0.08,0],[0.085,-0.04],[0.09,-0.10],[0.093,-0.16]] },
-      // Tall but broad R wave
-      { t: "B", pts: [[0.093,-0.16],[0.100,0.60],[0.108,1.80],[0.114,2.40]] },
-      // Slightly notched peak (common in ventricular escape)
-      { t: "B", pts: [[0.114,2.40],[0.118,2.60],[0.122,2.40],[0.127,1.80]] },
-      // Slurred descent
-      { t: "B", pts: [[0.127,1.80],[0.134,0.60],[0.141,-0.40],[0.147,-0.58]] },
-      // Broad S wave
-      { t: "B", pts: [[0.147,-0.58],[0.153,-0.36],[0.159,-0.10],[0.164,0]] },
-      // ST segment — typically elevated discordant to main QRS deflection
-      { t: "L", pts: [[0.164,0],[0.200,0.08]] },
-      // T wave — BROAD, discordant (opposite to QRS), characteristic of ventricular beats
-      { t: "B", pts: [[0.200,0.08],[0.216,-0.04],[0.236,-0.30],[0.252,-0.48]] },
-      { t: "B", pts: [[0.252,-0.48],[0.268,-0.36],[0.284,-0.12],[0.298,-0.02]] },
-      { t: "B", pts: [[0.298,-0.02],[0.304,-0.01],[0.310,0],[0.318,0]] },
-      // Long isoelectric baseline (slow rate = long TP interval)
-      { t: "L", pts: [[0.318,0],[1.0,0]] },
+      { t: "L", pts: [[0,0],[0.068,0]] },
+      { t: "B", pts: [[0.068,0],[0.072,-0.04],[0.076,-0.09],[0.078,-0.12]] },
+      { t: "B", pts: [[0.078,-0.12],[0.084,0.50],[0.091,1.70],[0.096,2.40]] },
+      { t: "B", pts: [[0.096,2.40],[0.100,2.60],[0.104,2.40],[0.108,1.80]] },
+      { t: "B", pts: [[0.108,1.80],[0.114,0.60],[0.121,-0.38],[0.127,-0.54]] },
+      { t: "B", pts: [[0.127,-0.54],[0.132,-0.34],[0.138,-0.10],[0.142,0]] },
+      { t: "L", pts: [[0.142,0],[0.168,0.06]] },
+      // Broad discordant T
+      { t: "B", pts: [[0.168,0.06],[0.182,-0.04],[0.202,-0.28],[0.218,-0.44]] },
+      { t: "B", pts: [[0.218,-0.44],[0.234,-0.34],[0.250,-0.12],[0.263,-0.02]] },
+      { t: "B", pts: [[0.263,-0.02],[0.268,0],[0.273,0],[0.280,0]] },
+      { t: "L", pts: [[0.280,0],[1.000,0]] },
     ],
   },
 
-  // ── VENTRICULAR ───────────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // VENTRICULAR RHYTHMS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   PVC: {
-    label: "Frequent PVCs", rate: 75, color: "#ff8800", irregular: false,
+    label: "Frequent PVCs (Bigeminy)", rate: 72, color: "#ff8800", irregular: true,
     category: "Ventricular", severity: "warning",
-    vitals: { hr: 75, sbp: 108, dbp: 66, spo2: 96, rr: 16, temp: 98.6, etco2: 36, map: 80 },
+    vitals: { hr: 72, sbp: 108, dbp: 66, spo2: 96, rr: 16, temp: 98.6, etco2: 36, map: 80 },
+    // BIGEMINY: every other beat is a PVC.
+    // Normal beat → PVC → normal beat → PVC
+    // PVC: wide (≥120ms), bizarre, NO preceding P, T wave DISCORDANT (opposite QRS)
+    // Full compensatory pause after PVC (sum of PVC RR + following RR = 2 normal RR)
     segments: [
-      { t: "L", pts: [[0,0],[0.04,0]] },
-      { t: "B", pts: [[0.04,0],[0.06,0.16],[0.08,0.20],[0.10,0.16]] },
-      { t: "B", pts: [[0.10,0.16],[0.12,0.08],[0.14,0],[0.16,0]] },
-      { t: "L", pts: [[0.16,0],[0.20,0]] },
-      { t: "B", pts: [[0.20,0],[0.21,-0.10],[0.215,-0.16],[0.22,-0.20]] },
-      { t: "B", pts: [[0.22,-0.20],[0.225,0.5],[0.23,1.5],[0.235,2.2]] },
-      { t: "B", pts: [[0.235,2.2],[0.24,0.8],[0.25,-0.30],[0.26,-0.35]] },
-      { t: "B", pts: [[0.26,-0.35],[0.27,-0.15],[0.29,0],[0.31,0.04]] },
-      { t: "L", pts: [[0.31,0.04],[0.36,0.05]] },
-      { t: "B", pts: [[0.36,0.05],[0.39,0.10],[0.41,0.32],[0.43,0.40]] },
-      { t: "B", pts: [[0.43,0.40],[0.45,0.32],[0.47,0.10],[0.49,0]] },
-      { t: "L", pts: [[0.49,0],[0.54,0]] },
-      { t: "B", pts: [[0.54,0],[0.56,0.3],[0.58,1.0],[0.60,2.0]] },
-      { t: "B", pts: [[0.60,2.0],[0.62,2.6],[0.64,2.2],[0.67,1.2]] },
-      { t: "B", pts: [[0.67,1.2],[0.70,0.2],[0.73,-0.9],[0.76,-1.4]] },
-      { t: "B", pts: [[0.76,-1.4],[0.78,-1.0],[0.80,-0.4],[0.83,0]] },
-      { t: "B", pts: [[0.83,0],[0.86,0.15],[0.89,0.22],[0.92,0.18]] },
-      { t: "B", pts: [[0.92,0.18],[0.95,0.10],[0.97,0],[1.0,0]] },
+      // ── NORMAL BEAT ──────────────────────────────────
+      { t: "L", pts: [[0,0],[0.038,0]] },
+      { t: "B", pts: [[0.038,0],[0.050,0.08],[0.062,0.20],[0.071,0.22]] },
+      { t: "B", pts: [[0.071,0.22],[0.080,0.18],[0.090,0.06],[0.096,0]] },
+      { t: "L", pts: [[0.096,0],[0.128,0]] },
+      { t: "B", pts: [[0.128,0],[0.131,-0.06],[0.134,-0.11],[0.135,-0.14]] },
+      { t: "B", pts: [[0.135,-0.14],[0.139,0.80],[0.143,2.10],[0.145,2.50]] },
+      { t: "B", pts: [[0.145,2.50],[0.148,1.40],[0.152,-0.18],[0.155,-0.36]] },
+      { t: "B", pts: [[0.155,-0.36],[0.158,-0.20],[0.161,-0.05],[0.164,0]] },
+      { t: "L", pts: [[0.164,0],[0.178,0.01]] },
+      { t: "B", pts: [[0.178,0.01],[0.187,0.07],[0.198,0.24],[0.207,0.36]] },
+      { t: "B", pts: [[0.207,0.36],[0.213,0.34],[0.221,0.18],[0.229,0.04]] },
+      { t: "B", pts: [[0.229,0.04],[0.234,0.01],[0.238,0],[0.242,0]] },
+
+      // ── PVC — arrives early, no preceding P ──────────
+      // Wide bizarre QRS (LBBB morphology is most common PVC pattern)
+      // Initial deflection OPPOSITE to normal QRS
+      { t: "L", pts: [[0.242,0],[0.268,0]] },
+      // Broad, tall, monophasic R wave (ventricular origin)
+      { t: "B", pts: [[0.268,0],[0.280,0.60],[0.296,1.60],[0.308,2.40]] },
+      { t: "B", pts: [[0.308,2.40],[0.316,2.60],[0.324,2.40],[0.334,1.80]] },
+      { t: "B", pts: [[0.334,1.80],[0.344,0.80],[0.356,-0.60],[0.364,-1.20]] },
+      { t: "B", pts: [[0.364,-1.20],[0.372,-0.90],[0.382,-0.40],[0.392,-0.10]] },
+      { t: "B", pts: [[0.392,-0.10],[0.398,-0.02],[0.403,0],[0.408,0]] },
+      // Discordant T wave: large, broad, NEGATIVE (opposite to monophasic R)
+      { t: "B", pts: [[0.408,0],[0.420,-0.16],[0.436,-0.40],[0.448,-0.52]] },
+      { t: "B", pts: [[0.448,-0.52],[0.460,-0.46],[0.476,-0.24],[0.490,-0.06]] },
+      { t: "B", pts: [[0.490,-0.06],[0.497,-0.01],[0.502,0],[0.506,0]] },
+      // FULL COMPENSATORY PAUSE — longer than normal RR
+      { t: "L", pts: [[0.506,0],[1.000,0]] },
     ],
   },
+
   IDIOVENTRICULAR: {
-    label: "Idioventricular", rate: 32, color: "#ff8800", irregular: false,
+    label: "Idioventricular Rhythm", rate: 32, color: "#ff8800", irregular: false,
     category: "Ventricular", severity: "critical",
     vitals: { hr: 32, sbp: 72, dbp: 40, spo2: 88, rr: 18, temp: 97.4, etco2: 24, map: 51 },
-    // Wide bizarre QRS, very slow, no P waves
+    // Rate 20-40bpm (ventricular escape). NO P waves. WIDE bizarre QRS.
+    // Slow, regular. Escape pacemaker in ventricles fires when all else fails.
+    // QRS morphology: broad monophasic, slurred, huge T opposite direction
     segments: [
-      { t: "L", pts: [[0,0],[0.15,0]] },
-      { t: "B", pts: [[0.15,0],[0.18,0.3],[0.21,0.9],[0.24,1.6]] },
-      { t: "B", pts: [[0.24,1.6],[0.27,2.2],[0.30,2.0],[0.33,1.3]] },
-      { t: "B", pts: [[0.33,1.3],[0.36,0.5],[0.39,-0.4],[0.42,-0.7]] },
-      { t: "B", pts: [[0.42,-0.7],[0.44,-0.5],[0.46,-0.2],[0.49,0]] },
-      { t: "B", pts: [[0.49,0],[0.52,-0.15],[0.55,-0.28],[0.58,-0.30]] },
-      { t: "B", pts: [[0.58,-0.30],[0.61,-0.24],[0.64,-0.08],[0.67,0]] },
-      { t: "L", pts: [[0.67,0],[1.0,0]] },
+      { t: "L", pts: [[0,0],[0.140,0]] },
+      // Wide slurred upstroke
+      { t: "B", pts: [[0.140,0],[0.156,0.40],[0.174,1.00],[0.190,1.80]] },
+      { t: "B", pts: [[0.190,1.80],[0.204,2.30],[0.216,2.40],[0.226,2.20]] },
+      { t: "B", pts: [[0.226,2.20],[0.236,1.60],[0.248,0.60],[0.258,0]] },
+      // Deep S wave, broad
+      { t: "B", pts: [[0.258,0],[0.266,-0.50],[0.276,-0.90],[0.284,-1.00]] },
+      { t: "B", pts: [[0.284,-1.00],[0.292,-0.80],[0.302,-0.40],[0.312,-0.10]] },
+      { t: "B", pts: [[0.312,-0.10],[0.318,-0.02],[0.322,0],[0.327,0]] },
+      // Broad discordant T (negative, large)
+      { t: "B", pts: [[0.327,0],[0.340,-0.14],[0.360,-0.34],[0.376,-0.44]] },
+      { t: "B", pts: [[0.376,-0.44],[0.392,-0.38],[0.410,-0.16],[0.424,-0.03]] },
+      { t: "B", pts: [[0.424,-0.03],[0.430,0],[0.436,0],[0.442,0]] },
+      // Long TP
+      { t: "L", pts: [[0.442,0],[1.000,0]] },
     ],
   },
+
   SVT: {
-    label: "SVT", rate: 190, color: "#ff8800", irregular: false,
+    label: "SVT (AVNRT)", rate: 190, color: "#ff8800", irregular: false,
     category: "Ventricular", severity: "warning",
     vitals: { hr: 190, sbp: 90, dbp: 56, spo2: 93, rr: 24, temp: 98.8, etco2: 30, map: 67 },
+    // AVNRT: 150-250bpm. NARROW QRS. P waves hidden in QRS or JUST after.
+    // 190bpm = 316ms/beat. NO TP segment. T wave truncated.
+    // Retrograde P may deform terminal QRS or early ST (pseudo-R' in V1, pseudo-S in II)
+    // The key: narrow complex tachycardia, very fast, regular, no visible P before QRS
     segments: [
-      { t: "L", pts: [[0,0],[0.10,0]] },
-      { t: "B", pts: [[0.10,0],[0.11,-0.08],[0.115,-0.14],[0.12,-0.18]] },
-      { t: "B", pts: [[0.12,-0.18],[0.125,0.5],[0.13,1.4],[0.135,2.1]] },
-      { t: "B", pts: [[0.135,2.1],[0.14,0.8],[0.15,-0.28],[0.16,-0.32]] },
-      { t: "B", pts: [[0.16,-0.32],[0.17,-0.14],[0.185,0],[0.20,0.02]] },
-      { t: "B", pts: [[0.20,0.02],[0.23,0.02],[0.26,-0.10],[0.29,-0.14]] },
-      { t: "B", pts: [[0.29,-0.14],[0.32,-0.10],[0.35,0],[0.38,0]] },
-      { t: "L", pts: [[0.38,0],[0.50,0]] },
+      // No TP segment at this rate
+      // P buried inside QRS (typical AVNRT): pseudo-r' at end of QRS
+      { t: "L", pts: [[0,0],[0.044,0]] },
+      // QRS — narrow, clean
+      { t: "B", pts: [[0.044,0],[0.047,-0.05],[0.050,-0.10],[0.051,-0.13]] },
+      { t: "B", pts: [[0.051,-0.13],[0.055,0.80],[0.059,2.10],[0.061,2.50]] },
+      { t: "B", pts: [[0.061,2.50],[0.064,1.40],[0.068,-0.18],[0.071,-0.36]] },
+      { t: "B", pts: [[0.071,-0.36],[0.074,-0.20],[0.077,-0.05],[0.080,0]] },
+      // Pseudo-r' (retrograde P buried in terminal QRS) — tiny positive notch
+      { t: "B", pts: [[0.080,0],[0.086,0.08],[0.092,0.06],[0.096,0]] },
+      // ST — flat very short
+      { t: "L", pts: [[0.096,0],[0.112,0.02]] },
+      // T wave — truncated, merges into next beat
+      { t: "B", pts: [[0.112,0.02],[0.120,0.08],[0.130,0.20],[0.138,0.28]] },
+      { t: "B", pts: [[0.138,0.28],[0.144,0.26],[0.152,0.14],[0.160,0.04]] },
+      { t: "B", pts: [[0.160,0.04],[0.164,0.01],[0.168,0],[0.172,0]] },
+      // Almost no TP — next P/QRS begins
+      { t: "L", pts: [[0.172,0],[1.000,0]] },
     ],
   },
+
   VTACH: {
-    label: "Ventricular Tachycardia", rate: 165, color: "#ff4444", irregular: false,
+    label: "Ventricular Tachycardia", rate: 170, color: "#ff4444", irregular: false,
     category: "Ventricular", severity: "critical",
-    vitals: { hr: 165, sbp: 74, dbp: 44, spo2: 85, rr: 28, temp: 98.0, etco2: 20, map: 54 },
+    vitals: { hr: 170, sbp: 74, dbp: 44, spo2: 85, rr: 28, temp: 98.0, etco2: 20, map: 54 },
+    // 170bpm = 353ms/beat. WIDE QRS (≥140ms). Monomorphic (all QRS same shape).
+    // No P waves visible (AV dissociation — but P march continues independently).
+    // QRS: tall, broad, with initial slow slur (slow conduction in myocardium).
+    // T wave: DISCORDANT (large, opposite direction to main QRS deflection).
+    // No ST, no TP. Sinusoidal appearance at very fast rates.
+    // Brugada criteria: QRS>140ms, northwest axis, AV dissociation
     segments: [
-      { t: "L", pts: [[0,0],[0.05,0]] },
-      { t: "B", pts: [[0.05,0],[0.10,0.3],[0.15,0.9],[0.20,1.8]] },
-      { t: "B", pts: [[0.20,1.8],[0.25,2.4],[0.30,2.2],[0.35,1.4]] },
-      { t: "B", pts: [[0.35,1.4],[0.40,0.5],[0.44,-0.6],[0.47,-1.0]] },
-      { t: "B", pts: [[0.47,-1.0],[0.50,-0.8],[0.54,-0.3],[0.58,0]] },
-      { t: "B", pts: [[0.58,0],[0.62,0.2],[0.66,0.35],[0.70,0.3]] },
-      { t: "B", pts: [[0.70,0.3],[0.74,0.2],[0.78,0.05],[0.82,0]] },
-      { t: "L", pts: [[0.82,0],[1.0,0]] },
+      { t: "L", pts: [[0,0],[0.026,0]] },
+      // Broad slow initial deflection (ventricular origin, not Purkinje)
+      { t: "B", pts: [[0.026,0],[0.044,0.30],[0.062,0.80],[0.080,1.40]] },
+      { t: "B", pts: [[0.080,1.40],[0.096,2.00],[0.108,2.40],[0.118,2.50]] },
+      // Notched peak (common in VT)
+      { t: "B", pts: [[0.118,2.50],[0.124,2.40],[0.130,2.20],[0.136,1.80]] },
+      { t: "B", pts: [[0.136,1.80],[0.146,1.00],[0.158,0.10],[0.166,-0.50]] },
+      { t: "B", pts: [[0.166,-0.50],[0.174,-0.90],[0.180,-1.10],[0.185,-1.20]] },
+      { t: "B", pts: [[0.185,-1.20],[0.190,-1.00],[0.196,-0.60],[0.202,-0.20]] },
+      { t: "B", pts: [[0.202,-0.20],[0.207,-0.06],[0.211,-0.01],[0.215,0]] },
+      // Discordant T — large negative (QRS is mostly positive)
+      { t: "B", pts: [[0.215,0],[0.224,-0.10],[0.238,-0.32],[0.250,-0.46]] },
+      { t: "B", pts: [[0.250,-0.46],[0.260,-0.42],[0.272,-0.22],[0.282,-0.06]] },
+      { t: "B", pts: [[0.282,-0.06],[0.288,-0.01],[0.292,0],[0.296,0]] },
+      // Essentially no TP at this rate
+      { t: "L", pts: [[0.296,0],[1.000,0]] },
     ],
   },
+
   TORSADES: {
-    label: "Torsades de Pointes", rate: 200, color: "#ff4444", irregular: true,
+    label: "Torsades de Pointes", rate: 220, color: "#ff4444", irregular: true,
     category: "Ventricular", severity: "critical",
-    vitals: { hr: 200, sbp: 60, dbp: 30, spo2: 70, rr: 0, temp: 97.6, etco2: 10, map: 40 },
-    // Twisting QRS axis — amplitude modulates sinusoidally
+    vitals: { hr: 220, sbp: 60, dbp: 30, spo2: 70, rr: 0, temp: 97.6, etco2: 10, map: 40 },
+    // 220bpm = 273ms/beat. Sinusoidal AMPLITUDE MODULATION over 5-20 beats.
+    // QRS axis "twists" around the isoelectric line — positive then negative cycles.
+    // Looks like VT but amplitude undulates. Often self-terminates or → VFib.
+    // The segments define ONE beat of the sinusoidal envelope.
+    // nextBeat() handles the amplitude modulation cycle.
     segments: [
-      { t: "B", pts: [[0,0],[0.03,0.6],[0.06,1.4],[0.09,0.8]] },
-      { t: "B", pts: [[0.09,0.8],[0.11,0.3],[0.13,-0.3],[0.15,-0.6]] },
-      { t: "B", pts: [[0.15,-0.6],[0.17,-0.4],[0.19,0],[0.21,0]] },
-      { t: "B", pts: [[0.21,0],[0.23,0.4],[0.25,1.0],[0.27,0.5]] },
-      { t: "B", pts: [[0.27,0.5],[0.29,0.1],[0.31,-0.2],[0.33,-0.4]] },
-      { t: "B", pts: [[0.33,-0.4],[0.35,-0.2],[0.37,0],[0.39,0]] },
-      { t: "B", pts: [[0.39,0],[0.41,-0.4],[0.43,-1.0],[0.45,-0.5]] },
-      { t: "B", pts: [[0.45,-0.5],[0.47,-0.2],[0.49,0.2],[0.51,0.4]] },
-      { t: "B", pts: [[0.51,0.4],[0.53,0.2],[0.55,0],[0.57,0]] },
-      { t: "B", pts: [[0.57,0],[0.59,-0.6],[0.61,-1.4],[0.63,-0.8]] },
-      { t: "B", pts: [[0.63,-0.8],[0.65,-0.3],[0.67,0.3],[0.69,0.6]] },
-      { t: "B", pts: [[0.69,0.6],[0.71,0.4],[0.73,0],[0.75,0]] },
-      { t: "B", pts: [[0.75,0],[0.77,-0.4],[0.79,-1.0],[0.81,-0.5]] },
-      { t: "B", pts: [[0.81,-0.5],[0.83,-0.2],[0.85,0.2],[0.87,0.4]] },
-      { t: "B", pts: [[0.87,0.4],[0.89,0.2],[0.91,0],[0.93,0]] },
-      { t: "L", pts: [[0.93,0],[1.0,0]] },
+      // Base template for one "beat" — will be scaled by envelope function
+      { t: "B", pts: [[0,0],[0.040,0.60],[0.080,1.40],[0.120,0.80]] },
+      { t: "B", pts: [[0.120,0.80],[0.150,0.20],[0.180,-0.30],[0.210,-0.50]] },
+      { t: "B", pts: [[0.210,-0.50],[0.240,-0.30],[0.270,0],[0.300,0]] },
+      { t: "L", pts: [[0.300,0],[1.000,0]] },
     ],
   },
+
   VFIB: {
     label: "Ventricular Fibrillation", rate: 0, color: "#ff2222", irregular: true,
     category: "Ventricular", severity: "critical",
     vitals: { hr: 0, sbp: 0, dbp: 0, spo2: 0, rr: 0, temp: 97.0, etco2: 0, map: 0 },
+    // Chaotic, no organized waveforms. Amplitude varies beat-to-beat.
+    // Early VFib: coarse (large amplitude). Late VFib: fine (small amplitude → asystole).
+    // nextBeat() generates random chaos. This is just a marker.
     segments: [{ t: "VF", pts: [[0,0],[1.0,0]] }],
   },
+
   ASYSTOLE: {
     label: "Asystole", rate: 0, color: "#ff2222", irregular: false,
     category: "Ventricular", severity: "critical",
     vitals: { hr: 0, sbp: 0, dbp: 0, spo2: 0, rr: 0, temp: 97.0, etco2: 0, map: 0 },
+    // Flat line. Occasional artifact or P wave (PEA-like).
     segments: [{ t: "L", pts: [[0,0],[1.0,0.0]] }],
   },
 
-  // ── PACED ────────────────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // PACED RHYTHMS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   PACED: {
     label: "100% Paced", rate: 70, color: "#44ddff", irregular: false,
     category: "Paced", severity: "normal",
     vitals: { hr: 70, sbp: 112, dbp: 68, spo2: 97, rr: 14, temp: 98.4, etco2: 37, map: 83 },
-    // Pacing spike → wide QRS (no P, or paced P before QRS)
+    // Ventricular pacing: pacing spike (sharp, 2ms) → wide LBBB-morphology QRS
+    // Spike is tall, narrow. QRS: broad, monophasic positive, slurred upstroke.
+    // Discordant T: negative (opposite QRS direction — expected in pacing).
+    // No P wave before QRS (ventricular pacing only, no P-synchronous pacing shown here).
     segments: [
-      { t: "L", pts: [[0,0],[0.28,0]] },
-      // Pacing spike (sharp vertical line)
-      { t: "L", pts: [[0.28,0],[0.28,1.8]] },
-      { t: "L", pts: [[0.28,1.8],[0.29,1.8]] },
-      { t: "L", pts: [[0.29,1.8],[0.29,0]] },
-      // Wide paced QRS
-      { t: "B", pts: [[0.29,0],[0.31,0.3],[0.33,1.0],[0.35,1.8]] },
-      { t: "B", pts: [[0.35,1.8],[0.37,2.2],[0.39,2.0],[0.42,1.2]] },
-      { t: "B", pts: [[0.42,1.2],[0.44,0.4],[0.46,-0.5],[0.48,-0.8]] },
-      { t: "B", pts: [[0.48,-0.8],[0.50,-0.5],[0.52,-0.2],[0.54,0]] },
-      // Discordant broad T
-      { t: "B", pts: [[0.54,0],[0.57,-0.12],[0.60,-0.30],[0.63,-0.35]] },
-      { t: "B", pts: [[0.63,-0.35],[0.66,-0.28],[0.70,-0.08],[0.73,0]] },
-      { t: "L", pts: [[0.73,0],[1.0,0]] },
+      // Flat baseline
+      { t: "L", pts: [[0,0],[0.250,0]] },
+      // Pacing SPIKE: very sharp vertical line (2ms = nearly instantaneous)
+      { t: "L", pts: [[0.250,0],[0.250,1.80]] },
+      { t: "L", pts: [[0.250,1.80],[0.252,1.80]] },
+      { t: "L", pts: [[0.252,1.80],[0.252,0]] },
+      // Wide QRS (LBBB morphology): broad positive deflection
+      // Slurred initial upstroke, broad R, slow descent
+      { t: "B", pts: [[0.252,0],[0.264,0.20],[0.278,0.70],[0.292,1.40]] },
+      { t: "B", pts: [[0.292,1.40],[0.300,1.90],[0.308,2.20],[0.318,2.30]] },
+      { t: "B", pts: [[0.318,2.30],[0.326,2.20],[0.334,1.80],[0.344,1.20]] },
+      { t: "B", pts: [[0.344,1.20],[0.356,0.40],[0.368,-0.30],[0.376,-0.60]] },
+      { t: "B", pts: [[0.376,-0.60],[0.384,-0.50],[0.392,-0.20],[0.400,-0.04]] },
+      { t: "B", pts: [[0.400,-0.04],[0.404,-0.01],[0.408,0],[0.412,0]] },
+      // ST elevation (discordant — normal for pacing)
+      { t: "L", pts: [[0.412,0],[0.432,0.06]] },
+      // Broad discordant T (negative, wide)
+      { t: "B", pts: [[0.432,0.06],[0.446,-0.06],[0.466,-0.28],[0.482,-0.42]] },
+      { t: "B", pts: [[0.482,-0.42],[0.498,-0.36],[0.516,-0.14],[0.530,-0.03]] },
+      { t: "B", pts: [[0.530,-0.03],[0.536,0],[0.542,0],[0.548,0]] },
+      { t: "L", pts: [[0.548,0],[1.000,0]] },
     ],
   },
+
   PACED_FAILURE: {
-    label: "Pacemaker Failure", rate: 35, color: "#44ddff", irregular: true,
+    label: "Pacemaker Failure to Capture", rate: 35, color: "#44ddff", irregular: true,
     category: "Paced", severity: "critical",
     vitals: { hr: 35, sbp: 76, dbp: 44, spo2: 88, rr: 18, temp: 97.8, etco2: 26, map: 55 },
-    // Pacing spike present but no capture (spike then flat)
+    // Pacing spikes PRESENT but some fail to capture (spike not followed by QRS).
+    // Pattern: spike (no capture) → flat → spike (captures) → wide QRS → T
+    // The uncaptured spike shows pacemaker FIRING but myocardium not responding.
     segments: [
-      { t: "L", pts: [[0,0],[0.20,0]] },
-      // Spike — no capture (just a spike, then flat)
-      { t: "L", pts: [[0.20,0],[0.20,1.6]] },
-      { t: "L", pts: [[0.20,1.6],[0.21,1.6]] },
-      { t: "L", pts: [[0.21,1.6],[0.21,0]] },
-      { t: "L", pts: [[0.21,0],[0.45,0]] },
-      // Second spike — this one captures (escape beat)
-      { t: "L", pts: [[0.45,0],[0.45,1.6]] },
-      { t: "L", pts: [[0.45,1.6],[0.46,1.6]] },
-      { t: "L", pts: [[0.46,1.6],[0.46,0]] },
-      { t: "B", pts: [[0.46,0],[0.48,0.3],[0.50,1.0],[0.52,1.8]] },
-      { t: "B", pts: [[0.52,1.8],[0.54,2.2],[0.56,2.0],[0.59,1.2]] },
-      { t: "B", pts: [[0.59,1.2],[0.61,0.4],[0.63,-0.4],[0.65,-0.7]] },
-      { t: "B", pts: [[0.65,-0.7],[0.67,-0.4],[0.69,-0.1],[0.71,0]] },
-      { t: "B", pts: [[0.71,0],[0.74,-0.10],[0.77,-0.24],[0.80,-0.28]] },
-      { t: "B", pts: [[0.80,-0.28],[0.83,-0.22],[0.86,-0.06],[0.89,0]] },
-      { t: "L", pts: [[0.89,0],[1.0,0]] },
+      // Flat with pacemaker firing
+      { t: "L", pts: [[0,0],[0.150,0]] },
+      // SPIKE 1 — no capture (fires but no QRS follows)
+      { t: "L", pts: [[0.150,0],[0.150,1.60]] },
+      { t: "L", pts: [[0.150,1.60],[0.152,1.60]] },
+      { t: "L", pts: [[0.152,1.60],[0.152,0]] },
+      // Flat — no QRS after spike 1
+      { t: "L", pts: [[0.152,0],[0.340,0]] },
+      // SPIKE 2 — CAPTURES (followed by paced QRS)
+      { t: "L", pts: [[0.340,0],[0.340,1.60]] },
+      { t: "L", pts: [[0.340,1.60],[0.342,1.60]] },
+      { t: "L", pts: [[0.342,1.60],[0.342,0]] },
+      // Paced QRS — wide LBBB-like
+      { t: "B", pts: [[0.342,0],[0.354,0.20],[0.368,0.70],[0.382,1.40]] },
+      { t: "B", pts: [[0.382,1.40],[0.390,1.90],[0.398,2.20],[0.408,2.30]] },
+      { t: "B", pts: [[0.408,2.30],[0.416,2.10],[0.426,1.40],[0.438,0.40]] },
+      { t: "B", pts: [[0.438,0.40],[0.450,-0.30],[0.458,-0.55],[0.465,-0.60]] },
+      { t: "B", pts: [[0.465,-0.60],[0.472,-0.46],[0.480,-0.18],[0.487,-0.03]] },
+      { t: "B", pts: [[0.487,-0.03],[0.491,0],[0.495,0],[0.500,0]] },
+      // Discordant T
+      { t: "L", pts: [[0.500,0],[0.516,0.04]] },
+      { t: "B", pts: [[0.516,0.04],[0.528,-0.06],[0.544,-0.24],[0.556,-0.34]] },
+      { t: "B", pts: [[0.556,-0.34],[0.568,-0.28],[0.582,-0.10],[0.592,-0.01]] },
+      { t: "L", pts: [[0.592,0],[1.000,0]] },
     ],
   },
 };
@@ -1051,32 +1197,52 @@ function nextBeat(rhythmKey, basePixPerBeat, beatState) {
     return { buf, beatLen: len };
   }
 
-  // ── Torsades: sinusoidally-modulated amplitude twisting ──────────────────
+  // ── Torsades de Pointes: sinusoidal amplitude/axis modulation ────────────
+  // Clinical: fast VT (200-250bpm) where QRS axis rotates around isoelectric line.
+  // Amplitude waxes from small → large → small over ~6-12 beats (one "spindle").
+  // Axis flips: positive beats become negative and vice versa.
+  // Rate slightly irregular. Often self-terminates; may degenerate to VFib.
   if (rhythmKey === "TORSADES") {
-    if (beatState.torsCount === undefined) beatState.torsCount = 0;
+    if (beatState.torsCount === undefined) {
+      beatState.torsCount = 0;
+      beatState.torsSpindle = 0; // position within amplitude spindle (0-1)
+    }
     beatState.torsCount++;
-    // Amplitude envelope sinusoidally modulates over ~8 beats
-    const envAmp = 0.4 + Math.abs(Math.sin(beatState.torsCount * 0.4)) * 1.2;
-    const inv = Math.sin(beatState.torsCount * 0.35) > 0 ? 1 : -1; // axis flip
-    const len = Math.round(basePixPerBeat * (0.9 + Math.random() * 0.2));
+    beatState.torsSpindle += 0.10; // advance spindle position
+    if (beatState.torsSpindle > Math.PI * 2) beatState.torsSpindle -= Math.PI * 2;
+
+    // Amplitude envelope: sinusoidal spindle, min 0.3, max 2.0 (builds and decays)
+    const envelope = 0.3 + 1.7 * Math.abs(Math.sin(beatState.torsSpindle));
+    // Axis: flips sign when spindle crosses zero-crossings (every ~half-spindle)
+    const axis = Math.sin(beatState.torsSpindle * 0.5) >= 0 ? 1 : -1;
+
+    // Fast irregular rate: 200-250bpm, slight beat-to-beat variation
+    const len = Math.round(basePixPerBeat * (0.85 + Math.random() * 0.18));
     const buf = new Float32Array(len);
-    const scaledSegs = RHYTHMS.TORSADES.segments.map(seg => ({
-      ...seg,
-      pts: seg.pts.map(([x, y]) => [x, y * envAmp * inv])
-    }));
-    paintSegments(scaledSegs, buf, len);
+
+    // Sinusoidal-like VT template with the amplitude/axis applied
+    const tSegs = [
+      { t: "B", pts: [[0,0],[0.06,0.30*axis*envelope],[0.16,0.80*axis*envelope],[0.26,1.40*axis*envelope]] },
+      { t: "B", pts: [[0.26,1.40*axis*envelope],[0.36,1.90*axis*envelope],[0.44,1.70*axis*envelope],[0.52,1.00*axis*envelope]] },
+      { t: "B", pts: [[0.52,1.00*axis*envelope],[0.60,0.20*axis*envelope],[0.68,-0.40*axis*envelope],[0.76,-0.80*axis*envelope]] },
+      { t: "B", pts: [[0.76,-0.80*axis*envelope],[0.84,-0.60*axis*envelope],[0.92,-0.20*axis*envelope],[1.00,0]] },
+    ];
+    paintSegments(tSegs, buf, len);
     return { buf, beatLen: len };
   }
 
-  // ── Sinus Arrest: normal beat + occasional long pause ────────────────────
+  // ── Sinus Arrest: 2 normal beats then sudden non-PP-multiple pause ─────────
+  // Teaching distinction from SA exit block: pause ≠ multiple of PP interval
   if (rhythmKey === "SINUS_ARREST") {
-    if (beatState.saCount === undefined) beatState.saCount = 0;
-    beatState.saCount++;
-    // Every 3rd beat is a long pause (no QRS, no P)
-    if (beatState.saCount % 3 === 0) {
-      const pauseLen = Math.round(basePixPerBeat * (2.2 + Math.random() * 0.6));
+    if (beatState.saSeq === undefined) { beatState.saSeq = 0; beatState.pauseDone = false; }
+    beatState.saSeq++;
+    const cycle = beatState.saSeq % 5; // pattern: beat,beat,pause,pause,beat...
+    if (cycle === 3 || cycle === 4) {
+      // Long flat pause — 2 flat segments = one elongated quiescent period
+      // Pause is 1.8–2.6× normal RR (irregular multiple — NOT 2×PP or 3×PP)
+      const pauseLen = Math.round(basePixPerBeat * (1.4 + Math.random() * 0.4));
       const buf = new Float32Array(pauseLen);
-      for (let i = 0; i < pauseLen; i++) buf[i] = (Math.random() - 0.5) * 0.01;
+      for (let i = 0; i < pauseLen; i++) buf[i] = (Math.random() - 0.5) * 0.008;
       return { buf, beatLen: pauseLen };
     }
     const len = basePixPerBeat;
@@ -1085,27 +1251,40 @@ function nextBeat(rhythmKey, basePixPerBeat, beatState) {
     return { buf, beatLen: len };
   }
 
-  // ── Wandering Pacemaker: P-wave morphology shifts beat to beat ────────────
+  // ── Wandering Pacemaker: 3-beat cycle with shifting P morphology ──────────
   if (rhythmKey === "WANDERING_PM") {
     if (beatState.wpCount === undefined) beatState.wpCount = 0;
+    const phase = beatState.wpCount % 3;
     beatState.wpCount++;
-    const phase = beatState.wpCount % 3; // 0=upright, 1=flat, 2=inverted
-    const pAmp = phase === 0 ? 0.22 : phase === 1 ? 0.08 : -0.18;
-    const len = Math.round(basePixPerBeat * (0.95 + Math.random() * 0.12));
+    // Slight rate irregularity (jitter ±8%)
+    const jitter = 0.92 + Math.random() * 0.16;
+    const len = Math.round(basePixPerBeat * jitter);
     const buf = new Float32Array(len);
+    // P morphologies: upright (SA), biphasic (mid-atrial), inverted (low atrial)
+    // PR varies with pacemaker distance from AV node
+    const pAmps  = [0.22, 0.0, -0.15];
+    const pBi    = [false, true, false];   // biphasic on beat 2
+    const prMult = [1.0, 0.88, 0.75];     // shorter PR as pacemaker moves lower
+    const pA = pAmps[phase];
+    const bi = pBi[phase];
+    const prFrac = 0.18 * prMult[phase];
     const wpSegs = [
-      { t: "L", pts: [[0,0],[0.08,0]] },
-      { t: "B", pts: [[0.08,0],[0.11,pAmp*0.8],[0.14,pAmp],[0.17,pAmp*0.8]] },
-      { t: "B", pts: [[0.17,pAmp*0.8],[0.20,pAmp*0.4],[0.23,0],[0.26,0]] },
-      { t: "L", pts: [[0.26,0],[0.32,0]] },
-      { t: "B", pts: [[0.32,0],[0.34,-0.12],[0.35,-0.18],[0.36,-0.22]] },
-      { t: "B", pts: [[0.36,-0.22],[0.365,0.5],[0.37,1.6],[0.375,2.4]] },
-      { t: "B", pts: [[0.375,2.4],[0.38,1.0],[0.39,-0.35],[0.40,-0.42]] },
-      { t: "B", pts: [[0.40,-0.42],[0.41,-0.2],[0.43,0],[0.46,0.04]] },
-      { t: "L", pts: [[0.46,0.04],[0.54,0.06]] },
-      { t: "B", pts: [[0.54,0.06],[0.57,0.12],[0.60,0.38],[0.63,0.45]] },
-      { t: "B", pts: [[0.63,0.45],[0.66,0.38],[0.70,0.12],[0.74,0]] },
-      { t: "L", pts: [[0.74,0],[1.0,0]] },
+      { t: "L", pts: [[0,0],[0.04,0]] },
+      // P wave: morphology changes each beat
+      bi ? { t: "B", pts: [[0.04,0],[0.06,0.14],[0.08,0.16],[0.10,0.08]] }
+         : { t: "B", pts: [[0.04,0],[0.06,pA*0.7],[0.09,pA],[0.11,pA*0.7]] },
+      bi ? { t: "B", pts: [[0.10,0.08],[0.11,-0.04],[0.13,-0.12],[0.15,-0.08]] }
+         : { t: "B", pts: [[0.11,pA*0.7],[0.13,pA*0.3],[0.15,0],[0.17,0]] },
+      !bi ? { t: "L", pts: [[0.17,0],[prFrac+0.17,0]] }
+          : { t: "L", pts: [[0.15,0],[prFrac+0.15,0]] },
+      { t: "B", pts: [[prFrac+0.17,0],[prFrac+0.20,-0.08],[prFrac+0.22,-0.14],[prFrac+0.23,-0.16]] },
+      { t: "B", pts: [[prFrac+0.23,-0.16],[prFrac+0.27,0.9],[prFrac+0.30,2.1],[prFrac+0.32,2.5]] },
+      { t: "B", pts: [[prFrac+0.32,2.5],[prFrac+0.34,1.4],[prFrac+0.37,-0.2],[prFrac+0.39,-0.38]] },
+      { t: "B", pts: [[prFrac+0.39,-0.38],[prFrac+0.41,-0.2],[prFrac+0.44,-0.04],[prFrac+0.46,0]] },
+      { t: "L", pts: [[prFrac+0.46,0],[prFrac+0.56,0.01]] },
+      { t: "B", pts: [[prFrac+0.56,0.01],[prFrac+0.64,0.12],[prFrac+0.71,0.36],[prFrac+0.77,0.44]] },
+      { t: "B", pts: [[prFrac+0.77,0.44],[prFrac+0.82,0.36],[prFrac+0.88,0.12],[prFrac+0.92,0]] },
+      { t: "L", pts: [[prFrac+0.92,0],[1.0,0]] },
     ];
     paintSegments(wpSegs, buf, len);
     return { buf, beatLen: len };
@@ -1123,37 +1302,49 @@ function nextBeat(rhythmKey, basePixPerBeat, beatState) {
   }
 
 
-  // ── PVC Bigeminy: alternates normal NSR beat → PVC beat ──────────────────
+  // ── PVC Bigeminy: sinus beat → PVC → sinus beat → PVC ──────────────────────
+  // Sinus beat is slightly SHORT (prematurity). PVC has full compensatory pause.
+  // PVC: broad monophasic R, slurred, NO preceding P, discordant T.
   if (rhythmKey === "PVC") {
     if (beatState.pvcTurn === undefined) beatState.pvcTurn = false;
     beatState.pvcTurn = !beatState.pvcTurn;
-
     if (beatState.pvcTurn) {
-      // PVC beat: wide bizarre complex, slightly longer RR (compensatory pause)
-      const len = Math.round(basePixPerBeat * 1.10);
+      // PVC: arrives at ~0.85×RR (early), then compensatory pause makes total ~2×RR
+      // We represent this as a single long buffer = sinus RR - short coupling + full pause
+      // Visual: PVC complex takes ~0.5×RR, then pause ~1.2×RR
+      const couplingLen = Math.round(basePixPerBeat * 0.50);
+      const pauseLen    = Math.round(basePixPerBeat * 1.20);
+      const len = couplingLen + pauseLen;
       const buf = new Float32Array(len);
-      // Wide notched QRS + deep S + discordant T
+      // Wide bizarre QRS template
       const pvcSegs = [
-        { t: "L",  pts: [[0,0],[0.08,0]] },
-        // Broad notched R (wide upstroke)
-        { t: "B",  pts: [[0.08,0],[0.13,0.4],[0.18,1.2],[0.24,2.1]] },
-        { t: "B",  pts: [[0.24,2.1],[0.27,2.5],[0.30,2.3],[0.33,1.6]] },
-        // Notch in R
-        { t: "B",  pts: [[0.33,1.6],[0.36,1.1],[0.37,0.9],[0.38,1.0]] },
-        { t: "B",  pts: [[0.38,1.0],[0.40,1.1],[0.42,0.5],[0.45,-0.5]] },
-        // Deep S
-        { t: "B",  pts: [[0.45,-0.5],[0.47,-1.1],[0.50,-1.4],[0.53,-1.2]] },
-        { t: "B",  pts: [[0.53,-1.2],[0.55,-0.8],[0.57,-0.3],[0.60,0]] },
-        // Discordant T (opposite direction to main deflection)
-        { t: "B",  pts: [[0.60,0],[0.63,-0.08],[0.66,-0.28],[0.69,-0.34]] },
-        { t: "B",  pts: [[0.69,-0.34],[0.72,-0.28],[0.76,-0.08],[0.80,0]] },
-        { t: "L",  pts: [[0.80,0],[1.0,0]] },
+        { t: "L",  pts: [[0,0],[0.04,0]] },
+        // Broad monophasic positive R (LBBB-type PVC from RV)
+        { t: "B",  pts: [[0.04,0],[0.12,0.40],[0.22,1.20],[0.30,2.10]] },
+        { t: "B",  pts: [[0.30,2.10],[0.38,2.60],[0.46,2.40],[0.52,1.80]] },
+        { t: "B",  pts: [[0.52,1.80],[0.58,1.00],[0.64,0.10],[0.68,-0.40]] },
+        // Deep wide S wave
+        { t: "B",  pts: [[0.68,-0.40],[0.72,-0.90],[0.76,-1.20],[0.80,-1.30]] },
+        { t: "B",  pts: [[0.80,-1.30],[0.84,-0.90],[0.88,-0.40],[0.92,-0.08]] },
+        { t: "B",  pts: [[0.92,-0.08],[0.95,-0.01],[0.97,0],[1.00,0]] },
       ];
-      paintSegments(pvcSegs, buf, len);
+      const qrsBuf = new Float32Array(couplingLen);
+      paintSegments(pvcSegs, qrsBuf, couplingLen);
+      // Discordant T in QRS buffer (first 60% of coupling)
+      const tStart = Math.floor(couplingLen * 0.62);
+      const tEnd   = Math.floor(couplingLen * 0.92);
+      for (let i = tStart; i < tEnd; i++) {
+        const tt = (i - tStart) / (tEnd - tStart);
+        const u = 1 - tt;
+        qrsBuf[i] += -(u*u*u*0 + 3*u*u*tt*0.52 + 3*u*tt*tt*0.52 + tt*tt*tt*0);
+      }
+      buf.set(qrsBuf, 0);
+      // Pause: flat with tiny wander
+      for (let i = couplingLen; i < len; i++) buf[i] = (Math.random()-0.5)*0.008;
       return { buf, beatLen: len };
     } else {
-      // Normal sinus beat (shorter — pre-PVC beat is slightly early)
-      const len = Math.round(basePixPerBeat * 0.92);
+      // Sinus beat before PVC — slightly short coupling interval
+      const len = Math.round(basePixPerBeat * 0.88);
       const buf = new Float32Array(len);
       paintSegments(RHYTHMS.NSR.segments, buf, len);
       return { buf, beatLen: len };
@@ -1297,9 +1488,10 @@ function ECGCanvas({ rhythm, height = 160, gridColor = "rgba(0,80,40,0.35)", bgC
 
     const getBase = (rKey) => {
       const r = RHYTHMS[rKey];
-      if (!r || r.rate <= 0) return Math.round(W * 0.9);
-      // 25mm/s paper speed: ~130px per beat at 75bpm feels natural on screen
-      return Math.round((60 / r.rate) * 120);
+      if (!r || r.rate <= 0) return Math.round((60 / 30) * 100);
+      // TRUE 25mm/s paper speed: 100px/s. basePixPerBeat = (60/rate) * 100
+      // NSR 72→83px, Brady 40→150px, Tach 130→46px, Flutter F-wave→20px ✓
+      return Math.max(20, Math.round((60 / r.rate) * 100));
     };
 
     let rKey = rhythm;
@@ -1309,7 +1501,10 @@ function ECGCanvas({ rhythm, height = 160, gridColor = "rgba(0,80,40,0.35)", bgC
     let nb = nextBeat(rKey, st.basePixPerBeat, st.beatState);
     st.beatBuf = nb.buf; st.beatLen = nb.beatLen; st.beatPos = 0;
 
-    const SPEED = 2; // 2px/frame @ 60fps — beat scrolls at real cardiac tempo
+    // 25mm/s paper speed: 100px/s ÷ 60fps = 1.6667px/frame
+    // Sub-pixel accumulator: advance 5px every 3 frames exactly
+    st.speedAccum = 0; // pixels owed this frame (fractional accumulator)
+    const SPEED_PX_PER_S = 100; // px/second = 25mm/s at 4px/mm
 
     const hexToRgba = (hex, a) => {
       const c = hex.replace("#","");
@@ -1325,7 +1520,11 @@ function ECGCanvas({ rhythm, height = 160, gridColor = "rgba(0,80,40,0.35)", bgC
         st.beatBuf = nb.buf; st.beatLen = nb.beatLen; st.beatPos = 0;
       }
 
-      for (let s = 0; s < SPEED; s++) {
+      // Fractional accumulator: 100px/s ÷ 60fps = 1.6667px/frame
+      st.speedAccum = (st.speedAccum || 0) + SPEED_PX_PER_S / 60;
+      const steps = Math.floor(st.speedAccum);
+      st.speedAccum -= steps;
+      for (let s = 0; s < steps; s++) {
         st.ringBuf[st.writePos % RING] = st.beatBuf[Math.min(st.beatPos, st.beatLen - 1)];
         st.writePos++;
         if (++st.beatPos >= st.beatLen) {
@@ -1342,44 +1541,63 @@ function ECGCanvas({ rhythm, height = 160, gridColor = "rgba(0,80,40,0.35)", bgC
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, W, H);
 
-      // Grid
-      const sm = 20, lg = 100;
-      ctx.lineWidth = 0.5;
-      for (let x = 0; x < W; x += sm) {
-        ctx.strokeStyle = x % lg === 0 ? "rgba(0,100,50,0.45)" : gridColor;
+      // ── ECG GRID: standard 25mm/s paper ─────────────────────────────────────
+      // At 100px/s: 1 small box = 0.04s = 4px. 1 large box = 0.20s = 20px.
+      // Vertical: 10mm/mV standard. Our amplitude units: R=2.5 ≈ 2.5×20px = 50px tall
+      const SM = 4;   // small box = 4px (0.04s horizontal, 1mm vertical)
+      const LG = 20;  // large box = 20px (0.20s horizontal, 5mm vertical)
+      ctx.lineWidth = 0.4;
+      // Small grid lines (thin, faint)
+      ctx.strokeStyle = gridColor;
+      for (let x = SM; x < W; x += SM) {
+        if (x % LG === 0) continue;
         ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
       }
-      for (let y = 0; y < H; y += sm) {
-        ctx.strokeStyle = y % lg === 0 ? "rgba(0,100,50,0.45)" : gridColor;
+      for (let y = SM; y < H; y += SM) {
+        if (y % LG === 0) continue;
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+      }
+      // Large grid lines (brighter)
+      ctx.strokeStyle = "rgba(0,110,55,0.50)";
+      ctx.lineWidth = 0.6;
+      for (let x = 0; x < W; x += LG) {
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+      }
+      for (let y = 0; y < H; y += LG) {
         ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
       }
 
       const color = RHYTHMS[rKey]?.color || "#00ff88";
-      const mid   = H * 0.55;
-      const scale = H * 0.34;
+      // Standard calibration: 20px per normalized unit (R wave 2.5 = 50px)
+      // Baseline at 62% from top gives room for tall R waves and negative deflections
+      const mid   = H * 0.62;
+      const scale = 20; // px per normalized ECG amplitude unit (1 unit ≈ 0.5mV)
 
-      // Glow
-      ctx.beginPath();
-      ctx.strokeStyle = hexToRgba(color, 0.18);
-      ctx.lineWidth = 5; ctx.lineJoin = "round"; ctx.lineCap = "round";
+      // Pre-compute trace path
+      const tracePts = [];
       for (let x = 0; x < W; x++) {
         const idx = (st.writePos - W + x + RING * 4) % RING;
-        const y = mid - st.ringBuf[idx] * scale;
-        x === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+        tracePts.push([x, mid - st.ringBuf[idx] * scale]);
       }
-      ctx.stroke();
 
-      // Trace
+      // Glow pass (wide, faint)
+      ctx.save();
       ctx.beginPath();
-      ctx.strokeStyle = color; ctx.lineWidth = 1.8;
-      ctx.shadowColor = color; ctx.shadowBlur = 4;
-      for (let x = 0; x < W; x++) {
-        const idx = (st.writePos - W + x + RING * 4) % RING;
-        const y = mid - st.ringBuf[idx] * scale;
-        x === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-      }
+      ctx.strokeStyle = hexToRgba(color, 0.16);
+      ctx.lineWidth = 6; ctx.lineJoin = "round"; ctx.lineCap = "round";
+      tracePts.forEach(([x,y], i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      ctx.restore();
+
+      // Main trace (crisp, bright)
+      ctx.save();
+      ctx.beginPath();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.6;
+      ctx.shadowColor = color; ctx.shadowBlur = 3;
+      ctx.lineJoin = "round"; ctx.lineCap = "round";
+      tracePts.forEach(([x,y], i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
+      ctx.stroke();
+      ctx.restore();
 
       // Sweep wipe
       const g = ctx.createLinearGradient(W-18, 0, W, 0);
@@ -1490,11 +1708,15 @@ function PlethCanvas({ hr = 72, spo2 = 98, height = 70 }) {
     let beatLen = Math.round((60 / rate) * 120);
     let beatBuf = buildPlethBeat(beatLen);
     let beatPos = 0;
-    const SPEED = 2; // match ECG speed
+    const SPEED_PX_PER_S_P = 100; // match ECG 25mm/s
+    let plethAccum = 0;
 
     const draw = () => {
       // Generate samples
-      for (let s = 0; s < SPEED; s++) {
+      plethAccum += SPEED_PX_PER_S_P / 60;
+      const plethSteps = Math.floor(plethAccum);
+      plethAccum -= plethSteps;
+      for (let s = 0; s < plethSteps; s++) {
         st.ringBuf[st.writePos % RING] = beatBuf[Math.min(beatPos, beatLen - 1)];
         st.writePos++;
         beatPos++;
@@ -3150,5 +3372,6 @@ function App() {
     const root = ReactDOM.createRoot(document.getElementById("root"));
     root.render(<App />);
   </script>
+
 </body>
 </html>
