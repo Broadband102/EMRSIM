@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimLab EMR — Nursing Simulation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d1117; }
+    input[type=range] { cursor: pointer; }
+    input[type=range]::-webkit-slider-thumb { cursor: pointer; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + ReactDOM -->
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <!-- Babel for in-browser JSX transform -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+  <script type="text/babel">
+
+// ─── AUDIO ENGINE ────────────────────────────────────────────────────────────
+// All sound synthesis via Web Audio API — no libraries needed.
+// One shared AudioContext, created lazily on first user gesture.
+
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_audioCtx.state === "suspended") _audioCtx.resume();
+  return _audioCtx;
+}
+
+// Play a short beep: freq Hz, duration ms, wave shape, optional envelope
+function playTone(freq, durationMs, type = "sine", gainVal = 0.18, fadeMs = 30) {
+  try {
+    const ctx = getAudioCtx();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(gainVal, ctx.currentTime + 0.008);
+    gain.gain.setValueAtTime(gainVal, ctx.currentTime + (durationMs - fadeMs) / 1000);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + durationMs / 1000);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + durationMs / 1000 + 0.01);
+  } catch(e) {}
+}
+
+// QRS beep — pitch tracks SpO2 (higher sat = higher pitch, like real monitors)
+function playQRSBeep(spo2 = 98) {
+  // Real monitors: 100% = 880Hz, 85% = ~440Hz, linear mapping
+  const freq = 440 + ((spo2 - 70) / 30) * 440;
+  playTone(Math.max(330, Math.min(1100, freq)), 80, "sine", 0.15, 25);
+}
+
+// Code alarm — urgent two-tone warble, called repeatedly by interval
+function playCodeAlarm() {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    // Two alternating tones: 880 → 1100 → 880 → ...
+    [[0, 880], [0.15, 1100], [0.30, 880], [0.45, 1100]].forEach(([offset, freq]) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "square";
+      osc.frequency.setValueAtTime(freq, now + offset);
+      gain.gain.setValueAtTime(0, now + offset);
+      gain.gain.linearRampToValueAtTime(0.12, now + offset + 0.01);
+      gain.gain.linearRampToValueAtTime(0, now + offset + 0.13);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.15);
+    });
+  } catch(e) {}
+}
+
+// Desat alarm — descending warble, pitch tied to SpO2 level
+function playDesatAlarm(spo2) {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const baseFreq = 300 + (spo2 - 70) * 8; // lower spo2 = lower pitch
+    [[0, baseFreq + 200], [0.2, baseFreq]].forEach(([offset, freq]) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq, now + offset);
+      gain.gain.setValueAtTime(0, now + offset);
+      gain.gain.linearRampToValueAtTime(0.10, now + offset + 0.015);
+      gain.gain.linearRampToValueAtTime(0, now + offset + 0.18);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.20);
+    });
+  } catch(e) {}
+}
+
+// Brady alarm — slow low double-beep
+function playBradyAlarm() {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    [0, 0.22].forEach(offset => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(440, now + offset);
+      gain.gain.setValueAtTime(0, now + offset);
+      gain.gain.linearRampToValueAtTime(0.14, now + offset + 0.01);
+      gain.gain.linearRampToValueAtTime(0, now + offset + 0.18);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.20);
+    });
+  } catch(e) {}
+}
+
+// BP alarm — mid-range double beep
+function playBPAlarm() {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    [0, 0.18].forEach(offset => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(660, now + offset);
+      gain.gain.setValueAtTime(0, now + offset);
+      gain.gain.linearRampToValueAtTime(0.12, now + offset + 0.01);
+      gain.gain.linearRampToValueAtTime(0, now + offset + 0.15);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.18);
+    });
+  } catch(e) {}
+}
+
+// Central alarm manager hook
+function useAlarmAudio(rhythm, vitals, muted) {
+  const alarmIntervalRef = useRef(null);
+  const prevRhythmRef    = useRef(null);
+
+  useEffect(() => {
+    if (alarmIntervalRef.current) {
+      clearInterval(alarmIntervalRef.current);
+      alarmIntervalRef.current = null;
+    }
+    if (muted) return;
+
+    const isCriticalRhythm = ["VFIB","ASYSTOLE","VTACH","TORSADES","IDIOVENTRICULAR","PACED_FAILURE"].includes(rhythm);
+    const isDesat   = vitals.spo2 > 0 && vitals.spo2 < 92;
+    const isBrady   = vitals.hr > 0 && vitals.hr < 40;
+    const isLowBP   = vitals.sbp > 0 && vitals.sbp < 90;
+
+    if (isCriticalRhythm) {
+      // Rapid code alarm — fires every 600ms
+      playCodeAlarm();
+      alarmIntervalRef.current = setInterval(() => playCodeAlarm(), 600);
+    } else if (isDesat) {
+      // Desat alarm every 1.5s
+      playDesatAlarm(vitals.spo2);
+      alarmIntervalRef.current = setInterval(() => playDesatAlarm(vitals.spo2), 1500);
+    } else if (isBrady) {
+      playBradyAlarm();
+      alarmIntervalRef.current = setInterval(() => playBradyAlarm(), 2000);
+    } else if (isLowBP) {
+      playBPAlarm();
+      alarmIntervalRef.current = setInterval(() => playBPAlarm(), 2000);
+    }
+
+    prevRhythmRef.current = rhythm;
+    return () => {
+      if (alarmIntervalRef.current) clearInterval(alarmIntervalRef.current);
+    };
+  }, [rhythm, vitals.spo2, vitals.hr, vitals.sbp, muted]);
+}
+
+// ─── RHYTHM DEFINITIONS ────────────────────────────────────────────────────
+// vitals: the physiologically accurate vital signs for this rhythm
+// category: used to group rhythms on the instructor panel
+// severity: "normal" | "warning" | "critical"
+
+const RHYTHMS = {
+  // ── NORMAL ──────────────────────────────────────────────────────────────
+  NSR: {
+    label: "Normal Sinus Rhythm", rate: 72, color: "#00ff88", irregular: false,
+    category: "Normal", severity: "normal",
+    vitals: { hr: 72, sbp: 118, dbp: 76, spo2: 98, rr: 14, temp: 98.6, etco2: 38, map: 90 },
+    segments: [
+      { t: "L", pts: [[0,0],[0.08,0]] },
+      { t: "B", pts: [[0.08,0],[0.11,0.18],[0.14,0.22],[0.17,0.18]] },
+      { t: "B", pts: [[0.17,0.18],[0.20,0.12],[0.23,0],[0.26,0]] },
+      { t: "L", pts: [[0.26,0],[0.32,0]] },
+      { t: "B", pts: [[0.32,0],[0.34,-0.12],[0.35,-0.18],[0.36,-0.22]] },
+      { t: "B", pts: [[0.36,-0.22],[0.365,0.5],[0.37,1.6],[0.375,2.4]] },
+      { t: "B", pts: [[0.375,2.4],[0.38,1.0],[0.39,-0.35],[0.40,-0.42]] },
+      { t: "B", pts: [[0.40,-0.42],[0.41,-0.2],[0.43,0],[0.46,0.04]] },
+      { t: "L", pts: [[0.46,0.04],[0.54,0.06]] },
+      { t: "B", pts: [[0.54,0.06],[0.57,0.12],[0.60,0.38],[0.63,0.45]] },
+      { t: "B", pts: [[0.63,0.45],[0.66,0.38],[0.70,0.12],[0.74,0]] },
+      { t: "L", pts: [[0.74,0],[1.0,0]] },
+    ],
+  },
+
+  // ── SINUS DYSRHYTHMIAS ───────────────────────────────────────────────────
+  SBRAD: {
+    label: "Sinus Bradycardia", rate: 40, color: "#ffcc00", irregular: false,
+    category: "Sinus", severity: "warning",
+    vitals: { hr: 40, sbp: 96, dbp: 58, spo2: 96, rr: 14, temp: 98.2, etco2: 36, map: 71 },
+    segments: [
+      { t: "L", pts: [[0,0],[0.10,0]] },
+      { t: "B", pts: [[0.10,0],[0.13,0.18],[0.16,0.22],[0.19,0.18]] },
+      { t: "B", pts: [[0.19,0.18],[0.22,0.10],[0.25,0],[0.28,0]] },
+      { t: "L", pts: [[0.28,0],[0.34,0]] },
+      { t: "B", pts: [[0.34,0],[0.36,-0.12],[0.37,-0.18],[0.375,-0.22]] },
+      { t: "B", pts: [[0.375,-0.22],[0.38,0.5],[0.385,1.6],[0.39,2.4]] },
+      { t: "B", pts: [[0.39,2.4],[0.395,0.9],[0.405,-0.35],[0.415,-0.40]] },
+      { t: "B", pts: [[0.415,-0.40],[0.425,-0.18],[0.44,0],[0.47,0.04]] },
+      { t: "L", pts: [[0.47,0.04],[0.54,0.05]] },
+      { t: "B", pts: [[0.54,0.05],[0.57,0.10],[0.60,0.36],[0.63,0.44]] },
+      { t: "B", pts: [[0.63,0.44],[0.66,0.36],[0.70,0.10],[0.74,0]] },
+      { t: "L", pts: [[0.74,0],[1.0,0]] },
+    ],
+  },
+  STACH: {
+    label: "Sinus Tachycardia", rate: 132, color: "#ffcc00", irregular: false,
+    category: "Sinus", severity: "warning",
+    // HR >100 = tachycardia by definition; we set 132 so it's clearly above threshold
+    vitals: { hr: 132, sbp: 108, dbp: 68, spo2: 96, rr: 22, temp: 100.4, etco2: 34, map: 81 },
+    segments: [
+      { t: "L", pts: [[0,0],[0.05,0]] },
+      { t: "B", pts: [[0.05,0],[0.08,0.16],[0.11,0.20],[0.14,0.16]] },
+      { t: "B", pts: [[0.14,0.16],[0.17,0.08],[0.19,0],[0.21,0]] },
+      { t: "L", pts: [[0.21,0],[0.26,0]] },
+      { t: "B", pts: [[0.26,0],[0.28,-0.10],[0.29,-0.16],[0.30,-0.20]] },
+      { t: "B", pts: [[0.30,-0.20],[0.305,0.4],[0.31,1.5],[0.315,2.3]] },
+      { t: "B", pts: [[0.315,2.3],[0.32,0.9],[0.33,-0.32],[0.34,-0.38]] },
+      { t: "B", pts: [[0.34,-0.38],[0.35,-0.18],[0.37,0],[0.40,0.04]] },
+      { t: "L", pts: [[0.40,0.04],[0.48,0.06]] },
+      { t: "B", pts: [[0.48,0.06],[0.52,0.10],[0.55,0.34],[0.58,0.42]] },
+      { t: "B", pts: [[0.58,0.42],[0.61,0.34],[0.65,0.10],[0.68,0]] },
+      { t: "L", pts: [[0.68,0],[1.0,0]] },
+    ],
+  },
+  SINUS_ARREST: {
+    label: "Sinus Arrest", rate: 38, color: "#ffcc00", irregular: true,
+    category: "Sinus", severity: "warning",
+    vitals: { hr: 38, sbp: 88, dbp: 52, spo2: 94, rr: 12, temp: 97.8, etco2: 32, map: 64 },
+    // Normal beats with long pause (no P, no QRS) then resumes
+    segments: [
+      { t: "L", pts: [[0,0],[0.06,0]] },
+      { t: "B", pts: [[0.06,0],[0.08,0.18],[0.10,0.22],[0.12,0.18]] },
+      { t: "B", pts: [[0.12,0.18],[0.14,0.08],[0.16,0],[0.18,0]] },
+      { t: "L", pts: [[0.18,0],[0.22,0]] },
+      { t: "B", pts: [[0.22,0],[0.23,-0.10],[0.235,-0.18],[0.24,-0.22]] },
+      { t: "B", pts: [[0.24,-0.22],[0.245,0.5],[0.25,1.6],[0.255,2.4]] },
+      { t: "B", pts: [[0.255,2.4],[0.26,0.9],[0.27,-0.32],[0.28,-0.38]] },
+      { t: "B", pts: [[0.28,-0.38],[0.29,-0.16],[0.31,0],[0.33,0.04]] },
+      { t: "L", pts: [[0.33,0.04],[0.39,0.05]] },
+      { t: "B", pts: [[0.39,0.05],[0.41,0.10],[0.44,0.36],[0.46,0.44]] },
+      { t: "B", pts: [[0.46,0.44],[0.48,0.36],[0.51,0.10],[0.53,0]] },
+      // Long flat pause — no P, no QRS (sinus arrest)
+      { t: "L", pts: [[0.53,0],[1.0,0]] },
+    ],
+  },
+
+  // ── ATRIAL DYSRHYTHMIAS ──────────────────────────────────────────────────
+  PAC: {
+    label: "PACs", rate: 72, color: "#ffcc00", irregular: true,
+    category: "Atrial", severity: "warning",
+    vitals: { hr: 72, sbp: 116, dbp: 74, spo2: 97, rr: 14, temp: 98.6, etco2: 38, map: 88 },
+    // NSR beat → early PAC (P' different morphology) → compensatory pause
+    segments: [
+      { t: "L", pts: [[0,0],[0.05,0]] },
+      { t: "B", pts: [[0.05,0],[0.07,0.18],[0.09,0.22],[0.11,0.18]] },
+      { t: "B", pts: [[0.11,0.18],[0.13,0.08],[0.15,0],[0.17,0]] },
+      { t: "L", pts: [[0.17,0],[0.21,0]] },
+      { t: "B", pts: [[0.21,0],[0.22,-0.10],[0.225,-0.18],[0.23,-0.22]] },
+      { t: "B", pts: [[0.23,-0.22],[0.235,0.5],[0.24,1.6],[0.245,2.4]] },
+      { t: "B", pts: [[0.245,2.4],[0.25,0.9],[0.26,-0.32],[0.27,-0.38]] },
+      { t: "B", pts: [[0.27,-0.38],[0.28,-0.16],[0.30,0],[0.32,0.04]] },
+      { t: "L", pts: [[0.32,0.04],[0.37,0.05]] },
+      { t: "B", pts: [[0.37,0.05],[0.39,0.10],[0.41,0.34],[0.43,0.42]] },
+      { t: "B", pts: [[0.43,0.42],[0.45,0.34],[0.48,0.10],[0.50,0]] },
+      // PAC — early beat, P' is biphasic/inverted
+      { t: "L", pts: [[0.50,0],[0.53,0]] },
+      { t: "B", pts: [[0.53,0],[0.54,-0.12],[0.555,-0.08],[0.57,0.10]] },
+      { t: "B", pts: [[0.57,0.10],[0.575,0.06],[0.58,0],[0.59,0]] },
+      { t: "L", pts: [[0.59,0],[0.62,0]] },
+      { t: "B", pts: [[0.62,0],[0.625,-0.08],[0.63,-0.14],[0.635,-0.18]] },
+      { t: "B", pts: [[0.635,-0.18],[0.64,0.4],[0.645,1.4],[0.65,2.1]] },
+      { t: "B", pts: [[0.65,2.1],[0.655,0.8],[0.665,-0.28],[0.675,-0.32]] },
+      { t: "B", pts: [[0.675,-0.32],[0.685,-0.14],[0.70,0],[0.72,0.03]] },
+      { t: "L", pts: [[0.72,0.03],[0.77,0.04]] },
+      { t: "B", pts: [[0.77,0.04],[0.79,0.08],[0.82,0.26],[0.84,0.32]] },
+      { t: "B", pts: [[0.84,0.32],[0.86,0.26],[0.89,0.08],[0.91,0]] },
+      { t: "L", pts: [[0.91,0],[1.0,0]] },
+    ],
+  },
+  AFIB: {
+    label: "Atrial Fibrillation", rate: 110, color: "#ffcc00", irregular: true,
+    category: "Atrial", severity: "warning",
+    vitals: { hr: 110, sbp: 108, dbp: 68, spo2: 95, rr: 18, temp: 98.6, etco2: 36, map: 81 },
+    segments: [
+      { t: "N", pts: [[0,0],[0.28,0]], amp: 0.08 },
+      { t: "B", pts: [[0.28,0],[0.29,-0.10],[0.295,-0.18],[0.30,-0.22]] },
+      { t: "B", pts: [[0.30,-0.22],[0.305,0.5],[0.31,1.55],[0.315,2.3]] },
+      { t: "B", pts: [[0.315,2.3],[0.32,0.9],[0.33,-0.32],[0.34,-0.38]] },
+      { t: "B", pts: [[0.34,-0.38],[0.35,-0.18],[0.37,0],[0.40,0.03]] },
+      { t: "L", pts: [[0.40,0.03],[0.47,0.04]] },
+      { t: "B", pts: [[0.47,0.04],[0.50,0.08],[0.54,0.30],[0.57,0.38]] },
+      { t: "B", pts: [[0.57,0.38],[0.60,0.30],[0.64,0.08],[0.67,0]] },
+      { t: "N", pts: [[0.67,0],[1.0,0]], amp: 0.08 },
+    ],
+  },
+  AFLUTTER: {
+    label: "Atrial Flutter", rate: 75, color: "#ffcc00", irregular: false,
+    category: "Atrial", severity: "warning",
+    vitals: { hr: 75, sbp: 110, dbp: 70, spo2: 95, rr: 18, temp: 98.6, etco2: 36, map: 83 },
+    // Classic sawtooth flutter waves at ~300bpm, 4:1 conduction → ventricular rate ~75
+    segments: [
+      // Sawtooth flutter waves (4 per QRS)
+      { t: "B", pts: [[0,0],[0.02,0.20],[0.05,0.22],[0.07,0]] },
+      { t: "B", pts: [[0.07,0],[0.09,-0.10],[0.10,-0.12],[0.12,0]] },
+      { t: "B", pts: [[0.12,0],[0.14,0.20],[0.17,0.22],[0.19,0]] },
+      { t: "B", pts: [[0.19,0],[0.21,-0.10],[0.22,-0.12],[0.24,0]] },
+      // QRS
+      { t: "B", pts: [[0.24,0],[0.25,-0.10],[0.255,-0.18],[0.26,-0.22]] },
+      { t: "B", pts: [[0.26,-0.22],[0.265,0.5],[0.27,1.6],[0.275,2.4]] },
+      { t: "B", pts: [[0.275,2.4],[0.28,0.9],[0.29,-0.32],[0.30,-0.38]] },
+      { t: "B", pts: [[0.30,-0.38],[0.31,-0.16],[0.33,0],[0.35,0.03]] },
+      // More flutter waves post-QRS
+      { t: "B", pts: [[0.35,0],[0.37,0.18],[0.40,0.20],[0.42,0]] },
+      { t: "B", pts: [[0.42,0],[0.44,-0.10],[0.45,-0.12],[0.47,0]] },
+      { t: "B", pts: [[0.47,0],[0.49,0.18],[0.52,0.20],[0.54,0]] },
+      { t: "B", pts: [[0.54,0],[0.56,-0.10],[0.57,-0.12],[0.59,0]] },
+      // Second QRS
+      { t: "B", pts: [[0.59,0],[0.60,-0.10],[0.605,-0.18],[0.61,-0.22]] },
+      { t: "B", pts: [[0.61,-0.22],[0.615,0.5],[0.62,1.6],[0.625,2.4]] },
+      { t: "B", pts: [[0.625,2.4],[0.63,0.9],[0.64,-0.32],[0.65,-0.38]] },
+      { t: "B", pts: [[0.65,-0.38],[0.66,-0.16],[0.68,0],[0.70,0.03]] },
+      { t: "B", pts: [[0.70,0],[0.72,0.18],[0.75,0.20],[0.77,0]] },
+      { t: "B", pts: [[0.77,0],[0.79,-0.10],[0.80,-0.12],[0.82,0]] },
+      { t: "B", pts: [[0.82,0],[0.84,0.18],[0.87,0.20],[0.89,0]] },
+      { t: "B", pts: [[0.89,0],[0.91,-0.10],[0.92,-0.12],[0.94,0]] },
+      { t: "L", pts: [[0.94,0],[1.0,0]] },
+    ],
+  },
+  WANDERING_PM: {
+    label: "Wandering Pacemaker", rate: 65, color: "#ffcc00", irregular: true,
+    category: "Atrial", severity: "warning",
+    vitals: { hr: 65, sbp: 112, dbp: 70, spo2: 97, rr: 14, temp: 98.4, etco2: 37, map: 84 },
+    // P wave morphology changes beat to beat (upright → flat → inverted)
+    segments: [
+      { t: "L", pts: [[0,0],[0.06,0]] },
+      { t: "B", pts: [[0.06,0],[0.08,0.20],[0.10,0.24],[0.12,0.20]] },
+      { t: "B", pts: [[0.12,0.20],[0.14,0.10],[0.16,0],[0.18,0]] },
+      { t: "L", pts: [[0.18,0],[0.22,0]] },
+      { t: "B", pts: [[0.22,0],[0.23,-0.10],[0.235,-0.18],[0.24,-0.22]] },
+      { t: "B", pts: [[0.24,-0.22],[0.245,0.5],[0.25,1.6],[0.255,2.4]] },
+      { t: "B", pts: [[0.255,2.4],[0.26,0.9],[0.27,-0.32],[0.28,-0.38]] },
+      { t: "B", pts: [[0.28,-0.38],[0.29,-0.16],[0.31,0],[0.33,0.04]] },
+      { t: "L", pts: [[0.33,0.04],[0.39,0.05]] },
+      { t: "B", pts: [[0.39,0.05],[0.41,0.10],[0.44,0.34],[0.46,0.42]] },
+      { t: "B", pts: [[0.46,0.42],[0.48,0.34],[0.51,0.10],[0.53,0]] },
+      { t: "L", pts: [[0.53,0],[1.0,0]] },
+    ],
+  },
+
+  // ── JUNCTIONAL ───────────────────────────────────────────────────────────
+  JUNCTIONAL: {
+    label: "Junctional Rhythm", rate: 48, color: "#ffcc00", irregular: false,
+    category: "Junctional", severity: "warning",
+    vitals: { hr: 48, sbp: 92, dbp: 56, spo2: 95, rr: 14, temp: 98.2, etco2: 34, map: 68 },
+    // No P wave before QRS (or retrograde inverted P in PR or after QRS)
+    segments: [
+      { t: "L", pts: [[0,0],[0.20,0]] },
+      // Retrograde P (inverted, just before QRS)
+      { t: "B", pts: [[0.20,0],[0.22,-0.10],[0.24,-0.14],[0.26,-0.10]] },
+      { t: "B", pts: [[0.26,-0.10],[0.28,-0.04],[0.30,0],[0.32,0]] },
+      // QRS normal width
+      { t: "B", pts: [[0.32,0],[0.33,-0.08],[0.335,-0.14],[0.34,-0.18]] },
+      { t: "B", pts: [[0.34,-0.18],[0.345,0.5],[0.35,1.6],[0.355,2.3]] },
+      { t: "B", pts: [[0.355,2.3],[0.36,0.9],[0.37,-0.30],[0.38,-0.36]] },
+      { t: "B", pts: [[0.38,-0.36],[0.39,-0.14],[0.41,0],[0.43,0.03]] },
+      { t: "L", pts: [[0.43,0.03],[0.50,0.04]] },
+      { t: "B", pts: [[0.50,0.04],[0.53,0.08],[0.56,0.30],[0.59,0.38]] },
+      { t: "B", pts: [[0.59,0.38],[0.62,0.30],[0.66,0.08],[0.69,0]] },
+      { t: "L", pts: [[0.69,0],[1.0,0]] },
+    ],
+  },
+  ACCEL_JUNCTIONAL: {
+    label: "Accel. Junctional", rate: 78, color: "#ffcc00", irregular: false,
+    category: "Junctional", severity: "warning",
+    vitals: { hr: 78, sbp: 112, dbp: 70, spo2: 96, rr: 15, temp: 98.6, etco2: 37, map: 84 },
+    segments: [
+      { t: "L", pts: [[0,0],[0.10,0]] },
+      { t: "B", pts: [[0.10,0],[0.12,-0.10],[0.13,-0.13],[0.14,-0.10]] },
+      { t: "B", pts: [[0.14,-0.10],[0.16,-0.04],[0.18,0],[0.20,0]] },
+      { t: "L", pts: [[0.20,0],[0.22,0]] },
+      { t: "B", pts: [[0.22,0],[0.23,-0.08],[0.235,-0.14],[0.24,-0.18]] },
+      { t: "B", pts: [[0.24,-0.18],[0.245,0.5],[0.25,1.6],[0.255,2.3]] },
+      { t: "B", pts: [[0.255,2.3],[0.26,0.9],[0.27,-0.30],[0.28,-0.36]] },
+      { t: "B", pts: [[0.28,-0.36],[0.29,-0.14],[0.31,0],[0.33,0.03]] },
+      { t: "L", pts: [[0.33,0.03],[0.40,0.04]] },
+      { t: "B", pts: [[0.40,0.04],[0.43,0.08],[0.46,0.30],[0.49,0.38]] },
+      { t: "B", pts: [[0.49,0.38],[0.52,0.30],[0.56,0.08],[0.59,0]] },
+      { t: "L", pts: [[0.59,0],[1.0,0]] },
+    ],
+  },
+
+  // ── HEART BLOCKS ─────────────────────────────────────────────────────────
+  HB1: {
+    label: "1° Heart Block", rate: 70, color: "#ffcc00", irregular: false,
+    category: "Blocks", severity: "warning",
+    vitals: { hr: 70, sbp: 116, dbp: 74, spo2: 97, rr: 14, temp: 98.6, etco2: 38, map: 88 },
+    // Normal P-QRS-T but prolonged PR interval (>0.20s = >20% of beat at normal rate)
+    segments: [
+      { t: "L", pts: [[0,0],[0.06,0]] },
+      { t: "B", pts: [[0.06,0],[0.09,0.18],[0.12,0.22],[0.15,0.18]] },
+      { t: "B", pts: [[0.15,0.18],[0.18,0.10],[0.20,0],[0.22,0]] },
+      // Prolonged PR segment
+      { t: "L", pts: [[0.22,0],[0.36,0]] },
+      { t: "B", pts: [[0.36,0],[0.37,-0.10],[0.375,-0.18],[0.38,-0.22]] },
+      { t: "B", pts: [[0.38,-0.22],[0.385,0.5],[0.39,1.6],[0.395,2.4]] },
+      { t: "B", pts: [[0.395,2.4],[0.40,0.9],[0.41,-0.32],[0.42,-0.38]] },
+      { t: "B", pts: [[0.42,-0.38],[0.43,-0.16],[0.45,0],[0.47,0.04]] },
+      { t: "L", pts: [[0.47,0.04],[0.55,0.06]] },
+      { t: "B", pts: [[0.55,0.06],[0.58,0.12],[0.61,0.36],[0.64,0.44]] },
+      { t: "B", pts: [[0.64,0.44],[0.67,0.36],[0.71,0.10],[0.74,0]] },
+      { t: "L", pts: [[0.74,0],[1.0,0]] },
+    ],
+  },
+  HB2_M1: {
+    label: "2° Block Mobitz I", rate: 60, color: "#ff8800", irregular: true,
+    category: "Blocks", severity: "warning",
+    vitals: { hr: 58, sbp: 100, dbp: 62, spo2: 95, rr: 14, temp: 98.2, etco2: 35, map: 75 },
+    // PR progressively lengthens then a P with no QRS (Wenckebach)
+    segments: [
+      // Beat 1 — short PR
+      { t: "L", pts: [[0,0],[0.04,0]] },
+      { t: "B", pts: [[0.04,0],[0.06,0.18],[0.08,0.22],[0.10,0.18]] },
+      { t: "B", pts: [[0.10,0.18],[0.12,0.08],[0.14,0],[0.16,0]] },
+      { t: "L", pts: [[0.16,0],[0.20,0]] },
+      { t: "B", pts: [[0.20,0],[0.21,-0.10],[0.215,-0.18],[0.22,-0.22]] },
+      { t: "B", pts: [[0.22,-0.22],[0.225,0.5],[0.23,1.6],[0.235,2.4]] },
+      { t: "B", pts: [[0.235,2.4],[0.24,0.9],[0.25,-0.32],[0.26,-0.38]] },
+      { t: "B", pts: [[0.26,-0.38],[0.27,-0.16],[0.29,0],[0.31,0.04]] },
+      { t: "L", pts: [[0.31,0.04],[0.35,0.05]] },
+      { t: "B", pts: [[0.35,0.05],[0.37,0.10],[0.39,0.32],[0.41,0.40]] },
+      { t: "B", pts: [[0.41,0.40],[0.43,0.32],[0.46,0.08],[0.48,0]] },
+      // Beat 2 — longer PR
+      { t: "L", pts: [[0.48,0],[0.51,0]] },
+      { t: "B", pts: [[0.51,0],[0.53,0.18],[0.55,0.22],[0.57,0.18]] },
+      { t: "B", pts: [[0.57,0.18],[0.59,0.08],[0.61,0],[0.63,0]] },
+      { t: "L", pts: [[0.63,0],[0.70,0]] },  // longer PR
+      { t: "B", pts: [[0.70,0],[0.71,-0.10],[0.715,-0.18],[0.72,-0.22]] },
+      { t: "B", pts: [[0.72,-0.22],[0.725,0.5],[0.73,1.6],[0.735,2.4]] },
+      { t: "B", pts: [[0.735,2.4],[0.74,0.9],[0.75,-0.32],[0.76,-0.38]] },
+      { t: "B", pts: [[0.76,-0.38],[0.77,-0.16],[0.79,0],[0.81,0.04]] },
+      { t: "L", pts: [[0.81,0.04],[0.85,0.05]] },
+      { t: "B", pts: [[0.85,0.05],[0.87,0.10],[0.89,0.30],[0.91,0.38]] },
+      { t: "B", pts: [[0.91,0.38],[0.93,0.30],[0.96,0.08],[0.98,0]] },
+      // Beat 3 — P wave only, no QRS (dropped beat)
+      { t: "L", pts: [[0.98,0],[1.0,0]] },
+    ],
+  },
+  HB2_M2: {
+    label: "2° Block Mobitz II", rate: 55, color: "#ff8800", irregular: true,
+    category: "Blocks", severity: "critical",
+    vitals: { hr: 55, sbp: 94, dbp: 58, spo2: 94, rr: 14, temp: 98.0, etco2: 33, map: 70 },
+    // Constant PR, then sudden dropped beat (no warning)
+    segments: [
+      { t: "L", pts: [[0,0],[0.05,0]] },
+      { t: "B", pts: [[0.05,0],[0.07,0.18],[0.09,0.22],[0.11,0.18]] },
+      { t: "B", pts: [[0.11,0.18],[0.13,0.08],[0.15,0],[0.17,0]] },
+      { t: "L", pts: [[0.17,0],[0.22,0]] },
+      { t: "B", pts: [[0.22,0],[0.23,-0.10],[0.235,-0.18],[0.24,-0.22]] },
+      { t: "B", pts: [[0.24,-0.22],[0.245,0.5],[0.25,1.6],[0.255,2.4]] },
+      { t: "B", pts: [[0.255,2.4],[0.26,0.9],[0.27,-0.32],[0.28,-0.38]] },
+      { t: "B", pts: [[0.28,-0.38],[0.29,-0.16],[0.31,0],[0.33,0.04]] },
+      { t: "L", pts: [[0.33,0.04],[0.38,0.05]] },
+      { t: "B", pts: [[0.38,0.05],[0.40,0.10],[0.42,0.32],[0.44,0.40]] },
+      { t: "B", pts: [[0.44,0.40],[0.46,0.32],[0.49,0.08],[0.51,0]] },
+      // P wave with NO QRS (suddenly dropped — same PR interval as above)
+      { t: "L", pts: [[0.51,0],[0.55,0]] },
+      { t: "B", pts: [[0.55,0],[0.57,0.18],[0.59,0.22],[0.61,0.18]] },
+      { t: "B", pts: [[0.61,0.18],[0.63,0.08],[0.65,0],[0.67,0]] },
+      // Flat — no QRS follows
+      { t: "L", pts: [[0.67,0],[1.0,0]] },
+    ],
+  },
+  HEART_BLOCK_3: {
+    label: "3° Heart Block", rate: 35, color: "#ff4444", irregular: false,
+    category: "Blocks", severity: "critical",
+    vitals: { hr: 35, sbp: 78, dbp: 46, spo2: 90, rr: 18, temp: 97.8, etco2: 28, map: 57 },
+    segments: [
+      { t: "B", pts: [[0,0],[0.03,0.18],[0.06,0.22],[0.09,0.18]] },
+      { t: "B", pts: [[0.09,0.18],[0.12,0.10],[0.14,0],[0.16,0]] },
+      { t: "B", pts: [[0.24,0],[0.27,0.16],[0.30,0.20],[0.33,0.16]] },
+      { t: "B", pts: [[0.33,0.16],[0.36,0.08],[0.38,0],[0.40,0]] },
+      { t: "L", pts: [[0.40,0],[0.44,0]] },
+      { t: "B", pts: [[0.44,0],[0.46,-0.10],[0.47,-0.18],[0.475,-0.22]] },
+      { t: "B", pts: [[0.475,-0.22],[0.48,0.4],[0.485,1.4],[0.49,2.0]] },
+      { t: "B", pts: [[0.49,2.0],[0.50,0.8],[0.515,-0.30],[0.53,-0.36]] },
+      { t: "B", pts: [[0.53,-0.36],[0.55,-0.15],[0.57,0],[0.60,0.03]] },
+      { t: "L", pts: [[0.60,0.03],[0.66,0.04]] },
+      { t: "B", pts: [[0.66,0.04],[0.69,0.08],[0.72,0.28],[0.75,0.36]] },
+      { t: "B", pts: [[0.75,0.36],[0.78,0.28],[0.81,0.08],[0.84,0]] },
+      { t: "L", pts: [[0.84,0],[1.0,0]] },
+    ],
+  },
+
+  // ── VENTRICULAR ───────────────────────────────────────────────────────────
+  PVC: {
+    label: "Frequent PVCs", rate: 75, color: "#ff8800", irregular: false,
+    category: "Ventricular", severity: "warning",
+    vitals: { hr: 75, sbp: 108, dbp: 66, spo2: 96, rr: 16, temp: 98.6, etco2: 36, map: 80 },
+    segments: [
+      { t: "L", pts: [[0,0],[0.04,0]] },
+      { t: "B", pts: [[0.04,0],[0.06,0.16],[0.08,0.20],[0.10,0.16]] },
+      { t: "B", pts: [[0.10,0.16],[0.12,0.08],[0.14,0],[0.16,0]] },
+      { t: "L", pts: [[0.16,0],[0.20,0]] },
+      { t: "B", pts: [[0.20,0],[0.21,-0.10],[0.215,-0.16],[0.22,-0.20]] },
+      { t: "B", pts: [[0.22,-0.20],[0.225,0.5],[0.23,1.5],[0.235,2.2]] },
+      { t: "B", pts: [[0.235,2.2],[0.24,0.8],[0.25,-0.30],[0.26,-0.35]] },
+      { t: "B", pts: [[0.26,-0.35],[0.27,-0.15],[0.29,0],[0.31,0.04]] },
+      { t: "L", pts: [[0.31,0.04],[0.36,0.05]] },
+      { t: "B", pts: [[0.36,0.05],[0.39,0.10],[0.41,0.32],[0.43,0.40]] },
+      { t: "B", pts: [[0.43,0.40],[0.45,0.32],[0.47,0.10],[0.49,0]] },
+      { t: "L", pts: [[0.49,0],[0.54,0]] },
+      { t: "B", pts: [[0.54,0],[0.56,0.3],[0.58,1.0],[0.60,2.0]] },
+      { t: "B", pts: [[0.60,2.0],[0.62,2.6],[0.64,2.2],[0.67,1.2]] },
+      { t: "B", pts: [[0.67,1.2],[0.70,0.2],[0.73,-0.9],[0.76,-1.4]] },
+      { t: "B", pts: [[0.76,-1.4],[0.78,-1.0],[0.80,-0.4],[0.83,0]] },
+      { t: "B", pts: [[0.83,0],[0.86,0.15],[0.89,0.22],[0.92,0.18]] },
+      { t: "B", pts: [[0.92,0.18],[0.95,0.10],[0.97,0],[1.0,0]] },
+    ],
+  },
+  IDIOVENTRICULAR: {
+    label: "Idioventricular", rate: 32, color: "#ff8800", irregular: false,
+    category: "Ventricular", severity: "critical",
+    vitals: { hr: 32, sbp: 72, dbp: 40, spo2: 88, rr: 18, temp: 97.4, etco2: 24, map: 51 },
+    // Wide bizarre QRS, very slow, no P waves
+    segments: [
+      { t: "L", pts: [[0,0],[0.15,0]] },
+      { t: "B", pts: [[0.15,0],[0.18,0.3],[0.21,0.9],[0.24,1.6]] },
+      { t: "B", pts: [[0.24,1.6],[0.27,2.2],[0.30,2.0],[0.33,1.3]] },
+      { t: "B", pts: [[0.33,1.3],[0.36,0.5],[0.39,-0.4],[0.42,-0.7]] },
+      { t: "B", pts: [[0.42,-0.7],[0.44,-0.5],[0.46,-0.2],[0.49,0]] },
+      { t: "B", pts: [[0.49,0],[0.52,-0.15],[0.55,-0.28],[0.58,-0.30]] },
+      { t: "B", pts: [[0.58,-0.30],[0.61,-0.24],[0.64,-0.08],[0.67,0]] },
+      { t: "L", pts: [[0.67,0],[1.0,0]] },
+    ],
+  },
+  SVT: {
+    label: "SVT", rate: 190, color: "#ff8800", irregular: false,
+    category: "Ventricular", severity: "warning",
+    vitals: { hr: 190, sbp: 90, dbp: 56, spo2: 93, rr: 24, temp: 98.8, etco2: 30, map: 67 },
+    segments: [
+      { t: "L", pts: [[0,0],[0.10,0]] },
+      { t: "B", pts: [[0.10,0],[0.11,-0.08],[0.115,-0.14],[0.12,-0.18]] },
+      { t: "B", pts: [[0.12,-0.18],[0.125,0.5],[0.13,1.4],[0.135,2.1]] },
+      { t: "B", pts: [[0.135,2.1],[0.14,0.8],[0.15,-0.28],[0.16,-0.32]] },
+      { t: "B", pts: [[0.16,-0.32],[0.17,-0.14],[0.185,0],[0.20,0.02]] },
+      { t: "B", pts: [[0.20,0.02],[0.23,0.02],[0.26,-0.10],[0.29,-0.14]] },
+      { t: "B", pts: [[0.29,-0.14],[0.32,-0.10],[0.35,0],[0.38,0]] },
+      { t: "L", pts: [[0.38,0],[0.50,0]] },
+    ],
+  },
+  VTACH: {
+    label: "Ventricular Tachycardia", rate: 165, color: "#ff4444", irregular: false,
+    category: "Ventricular", severity: "critical",
+    vitals: { hr: 165, sbp: 74, dbp: 44, spo2: 85, rr: 28, temp: 98.0, etco2: 20, map: 54 },
+    segments: [
+      { t: "L", pts: [[0,0],[0.05,0]] },
+      { t: "B", pts: [[0.05,0],[0.10,0.3],[0.15,0.9],[0.20,1.8]] },
+      { t: "B", pts: [[0.20,1.8],[0.25,2.4],[0.30,2.2],[0.35,1.4]] },
+      { t: "B", pts: [[0.35,1.4],[0.40,0.5],[0.44,-0.6],[0.47,-1.0]] },
+      { t: "B", pts: [[0.47,-1.0],[0.50,-0.8],[0.54,-0.3],[0.58,0]] },
+      { t: "B", pts: [[0.58,0],[0.62,0.2],[0.66,0.35],[0.70,0.3]] },
+      { t: "B", pts: [[0.70,0.3],[0.74,0.2],[0.78,0.05],[0.82,0]] },
+      { t: "L", pts: [[0.82,0],[1.0,0]] },
+    ],
+  },
+  TORSADES: {
+    label: "Torsades de Pointes", rate: 200, color: "#ff4444", irregular: true,
+    category: "Ventricular", severity: "critical",
+    vitals: { hr: 200, sbp: 60, dbp: 30, spo2: 70, rr: 0, temp: 97.6, etco2: 10, map: 40 },
+    // Twisting QRS axis — amplitude modulates sinusoidally
+    segments: [
+      { t: "B", pts: [[0,0],[0.03,0.6],[0.06,1.4],[0.09,0.8]] },
+      { t: "B", pts: [[0.09,0.8],[0.11,0.3],[0.13,-0.3],[0.15,-0.6]] },
+      { t: "B", pts: [[0.15,-0.6],[0.17,-0.4],[0.19,0],[0.21,0]] },
+      { t: "B", pts: [[0.21,0],[0.23,0.4],[0.25,1.0],[0.27,0.5]] },
+      { t: "B", pts: [[0.27,0.5],[0.29,0.1],[0.31,-0.2],[0.33,-0.4]] },
+      { t: "B", pts: [[0.33,-0.4],[0.35,-0.2],[0.37,0],[0.39,0]] },
+      { t: "B", pts: [[0.39,0],[0.41,-0.4],[0.43,-1.0],[0.45,-0.5]] },
+      { t: "B", pts: [[0.45,-0.5],[0.47,-0.2],[0.49,0.2],[0.51,0.4]] },
+      { t: "B", pts: [[0.51,0.4],[0.53,0.2],[0.55,0],[0.57,0]] },
+      { t: "B", pts: [[0.57,0],[0.59,-0.6],[0.61,-1.4],[0.63,-0.8]] },
+      { t: "B", pts: [[0.63,-0.8],[0.65,-0.3],[0.67,0.3],[0.69,0.6]] },
+      { t: "B", pts: [[0.69,0.6],[0.71,0.4],[0.73,0],[0.75,0]] },
+      { t: "B", pts: [[0.75,0],[0.77,-0.4],[0.79,-1.0],[0.81,-0.5]] },
+      { t: "B", pts: [[0.81,-0.5],[0.83,-0.2],[0.85,0.2],[0.87,0.4]] },
+      { t: "B", pts: [[0.87,0.4],[0.89,0.2],[0.91,0],[0.93,0]] },
+      { t: "L", pts: [[0.93,0],[1.0,0]] },
+    ],
+  },
+  VFIB: {
+    label: "Ventricular Fibrillation", rate: 0, color: "#ff2222", irregular: true,
+    category: "Ventricular", severity: "critical",
+    vitals: { hr: 0, sbp: 0, dbp: 0, spo2: 0, rr: 0, temp: 97.0, etco2: 0, map: 0 },
+    segments: [{ t: "VF", pts: [[0,0],[1.0,0]] }],
+  },
+  ASYSTOLE: {
+    label: "Asystole", rate: 0, color: "#ff2222", irregular: false,
+    category: "Ventricular", severity: "critical",
+    vitals: { hr: 0, sbp: 0, dbp: 0, spo2: 0, rr: 0, temp: 97.0, etco2: 0, map: 0 },
+    segments: [{ t: "L", pts: [[0,0],[1.0,0.0]] }],
+  },
+
+  // ── PACED ────────────────────────────────────────────────────────────────
+  PACED: {
+    label: "100% Paced", rate: 70, color: "#44ddff", irregular: false,
+    category: "Paced", severity: "normal",
+    vitals: { hr: 70, sbp: 112, dbp: 68, spo2: 97, rr: 14, temp: 98.4, etco2: 37, map: 83 },
+    // Pacing spike → wide QRS (no P, or paced P before QRS)
+    segments: [
+      { t: "L", pts: [[0,0],[0.28,0]] },
+      // Pacing spike (sharp vertical line)
+      { t: "L", pts: [[0.28,0],[0.28,1.8]] },
+      { t: "L", pts: [[0.28,1.8],[0.29,1.8]] },
+      { t: "L", pts: [[0.29,1.8],[0.29,0]] },
+      // Wide paced QRS
+      { t: "B", pts: [[0.29,0],[0.31,0.3],[0.33,1.0],[0.35,1.8]] },
+      { t: "B", pts: [[0.35,1.8],[0.37,2.2],[0.39,2.0],[0.42,1.2]] },
+      { t: "B", pts: [[0.42,1.2],[0.44,0.4],[0.46,-0.5],[0.48,-0.8]] },
+      { t: "B", pts: [[0.48,-0.8],[0.50,-0.5],[0.52,-0.2],[0.54,0]] },
+      // Discordant broad T
+      { t: "B", pts: [[0.54,0],[0.57,-0.12],[0.60,-0.30],[0.63,-0.35]] },
+      { t: "B", pts: [[0.63,-0.35],[0.66,-0.28],[0.70,-0.08],[0.73,0]] },
+      { t: "L", pts: [[0.73,0],[1.0,0]] },
+    ],
+  },
+  PACED_FAILURE: {
+    label: "Pacemaker Failure", rate: 35, color: "#44ddff", irregular: true,
+    category: "Paced", severity: "critical",
+    vitals: { hr: 35, sbp: 76, dbp: 44, spo2: 88, rr: 18, temp: 97.8, etco2: 26, map: 55 },
+    // Pacing spike present but no capture (spike then flat)
+    segments: [
+      { t: "L", pts: [[0,0],[0.20,0]] },
+      // Spike — no capture (just a spike, then flat)
+      { t: "L", pts: [[0.20,0],[0.20,1.6]] },
+      { t: "L", pts: [[0.20,1.6],[0.21,1.6]] },
+      { t: "L", pts: [[0.21,1.6],[0.21,0]] },
+      { t: "L", pts: [[0.21,0],[0.45,0]] },
+      // Second spike — this one captures (escape beat)
+      { t: "L", pts: [[0.45,0],[0.45,1.6]] },
+      { t: "L", pts: [[0.45,1.6],[0.46,1.6]] },
+      { t: "L", pts: [[0.46,1.6],[0.46,0]] },
+      { t: "B", pts: [[0.46,0],[0.48,0.3],[0.50,1.0],[0.52,1.8]] },
+      { t: "B", pts: [[0.52,1.8],[0.54,2.2],[0.56,2.0],[0.59,1.2]] },
+      { t: "B", pts: [[0.59,1.2],[0.61,0.4],[0.63,-0.4],[0.65,-0.7]] },
+      { t: "B", pts: [[0.65,-0.7],[0.67,-0.4],[0.69,-0.1],[0.71,0]] },
+      { t: "B", pts: [[0.71,0],[0.74,-0.10],[0.77,-0.24],[0.80,-0.28]] },
+      { t: "B", pts: [[0.80,-0.28],[0.83,-0.22],[0.86,-0.06],[0.89,0]] },
+      { t: "L", pts: [[0.89,0],[1.0,0]] },
+    ],
+  },
+};
+
+
+// ─── SEGMENT RENDERER ───────────────────────────────────────────────────────
+// Paints one rhythm's bezier segments into a pre-allocated Float32Array buffer.
+// noisePhase: running phase accumulator for continuous AFib fibrillatory noise
+function paintSegments(segments, buf, numSamples, noisePhase = 0) {
+  for (const seg of segments) {
+    const [x0] = seg.pts[0];
+    const [x1] = seg.pts[seg.pts.length - 1];
+    const iStart = Math.floor(x0 * numSamples);
+    const iEnd   = Math.ceil(x1 * numSamples);
+
+    if (seg.t === "L") {
+      const [, y0] = seg.pts[0];
+      const [, y1] = seg.pts[1];
+      for (let i = iStart; i <= iEnd && i < numSamples; i++) {
+        const tt = iEnd === iStart ? 0 : (i - iStart) / (iEnd - iStart);
+        buf[i] = y0 + (y1 - y0) * tt;
+      }
+    } else if (seg.t === "B") {
+      const [[,p0y],[,p1y],[,p2y],[,p3y]] = seg.pts;
+      for (let i = iStart; i <= iEnd && i < numSamples; i++) {
+        const tt = iEnd === iStart ? 0 : (i - iStart) / (iEnd - iStart);
+        const u = 1 - tt;
+        buf[i] = u*u*u*p0y + 3*u*u*tt*p1y + 3*u*tt*tt*p2y + tt*tt*tt*p3y;
+      }
+    } else if (seg.t === "N") {
+      // Fibrillatory noise — uses continuous phase so it doesn't reset each beat
+      const amp = seg.amp || 0.07;
+      for (let i = iStart; i <= iEnd && i < numSamples; i++) {
+        const ph = noisePhase + i * 0.18;
+        buf[i] = Math.sin(ph * 3.1)  * amp * 0.55
+               + Math.sin(ph * 5.3 + 1.1) * amp * 0.35
+               + Math.sin(ph * 8.7 + 2.3) * amp * 0.25
+               + (Math.random() - 0.5) * amp * 0.18;
+      }
+    }
+  }
+}
+
+// ─── BEAT GENERATOR ──────────────────────────────────────────────────────────
+// Returns { buf: Float32Array, beatLen: number } for one beat tick.
+// beatState: mutable object persisted across beats per rhythm instance.
+function nextBeat(rhythmKey, basePixPerBeat, beatState) {
+  // ── VFib: pure chaos, amplitude varies beat-to-beat ──────────────────────
+  if (rhythmKey === "VFIB") {
+    const len = basePixPerBeat;
+    const buf = new Float32Array(len);
+    const amp = 0.5 + Math.random() * 0.7; // amplitude wanders 0.5–1.2
+    const f1 = 18 + Math.random() * 10;
+    const f2 = 30 + Math.random() * 16;
+    const f3 = 47 + Math.random() * 14;
+    const ph = Math.random() * Math.PI * 2;
+    for (let i = 0; i < len; i++) {
+      const t = i / len;
+      buf[i] = Math.sin(t * Math.PI * f1 + ph)         * amp * 0.55
+             + Math.sin(t * Math.PI * f2 + ph + 1.2)   * amp * 0.35
+             + Math.sin(t * Math.PI * f3 + ph + 2.4)   * amp * 0.20
+             + (Math.random() - 0.5) * amp * 0.22;
+    }
+    return { buf, beatLen: len };
+  }
+
+  // ── Asystole: flat with occasional micro-wander ───────────────────────────
+  if (rhythmKey === "ASYSTOLE") {
+    const len = basePixPerBeat;
+    const buf = new Float32Array(len);
+    for (let i = 0; i < len; i++) buf[i] = (Math.random() - 0.5) * 0.015;
+    return { buf, beatLen: len };
+  }
+
+  // ── Torsades: sinusoidally-modulated amplitude twisting ──────────────────
+  if (rhythmKey === "TORSADES") {
+    if (beatState.torsCount === undefined) beatState.torsCount = 0;
+    beatState.torsCount++;
+    // Amplitude envelope sinusoidally modulates over ~8 beats
+    const envAmp = 0.4 + Math.abs(Math.sin(beatState.torsCount * 0.4)) * 1.2;
+    const inv = Math.sin(beatState.torsCount * 0.35) > 0 ? 1 : -1; // axis flip
+    const len = Math.round(basePixPerBeat * (0.9 + Math.random() * 0.2));
+    const buf = new Float32Array(len);
+    const scaledSegs = RHYTHMS.TORSADES.segments.map(seg => ({
+      ...seg,
+      pts: seg.pts.map(([x, y]) => [x, y * envAmp * inv])
+    }));
+    paintSegments(scaledSegs, buf, len);
+    return { buf, beatLen: len };
+  }
+
+  // ── Sinus Arrest: normal beat + occasional long pause ────────────────────
+  if (rhythmKey === "SINUS_ARREST") {
+    if (beatState.saCount === undefined) beatState.saCount = 0;
+    beatState.saCount++;
+    // Every 3rd beat is a long pause (no QRS, no P)
+    if (beatState.saCount % 3 === 0) {
+      const pauseLen = Math.round(basePixPerBeat * (2.2 + Math.random() * 0.6));
+      const buf = new Float32Array(pauseLen);
+      for (let i = 0; i < pauseLen; i++) buf[i] = (Math.random() - 0.5) * 0.01;
+      return { buf, beatLen: pauseLen };
+    }
+    const len = basePixPerBeat;
+    const buf = new Float32Array(len);
+    paintSegments(RHYTHMS.NSR.segments, buf, len);
+    return { buf, beatLen: len };
+  }
+
+  // ── Wandering Pacemaker: P-wave morphology shifts beat to beat ────────────
+  if (rhythmKey === "WANDERING_PM") {
+    if (beatState.wpCount === undefined) beatState.wpCount = 0;
+    beatState.wpCount++;
+    const phase = beatState.wpCount % 3; // 0=upright, 1=flat, 2=inverted
+    const pAmp = phase === 0 ? 0.22 : phase === 1 ? 0.08 : -0.18;
+    const len = Math.round(basePixPerBeat * (0.95 + Math.random() * 0.12));
+    const buf = new Float32Array(len);
+    const wpSegs = [
+      { t: "L", pts: [[0,0],[0.08,0]] },
+      { t: "B", pts: [[0.08,0],[0.11,pAmp*0.8],[0.14,pAmp],[0.17,pAmp*0.8]] },
+      { t: "B", pts: [[0.17,pAmp*0.8],[0.20,pAmp*0.4],[0.23,0],[0.26,0]] },
+      { t: "L", pts: [[0.26,0],[0.32,0]] },
+      { t: "B", pts: [[0.32,0],[0.34,-0.12],[0.35,-0.18],[0.36,-0.22]] },
+      { t: "B", pts: [[0.36,-0.22],[0.365,0.5],[0.37,1.6],[0.375,2.4]] },
+      { t: "B", pts: [[0.375,2.4],[0.38,1.0],[0.39,-0.35],[0.40,-0.42]] },
+      { t: "B", pts: [[0.40,-0.42],[0.41,-0.2],[0.43,0],[0.46,0.04]] },
+      { t: "L", pts: [[0.46,0.04],[0.54,0.06]] },
+      { t: "B", pts: [[0.54,0.06],[0.57,0.12],[0.60,0.38],[0.63,0.45]] },
+      { t: "B", pts: [[0.63,0.45],[0.66,0.38],[0.70,0.12],[0.74,0]] },
+      { t: "L", pts: [[0.74,0],[1.0,0]] },
+    ];
+    paintSegments(wpSegs, buf, len);
+    return { buf, beatLen: len };
+  }
+
+  // ── AFib with RUE noise phase ─────────────────────────────────────────────
+  if (rhythmKey === "AFIB") {
+    if (!beatState.noisePhase) beatState.noisePhase = 0;
+    const jitter = 0.65 + Math.random() * 0.70;
+    const len = Math.round(basePixPerBeat * jitter);
+    const buf = new Float32Array(len);
+    paintSegments(RHYTHMS.AFIB.segments, buf, len, beatState.noisePhase);
+    beatState.noisePhase += len * 0.18;
+    return { buf, beatLen: len };
+  }
+
+
+  // ── PVC Bigeminy: alternates normal NSR beat → PVC beat ──────────────────
+  if (rhythmKey === "PVC") {
+    if (beatState.pvcTurn === undefined) beatState.pvcTurn = false;
+    beatState.pvcTurn = !beatState.pvcTurn;
+
+    if (beatState.pvcTurn) {
+      // PVC beat: wide bizarre complex, slightly longer RR (compensatory pause)
+      const len = Math.round(basePixPerBeat * 1.10);
+      const buf = new Float32Array(len);
+      // Wide notched QRS + deep S + discordant T
+      const pvcSegs = [
+        { t: "L",  pts: [[0,0],[0.08,0]] },
+        // Broad notched R (wide upstroke)
+        { t: "B",  pts: [[0.08,0],[0.13,0.4],[0.18,1.2],[0.24,2.1]] },
+        { t: "B",  pts: [[0.24,2.1],[0.27,2.5],[0.30,2.3],[0.33,1.6]] },
+        // Notch in R
+        { t: "B",  pts: [[0.33,1.6],[0.36,1.1],[0.37,0.9],[0.38,1.0]] },
+        { t: "B",  pts: [[0.38,1.0],[0.40,1.1],[0.42,0.5],[0.45,-0.5]] },
+        // Deep S
+        { t: "B",  pts: [[0.45,-0.5],[0.47,-1.1],[0.50,-1.4],[0.53,-1.2]] },
+        { t: "B",  pts: [[0.53,-1.2],[0.55,-0.8],[0.57,-0.3],[0.60,0]] },
+        // Discordant T (opposite direction to main deflection)
+        { t: "B",  pts: [[0.60,0],[0.63,-0.08],[0.66,-0.28],[0.69,-0.34]] },
+        { t: "B",  pts: [[0.69,-0.34],[0.72,-0.28],[0.76,-0.08],[0.80,0]] },
+        { t: "L",  pts: [[0.80,0],[1.0,0]] },
+      ];
+      paintSegments(pvcSegs, buf, len);
+      return { buf, beatLen: len };
+    } else {
+      // Normal sinus beat (shorter — pre-PVC beat is slightly early)
+      const len = Math.round(basePixPerBeat * 0.92);
+      const buf = new Float32Array(len);
+      paintSegments(RHYTHMS.NSR.segments, buf, len);
+      return { buf, beatLen: len };
+    }
+  }
+
+  // ── 3° Heart Block: dual oscillator — P waves march independently ─────────
+  // We render P waves at atrial rate (~75bpm) and QRS at ventricular rate (~35bpm).
+  // beatState tracks P-wave phase across beats so Ps drift through QRS freely.
+  if (rhythmKey === "HEART_BLOCK_3") {
+    if (!beatState.pPhase) beatState.pPhase = 0;
+    const len = basePixPerBeat; // ventricular escape beat length
+    const buf = new Float32Array(len);
+
+    // 1. Paint ventricular escape QRS + T (wide, no P before it)
+    const vSegs = [
+      { t: "L",  pts: [[0,0],[0.10,0]] },
+      // Escape QRS — wider than normal
+      { t: "B",  pts: [[0.10,0],[0.12,-0.10],[0.13,-0.16],[0.135,-0.20]] },
+      { t: "B",  pts: [[0.135,-0.20],[0.14,0.5],[0.145,1.5],[0.15,2.1]] },
+      { t: "B",  pts: [[0.15,2.1],[0.155,0.9],[0.165,-0.35],[0.175,-0.42]] },
+      { t: "B",  pts: [[0.175,-0.42],[0.185,-0.18],[0.20,0],[0.22,0.03]] },
+      { t: "L",  pts: [[0.22,0.03],[0.30,0.04]] },
+      // Broad T — often discordant with escape beats
+      { t: "B",  pts: [[0.30,0.04],[0.34,0.06],[0.38,0.32],[0.42,0.40]] },
+      { t: "B",  pts: [[0.42,0.40],[0.46,0.32],[0.50,0.08],[0.55,0]] },
+      { t: "L",  pts: [[0.55,0],[1.0,0]] },
+    ];
+    paintSegments(vSegs, buf, len);
+
+    // 2. Overlay independent P waves marching at ~75bpm (≈ 0.58× ventricular rate at 35bpm)
+    // P-wave period in fractional beat units: ventricular/atrial = 35/75 ≈ 0.467
+    const pPeriod = (35 / 75); // fraction of ventricular beat length
+    let pStart = beatState.pPhase; // where the next P starts (in fraction of this beat)
+
+    while (pStart < 1.0) {
+      const pWidth = 0.09; // P wave occupies 9% of ventricular beat length
+      if (pStart + pWidth < 1.0) {
+        // Render P wave at this position, additive onto buf
+        const iS = Math.floor(pStart * len);
+        const iE = Math.ceil((pStart + pWidth) * len);
+        for (let i = iS; i <= iE && i < len; i++) {
+          const tt = (i - iS) / Math.max(1, iE - iS);
+          const u = 1 - tt;
+          // Smooth bump bezier: 0 → 0.18 → 0.20 → 0.18 → 0
+          const py = u*u*u*0 + 3*u*u*tt*0.22 + 3*u*tt*tt*0.22 + tt*tt*tt*0;
+          buf[i] = (buf[i] || 0) + py;
+        }
+      }
+      pStart += pPeriod;
+    }
+    // Advance phase for next beat: remainder carries over
+    beatState.pPhase = ((beatState.pPhase - 1.0) % pPeriod + pPeriod) % pPeriod;
+    // Add slight P-march drift so Ps walk through QRS over time
+    beatState.pPhase += pPeriod * 0.015;
+
+    return { buf, beatLen: len };
+  }
+
+  // ── VTach: slight beat-to-beat amplitude variation (can be polymorphic) ───
+  if (rhythmKey === "VTACH") {
+    if (!beatState.vtAmp) beatState.vtAmp = 1.0;
+    // Amplitude wanders slowly
+    beatState.vtAmp += (Math.random() - 0.5) * 0.06;
+    beatState.vtAmp = Math.max(0.75, Math.min(1.25, beatState.vtAmp));
+    const amp = beatState.vtAmp;
+
+    const len = Math.round(basePixPerBeat * (1 + (Math.random() - 0.5) * 0.05));
+    const buf = new Float32Array(len);
+    // Scale the VTach segments by amplitude
+    const scaledSegs = RHYTHMS.VTACH.segments.map(seg => ({
+      ...seg,
+      pts: seg.pts.map(([x, y]) => [x, y * amp])
+    }));
+    paintSegments(scaledSegs, buf, len);
+    return { buf, beatLen: len };
+  }
+
+  // ── Default: regular beat with minor baseline wander ─────────────────────
+  const r = RHYTHMS[rhythmKey];
+  // Add tiny baseline wander (±0.015) to all regular rhythms for realism
+  if (!beatState.wander) beatState.wander = 0;
+  beatState.wander += (Math.random() - 0.5) * 0.008;
+  beatState.wander *= 0.97; // slowly revert to zero
+  beatState.wander = Math.max(-0.04, Math.min(0.04, beatState.wander));
+  const wander = beatState.wander;
+
+  const len = basePixPerBeat;
+  const buf = new Float32Array(len);
+  paintSegments(r.segments, buf, len);
+  // Apply wander offset
+  for (let i = 0; i < len; i++) buf[i] += wander;
+  return { buf, beatLen: len };
+}
+
+// ─── ECG CANVAS ─────────────────────────────────────────────────────────────
+// Real-time scrolling strip. Per-beat irregularity handled by nextBeat().
+function ECGCanvas({ rhythm, height = 160, gridColor = "rgba(0,80,40,0.35)", bgColor = "#000d08", spo2 = 98, muted = false }) {
+  const canvasRef = useRef(null);
+  const animRef   = useRef(null);
+  const stateRef  = useRef({ rhythm: null, ringBuf: null, writePos: 0, beatBuf: null, beatPos: 0, beatLen: 0, beatState: {}, basePixPerBeat: 200 });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+    const RING = W * 5;
+
+    const st = stateRef.current;
+    if (!st.ringBuf || st.ringBuf.length !== RING) {
+      st.ringBuf = new Float32Array(RING);
+      st.writePos = 0;
+    }
+
+    const getBase = (rKey) => {
+      const r = RHYTHMS[rKey];
+      if (!r || r.rate <= 0) return Math.round(W * 0.9);
+      // 25mm/s paper speed: ~130px per beat at 75bpm feels natural on screen
+      return Math.round((60 / r.rate) * 130);
+    };
+
+    let rKey = rhythm;
+    st.rhythm  = rKey;
+    st.beatState = {};
+    st.basePixPerBeat = getBase(rKey);
+    let nb = nextBeat(rKey, st.basePixPerBeat, st.beatState);
+    st.beatBuf = nb.buf; st.beatLen = nb.beatLen; st.beatPos = 0;
+
+    const SPEED = 1; // 1px per frame @ ~60fps = ~60px/sec — realistic 25mm/s feel
+
+    const hexToRgba = (hex, a) => {
+      const c = hex.replace("#","");
+      return `rgba(${parseInt(c.slice(0,2),16)},${parseInt(c.slice(2,4),16)},${parseInt(c.slice(4,6),16)},${a})`;
+    };
+
+    const draw = () => {
+      if (rhythm !== st.rhythm) {
+        st.rhythm = rKey = rhythm;
+        st.beatState = {};
+        st.basePixPerBeat = getBase(rKey);
+        nb = nextBeat(rKey, st.basePixPerBeat, st.beatState);
+        st.beatBuf = nb.buf; st.beatLen = nb.beatLen; st.beatPos = 0;
+      }
+
+      for (let s = 0; s < SPEED; s++) {
+        st.ringBuf[st.writePos % RING] = st.beatBuf[Math.min(st.beatPos, st.beatLen - 1)];
+        st.writePos++;
+        if (++st.beatPos >= st.beatLen) {
+          st.beatPos = 0;
+          nb = nextBeat(rKey, st.basePixPerBeat, st.beatState);
+          st.beatBuf = nb.buf; st.beatLen = nb.beatLen;
+          // QRS beep — skip for flat/chaotic rhythms
+          if (!muted && !["VFIB","ASYSTOLE","TORSADES"].includes(rKey)) {
+            playQRSBeep(spo2);
+          }
+        }
+      }
+
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, W, H);
+
+      // Grid
+      const sm = 20, lg = 100;
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x < W; x += sm) {
+        ctx.strokeStyle = x % lg === 0 ? "rgba(0,100,50,0.45)" : gridColor;
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+      }
+      for (let y = 0; y < H; y += sm) {
+        ctx.strokeStyle = y % lg === 0 ? "rgba(0,100,50,0.45)" : gridColor;
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+      }
+
+      const color = RHYTHMS[rKey]?.color || "#00ff88";
+      const mid   = H * 0.55;
+      const scale = H * 0.34;
+
+      // Glow
+      ctx.beginPath();
+      ctx.strokeStyle = hexToRgba(color, 0.18);
+      ctx.lineWidth = 5; ctx.lineJoin = "round"; ctx.lineCap = "round";
+      for (let x = 0; x < W; x++) {
+        const idx = (st.writePos - W + x + RING * 4) % RING;
+        const y = mid - st.ringBuf[idx] * scale;
+        x === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+
+      // Trace
+      ctx.beginPath();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.8;
+      ctx.shadowColor = color; ctx.shadowBlur = 4;
+      for (let x = 0; x < W; x++) {
+        const idx = (st.writePos - W + x + RING * 4) % RING;
+        const y = mid - st.ringBuf[idx] * scale;
+        x === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Sweep wipe
+      const g = ctx.createLinearGradient(W-18, 0, W, 0);
+      g.addColorStop(0, "transparent"); g.addColorStop(1, bgColor);
+      ctx.fillStyle = g; ctx.fillRect(W-18, 0, 18, H);
+
+      animRef.current = requestAnimationFrame(draw);
+    };
+
+    animRef.current = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [rhythm, height, bgColor, gridColor]);
+
+  return <canvas ref={canvasRef} width={900} height={height} style={{ width:"100%", height:`${height}px`, display:"block" }} />;
+}
+
+
+const INITIAL_STATE = {
+  patient: { name: "Johnson, Mary", dob: "03/14/1958", mrn: "MRN-448821", room: "ICU-4", provider: "Dr. Patel", weight: "72 kg", allergies: ["PCN", "Sulfa"] },
+  rhythm: "NSR",
+  vitals: { hr: 72, sbp: 118, dbp: 76, spo2: 98, rr: 16, temp: 98.6, etco2: 38, map: 90 },
+  labs: {
+    sodium: { val: 138, ref: "136-145", unit: "mEq/L" },
+    potassium: { val: 4.1, ref: "3.5-5.0", unit: "mEq/L" },
+    chloride: { val: 102, ref: "98-107", unit: "mEq/L" },
+    co2: { val: 24, ref: "22-29", unit: "mEq/L" },
+    bun: { val: 18, ref: "7-20", unit: "mg/dL" },
+    creatinine: { val: 1.0, ref: "0.6-1.2", unit: "mg/dL" },
+    glucose: { val: 104, ref: "70-100", unit: "mg/dL" },
+    wbc: { val: 8.2, ref: "4.5-11.0", unit: "K/µL" },
+    hgb: { val: 13.4, ref: "12.0-16.0", unit: "g/dL" },
+    hct: { val: 40.2, ref: "36-46", unit: "%" },
+    platelets: { val: 220, ref: "150-400", unit: "K/µL" },
+    ph: { val: 7.40, ref: "7.35-7.45", unit: "" },
+    pao2: { val: 94, ref: "80-100", unit: "mmHg" },
+    paco2: { val: 40, ref: "35-45", unit: "mmHg" },
+    hco3: { val: 24, ref: "22-26", unit: "mEq/L" },
+    lactate: { val: 1.1, ref: "0.5-2.0", unit: "mmol/L" },
+    troponin: { val: 0.01, ref: "<0.04", unit: "ng/mL" },
+    bnp: { val: 85, ref: "<100", unit: "pg/mL" },
+  },
+  medications: [
+    { id: 1, drug: "Metoprolol", dose: "25mg", route: "PO", freq: "BID", barcode: "MET-025-PO", due: "0800", status: "due", check1: false, check2: false, scanned: false },
+    { id: 2, drug: "Lisinopril", dose: "10mg", route: "PO", freq: "Daily", barcode: "LIS-010-PO", due: "0800", status: "due", check1: false, check2: false, scanned: false },
+    { id: 3, drug: "Furosemide", dose: "40mg", route: "IV", freq: "BID", barcode: "FUR-040-IV", due: "0800", status: "due", check1: false, check2: false, scanned: false },
+    { id: 4, drug: "Heparin", dose: "5000 units", route: "SubQ", freq: "Q8H", barcode: "HEP-5000-SQ", due: "1200", status: "scheduled", check1: false, check2: false, scanned: false },
+    { id: 5, drug: "Aspirin", dose: "81mg", route: "PO", freq: "Daily", barcode: "ASA-081-PO", due: "0800", status: "due", check1: false, check2: false, scanned: false },
+  ],
+  alarms: [],
+  scenario: "Stable Post-Op Day 1",
+};
+
+// ─── PLETH (SpO2) CANVAS ─────────────────────────────────────────────────────
+// Realistic plethysmography waveform: smooth rounded peaks, filled blue gradient
+function PlethCanvas({ hr = 72, spo2 = 98, height = 70 }) {
+  const canvasRef = useRef(null);
+  const animRef = useRef(null);
+  const stateRef = useRef({ writePos: 0, ringBuf: null });
+
+  // Build one pleth beat: dicrotic notch + main peak
+  const buildPlethBeat = useCallback((numSamples) => {
+    const buf = new Float32Array(numSamples);
+    for (let i = 0; i < numSamples; i++) {
+      const t = i / numSamples;
+      // Main upstroke + systolic peak
+      let val = 0;
+      if (t < 0.35) {
+        // Rapid upstroke — logistic
+        val = 1 / (1 + Math.exp(-18 * (t - 0.14)));
+      } else if (t < 0.55) {
+        // Systolic peak → dicrotic notch
+        const tt = (t - 0.35) / 0.2;
+        val = 1.0 - tt * 0.28 + Math.sin(tt * Math.PI) * 0.04;
+      } else if (t < 0.65) {
+        // Dicrotic notch dip
+        const tt = (t - 0.55) / 0.10;
+        val = 0.72 - Math.sin(tt * Math.PI) * 0.12;
+      } else if (t < 0.80) {
+        // Dicrotic wave secondary peak
+        const tt = (t - 0.65) / 0.15;
+        val = 0.60 + Math.sin(tt * Math.PI) * 0.12;
+      } else {
+        // Slow diastolic run-off
+        const tt = (t - 0.80) / 0.20;
+        val = 0.72 * Math.exp(-tt * 2.8);
+      }
+      buf[i] = Math.max(0, val);
+    }
+    return buf;
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+    const RING = W * 4;
+
+    const st = stateRef.current;
+    if (!st.ringBuf || st.ringBuf.length !== RING) {
+      st.ringBuf = new Float32Array(RING);
+      st.writePos = 0;
+    }
+
+    const rate = Math.max(20, Math.min(200, hr));
+    let beatLen = Math.round((60 / rate) * 130);
+    let beatBuf = buildPlethBeat(beatLen);
+    let beatPos = 0;
+    const SPEED = 1;
+
+    const draw = () => {
+      // Generate samples
+      for (let s = 0; s < SPEED; s++) {
+        st.ringBuf[st.writePos % RING] = beatBuf[Math.min(beatPos, beatLen - 1)];
+        st.writePos++;
+        beatPos++;
+        if (beatPos >= beatLen) {
+          beatPos = 0;
+          const newRate = Math.max(20, Math.min(200, hr));
+          beatLen = Math.round((60 / newRate) * 130);
+          beatBuf = buildPlethBeat(beatLen);
+        }
+      }
+
+      // Amplitude modulation based on SpO2
+      const amp = spo2 < 90 ? 0.4 + (spo2 - 80) * 0.06 : 1.0;
+
+      ctx.fillStyle = "#00050f";
+      ctx.fillRect(0, 0, W, H);
+
+      // Grid
+      ctx.strokeStyle = "rgba(0,40,100,0.3)";
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x < W; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+      for (let y = 0; y < H; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+      const pad = 6;
+      const range = H - pad * 2;
+
+      // Build path
+      const pts = [];
+      for (let x = 0; x < W; x++) {
+        const idx = (st.writePos - W + x + RING * 4) % RING;
+        const val = st.ringBuf[idx] * amp;
+        const y = H - pad - val * range;
+        pts.push([x, y]);
+      }
+
+      // Filled gradient under curve
+      const fillGrad = ctx.createLinearGradient(0, pad, 0, H);
+      fillGrad.addColorStop(0, "rgba(0,150,255,0.45)");
+      fillGrad.addColorStop(0.5, "rgba(0,100,220,0.20)");
+      fillGrad.addColorStop(1, "rgba(0,60,180,0.04)");
+
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      pts.forEach(([x, y]) => ctx.lineTo(x, y));
+      ctx.lineTo(W, H);
+      ctx.closePath();
+      ctx.fillStyle = fillGrad;
+      ctx.fill();
+
+      // Glow trace
+      ctx.beginPath();
+      pts.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+      ctx.strokeStyle = "rgba(60,160,255,0.25)";
+      ctx.lineWidth = 5;
+      ctx.lineJoin = "round";
+      ctx.stroke();
+
+      // Main blue line
+      ctx.beginPath();
+      pts.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+      ctx.strokeStyle = "#3ab0ff";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "#3ab0ff";
+      ctx.shadowBlur = 5;
+      ctx.lineJoin = "round";
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Sweep wipe
+      const sweep = 18;
+      const g = ctx.createLinearGradient(W - sweep, 0, W, 0);
+      g.addColorStop(0, "transparent");
+      g.addColorStop(1, "#00050f");
+      ctx.fillStyle = g;
+      ctx.fillRect(W - sweep, 0, sweep, H);
+
+      animRef.current = requestAnimationFrame(draw);
+    };
+
+    animRef.current = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [hr, spo2, buildPlethBeat]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={900}
+      height={height}
+      style={{ width: "100%", height: `${height}px`, display: "block" }}
+    />
+  );
+}
+
+// ─── BEDSIDE MONITOR VIEW ───────────────────────────────────────────────────
+function BedsideMonitor({ state }) {
+  const { vitals, rhythm, patient, alarms } = state;
+  const r = RHYTHMS[rhythm];
+  const isCritical = ["VFIB","ASYSTOLE","VTACH","TORSADES","IDIOVENTRICULAR","PACED_FAILURE"].includes(rhythm);
+  const [blink, setBlink] = useState(false);
+  const [muted, setMuted] = useState(false);
+
+  // Alarm audio
+  useAlarmAudio(rhythm, vitals, muted);
+
+  useEffect(() => {
+    if (isCritical) {
+      const t = setInterval(() => setBlink(b => !b), 500);
+      return () => clearInterval(t);
+    }
+    setBlink(false);
+  }, [isCritical]);
+
+  const vitalBox = (label, value, unit, color, critical = false) => (
+    <div style={{
+      background: critical && blink ? "rgba(255,40,40,0.3)" : "rgba(0,20,15,0.8)",
+      border: `1px solid ${critical ? "#ff4444" : color}`,
+      borderRadius: 4, padding: "8px 12px", minWidth: 110,
+      transition: "background 0.2s"
+    }}>
+      <div style={{ color: "#aaa", fontSize: 11, fontFamily: "monospace", letterSpacing: 2, marginBottom: 2 }}>{label}</div>
+      <div style={{ color: critical ? "#ff4444" : color, fontSize: 36, fontFamily: "'Courier New', monospace", fontWeight: "bold", lineHeight: 1 }}>{value}</div>
+      <div style={{ color: "#666", fontSize: 11, fontFamily: "monospace" }}>{unit}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ background: "#000a0a", minHeight: "100vh", color: "#00ff88", fontFamily: "monospace", padding: 16 }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, borderBottom: "1px solid #002a1a", paddingBottom: 8 }}>
+        <div>
+          <span style={{ color: "#00ff88", fontSize: 14, fontWeight: "bold" }}>{patient.name}</span>
+          <span style={{ color: "#555", fontSize: 11, marginLeft: 16 }}>MRN: {patient.mrn}</span>
+          <span style={{ color: "#555", fontSize: 11, marginLeft: 16 }}>Room: {patient.room}</span>
+        </div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <span style={{ color: isCritical ? (blink ? "#ff4444" : "#880000") : "#00aa55", fontSize: 11, border: `1px solid ${isCritical ? "#ff4444" : "#00aa55"}`, padding: "2px 8px", borderRadius: 2 }}>
+            {isCritical ? "⚠ ALARM" : "● MONITORING"}
+          </span>
+          <button onClick={() => setMuted(m => !m)} style={{
+            fontSize: 11, padding: "3px 10px", borderRadius: 3, cursor: "pointer",
+            border: `1px solid ${muted ? "#ff6644" : "#336644"}`,
+            background: muted ? "rgba(255,100,68,0.15)" : "rgba(0,100,60,0.15)",
+            color: muted ? "#ff6644" : "#00cc66", fontFamily: "monospace"
+          }}>
+            {muted ? "🔇 MUTED" : "🔊 SOUND ON"}
+          </button>
+          <span style={{ color: "#444", fontSize: 10 }}>{new Date().toLocaleTimeString()}</span>
+        </div>
+      </div>
+
+      {/* ECG */}
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+          <span style={{ color: r.color, fontSize: 11, letterSpacing: 2 }}>I · ECG · 25mm/s</span>
+          <span style={{ color: isCritical ? (blink ? "#ff4444" : "#880000") : r.color, fontSize: 12, fontWeight: "bold" }}>{r.label}</span>
+        </div>
+        <div style={{ border: `1px solid ${isCritical ? "#ff4444" : "#002a1a"}`, borderRadius: 4, overflow: "hidden" }}>
+          <ECGCanvas rhythm={rhythm} height={140} spo2={vitals.spo2} muted={muted} />
+        </div>
+      </div>
+
+      {/* SpO2 Pleth */}
+      <div style={{ color: "#3ab0ff", fontSize: 10, letterSpacing: 2, marginBottom: 4 }}>PLETH · SpO₂ · {vitals.spo2}%</div>
+      <div style={{ border: "1px solid #001a2a", borderRadius: 4, overflow: "hidden", marginBottom: 12 }}>
+        <PlethCanvas hr={vitals.hr} spo2={vitals.spo2} height={70} />
+      </div>
+
+      {/* Vitals Grid */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {vitalBox("HR", r.rate > 0 ? vitals.hr : "---", "bpm", "#00ff88", vitals.hr > 150 || vitals.hr < 40)}
+        {vitalBox("BP", `${vitals.sbp}/${vitals.dbp}`, "mmHg", "#ffcc00", vitals.sbp < 90 || vitals.sbp > 180)}
+        {vitalBox("MAP", vitals.map, "mmHg", "#ffaa00", vitals.map < 65)}
+        {vitalBox("SpO₂", `${vitals.spo2}%`, "", "#0099ff", vitals.spo2 < 92)}
+        {vitalBox("RR", vitals.rr, "/min", "#cc44ff", vitals.rr > 24 || vitals.rr < 8)}
+        {vitalBox("TEMP", vitals.temp, "°F", "#ff6644", vitals.temp > 101 || vitals.temp < 96)}
+        {vitalBox("EtCO₂", vitals.etco2, "mmHg", "#44ffcc", vitals.etco2 > 50 || vitals.etco2 < 25)}
+      </div>
+
+      {/* Active alarms */}
+      {alarms.length > 0 && (
+        <div style={{ marginTop: 12, padding: "8px 12px", background: "rgba(255,40,40,0.1)", border: "1px solid #ff4444", borderRadius: 4 }}>
+          {alarms.map((a, i) => <div key={i} style={{ color: "#ff6666", fontSize: 12 }}>⚠ {a}</div>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── STUDENT EMR VIEW ───────────────────────────────────────────────────────
+function StudentEMR({ state, onMARUpdate }) {
+  const { patient, vitals, labs, medications, rhythm } = state;
+  const [activeTab, setActiveTab] = useState("chart");
+  const [scanInput, setScanInput] = useState("");
+  const [scanMessage, setScanMessage] = useState(null);
+  const [scanningMed, setScanningMed] = useState(null);
+
+  const isLow = (val, ref) => {
+    const [lo] = ref.split("-").map(parseFloat);
+    return parseFloat(val) < lo;
+  };
+  const isHigh = (val, ref) => {
+    const parts = ref.split("-");
+    if (parts.length < 2) return false;
+    return parseFloat(val) > parseFloat(parts[1]);
+  };
+
+  const handleScan = (medId) => {
+    const med = medications.find(m => m.id === medId);
+    if (!med) return;
+    setScanningMed(medId);
+    setScanInput("");
+    setScanMessage(null);
+  };
+
+  const processScan = (medId) => {
+    const med = medications.find(m => m.id === medId);
+    if (!med) return;
+    if (scanInput.trim() === med.barcode) {
+      setScanMessage({ type: "success", text: `✓ ${med.drug} verified — scan matches order` });
+      onMARUpdate(medId, "scanned", true);
+    } else {
+      setScanMessage({ type: "error", text: `✗ Barcode mismatch — verify medication before administering` });
+    }
+  };
+
+  const handleCheckoff = (medId, check) => {
+    const med = medications.find(m => m.id === medId);
+    if (!med) return;
+    if (!med.scanned) { setScanMessage({ type: "error", text: "Scan medication barcode before signing off" }); return; }
+    onMARUpdate(medId, check, true);
+    if (check === "check1" && med.check2) markGiven(medId);
+    if (check === "check2" && med.check1) markGiven(medId);
+  };
+
+  const markGiven = (medId) => {
+    onMARUpdate(medId, "status", "given");
+  };
+
+  const tabs = ["chart", "labs", "mar", "notes"];
+
+  return (
+    <div style={{ background: "#f0f4f8", minHeight: "100vh", fontFamily: "'Georgia', serif" }}>
+      {/* EMR Header */}
+      <div style={{ background: "#1a3a5c", color: "white", padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <span style={{ fontSize: 18, fontWeight: "bold" }}>SimChart EMR</span>
+          <span style={{ fontSize: 11, marginLeft: 16, color: "#aac4e0" }}>Nursing Education System</span>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 14, fontWeight: "bold" }}>{patient.name}</div>
+          <div style={{ fontSize: 11, color: "#aac4e0" }}>{patient.mrn} · DOB: {patient.dob} · {patient.room}</div>
+        </div>
+      </div>
+
+      {/* Allergy banner */}
+      <div style={{ background: "#fff3cd", borderBottom: "2px solid #ffc107", padding: "4px 20px", fontSize: 12, color: "#856404" }}>
+        <strong>⚠ ALLERGIES:</strong> {patient.allergies.join(", ")}
+      </div>
+
+      {/* Quick vitals bar */}
+      <div style={{ background: "#e8f0f8", borderBottom: "1px solid #c5d5e8", padding: "6px 20px", display: "flex", gap: 24, fontSize: 12 }}>
+        {[["HR", vitals.hr + " bpm", vitals.hr > 150 || vitals.hr < 40],
+          ["BP", `${vitals.sbp}/${vitals.dbp}`, vitals.sbp < 90],
+          ["SpO₂", vitals.spo2 + "%", vitals.spo2 < 92],
+          ["RR", vitals.rr + "/min", vitals.rr > 24],
+          ["Temp", vitals.temp + "°F", vitals.temp > 101],
+          ["Rhythm", RHYTHMS[rhythm].label, rhythm === "VFIB" || rhythm === "VTACH" || rhythm === "ASYSTOLE"]
+        ].map(([label, val, crit]) => (
+          <span key={label}>
+            <span style={{ color: "#555" }}>{label}: </span>
+            <span style={{ color: crit ? "#dc3545" : "#1a3a5c", fontWeight: crit ? "bold" : "normal" }}>{val}</span>
+            {crit && <span style={{ color: "#dc3545" }}> ⚠</span>}
+          </span>
+        ))}
+      </div>
+
+      {/* Tabs */}
+      <div style={{ background: "#1a3a5c", display: "flex", paddingLeft: 20 }}>
+        {tabs.map(t => (
+          <button key={t} onClick={() => setActiveTab(t)} style={{
+            background: activeTab === t ? "#f0f4f8" : "transparent",
+            color: activeTab === t ? "#1a3a5c" : "#aac4e0",
+            border: "none", padding: "8px 20px", cursor: "pointer",
+            fontSize: 12, fontWeight: activeTab === t ? "bold" : "normal",
+            borderRadius: "4px 4px 0 0", textTransform: "capitalize"
+          }}>{t === "mar" ? "MAR" : t.charAt(0).toUpperCase() + t.slice(1)}</button>
+        ))}
+      </div>
+
+      <div style={{ padding: 20 }}>
+        {/* CHART TAB */}
+        {activeTab === "chart" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div style={{ background: "white", borderRadius: 6, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+              <h3 style={{ color: "#1a3a5c", fontSize: 13, marginBottom: 12, borderBottom: "1px solid #e0e8f0", paddingBottom: 6 }}>Patient Information</h3>
+              {[["Name", patient.name], ["DOB", patient.dob], ["MRN", patient.mrn], ["Room", patient.room], ["Provider", patient.provider], ["Weight", patient.weight]].map(([k, v]) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
+                  <span style={{ color: "#666" }}>{k}:</span><span style={{ fontWeight: "500" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ background: "white", borderRadius: 6, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+              <h3 style={{ color: "#1a3a5c", fontSize: 13, marginBottom: 12, borderBottom: "1px solid #e0e8f0", paddingBottom: 6 }}>Active Diagnoses</h3>
+              {["Hypertensive urgency", "Acute decompensated heart failure", "CKD Stage 3", "Type 2 Diabetes Mellitus"].map(d => (
+                <div key={d} style={{ fontSize: 13, marginBottom: 6, color: "#333" }}>• {d}</div>
+              ))}
+            </div>
+            <div style={{ background: "white", borderRadius: 6, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", gridColumn: "1 / -1" }}>
+              <h3 style={{ color: "#1a3a5c", fontSize: 13, marginBottom: 10, borderBottom: "1px solid #e0e8f0", paddingBottom: 6 }}>Nursing Notes</h3>
+              <p style={{ fontSize: 13, color: "#444", lineHeight: 1.6 }}>
+                0645 — Patient alert and oriented x3. Denies chest pain. Reports mild shortness of breath on exertion. 
+                Lower extremity edema 2+ bilateral. Lung sounds with bibasilar crackles. Foley in place, urine output adequate. 
+                IV site intact — no redness or swelling. Patient verbalized understanding of fluid restriction. — RN Smith, J.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* LABS TAB */}
+        {activeTab === "labs" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+            {[
+              { title: "Basic Metabolic Panel", keys: ["sodium","potassium","chloride","co2","bun","creatinine","glucose"] },
+              { title: "Complete Blood Count", keys: ["wbc","hgb","hct","platelets"] },
+              { title: "Arterial Blood Gas", keys: ["ph","pao2","paco2","hco3","lactate"] },
+              { title: "Cardiac Markers", keys: ["troponin","bnp"] },
+            ].map(panel => (
+              <div key={panel.title} style={{ background: "white", borderRadius: 6, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+                <h3 style={{ color: "#1a3a5c", fontSize: 13, marginBottom: 10, borderBottom: "2px solid #1a3a5c", paddingBottom: 6 }}>{panel.title}</h3>
+                <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+                  <thead><tr style={{ color: "#888" }}>
+                    <th style={{ textAlign: "left", paddingBottom: 4 }}>Test</th>
+                    <th style={{ textAlign: "right", paddingBottom: 4 }}>Value</th>
+                    <th style={{ textAlign: "right", paddingBottom: 4 }}>Ref</th>
+                  </tr></thead>
+                  <tbody>
+                    {panel.keys.map(k => {
+                      const lab = labs[k];
+                      if (!lab) return null;
+                      const hi = isHigh(lab.val, lab.ref);
+                      const lo = isLow(lab.val, lab.ref);
+                      const crit = hi || lo;
+                      return (
+                        <tr key={k} style={{ borderTop: "1px solid #f0f0f0" }}>
+                          <td style={{ padding: "4px 0", color: "#555" }}>{k.toUpperCase()}</td>
+                          <td style={{ textAlign: "right", fontWeight: crit ? "bold" : "normal", color: crit ? "#dc3545" : "#222" }}>
+                            {lab.val} {lab.unit} {hi ? "↑" : lo ? "↓" : ""}
+                          </td>
+                          <td style={{ textAlign: "right", color: "#aaa", fontSize: 11 }}>{lab.ref}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* MAR TAB */}
+        {activeTab === "mar" && (
+          <div>
+            <h3 style={{ color: "#1a3a5c", marginBottom: 12, fontSize: 14 }}>Medication Administration Record — {new Date().toLocaleDateString()}</h3>
+            {scanMessage && (
+              <div style={{ padding: "8px 14px", borderRadius: 4, marginBottom: 12, fontSize: 13,
+                background: scanMessage.type === "success" ? "#d4edda" : "#f8d7da",
+                color: scanMessage.type === "success" ? "#155724" : "#721c24",
+                border: `1px solid ${scanMessage.type === "success" ? "#c3e6cb" : "#f5c6cb"}`
+              }}>{scanMessage.text}</div>
+            )}
+            {medications.map(med => (
+              <div key={med.id} style={{
+                background: "white", borderRadius: 6, padding: 16, marginBottom: 10,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                borderLeft: `4px solid ${med.status === "given" ? "#28a745" : med.status === "due" ? "#ffc107" : "#6c757d"}`
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ fontWeight: "bold", fontSize: 15, color: "#1a3a5c" }}>{med.drug}</div>
+                    <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>
+                      {med.dose} · {med.route} · {med.freq} · Due: {med.due}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#888", marginTop: 2, fontFamily: "monospace" }}>Barcode: {med.barcode}</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                    <span style={{
+                      fontSize: 11, padding: "2px 8px", borderRadius: 10, fontWeight: "bold",
+                      background: med.status === "given" ? "#d4edda" : med.status === "due" ? "#fff3cd" : "#e2e3e5",
+                      color: med.status === "given" ? "#155724" : med.status === "due" ? "#856404" : "#495057"
+                    }}>{med.status.toUpperCase()}</span>
+                  </div>
+                </div>
+
+                {med.status !== "given" && (
+                  <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid #f0f0f0" }}>
+                    {/* Scan section */}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                      {scanningMed === med.id ? (
+                        <>
+                          <input value={scanInput} onChange={e => setScanInput(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && processScan(med.id)}
+                            placeholder="Scan or type barcode → Enter"
+                            autoFocus
+                            style={{ fontSize: 12, padding: "4px 8px", border: "1px solid #1a3a5c", borderRadius: 4, width: 220, fontFamily: "monospace" }}
+                          />
+                          <button onClick={() => processScan(med.id)} style={{ fontSize: 11, padding: "4px 10px", background: "#1a3a5c", color: "white", border: "none", borderRadius: 4, cursor: "pointer" }}>Verify</button>
+                          <button onClick={() => { setScanningMed(null); setScanInput(""); }} style={{ fontSize: 11, padding: "4px 10px", background: "#6c757d", color: "white", border: "none", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
+                        </>
+                      ) : (
+                        <button onClick={() => handleScan(med.id)} style={{
+                          fontSize: 12, padding: "5px 14px", cursor: "pointer", borderRadius: 4, border: "none",
+                          background: med.scanned ? "#d4edda" : "#1a3a5c", color: med.scanned ? "#155724" : "white", fontWeight: "bold"
+                        }}>
+                          {med.scanned ? "✓ Barcode Verified" : "📷 Scan Barcode"}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Double check-off */}
+                    <div style={{ display: "flex", gap: 12 }}>
+                      {[["check1", "Nurse 1 Sign-off"], ["check2", "Nurse 2 Sign-off"]].map(([key, label]) => (
+                        <button key={key} onClick={() => handleCheckoff(med.id, key)} style={{
+                          fontSize: 11, padding: "5px 12px", borderRadius: 4, cursor: "pointer",
+                          border: `1px solid ${med[key] ? "#28a745" : "#ccc"}`,
+                          background: med[key] ? "#d4edda" : "#f8f9fa",
+                          color: med[key] ? "#155724" : "#555"
+                        }}>
+                          {med[key] ? `✓ ${label}` : `☐ ${label}`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {med.status === "given" && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: "#28a745", fontWeight: "bold" }}>✓ Administered — Double check-off complete</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === "notes" && (
+          <div style={{ background: "white", borderRadius: 6, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+            <h3 style={{ color: "#1a3a5c", marginBottom: 16 }}>Nursing Notes</h3>
+            <textarea rows={8} placeholder="Enter nursing note..." style={{ width: "100%", fontSize: 13, padding: 10, border: "1px solid #ccc", borderRadius: 4, fontFamily: "Georgia, serif", lineHeight: 1.6, boxSizing: "border-box" }} />
+            <button style={{ marginTop: 8, padding: "6px 20px", background: "#1a3a5c", color: "white", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>Sign & Save Note</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── INSTRUCTOR PANEL ───────────────────────────────────────────────────────
+function InstructorPanel({ state, onUpdate }) {
+  const { vitals, rhythm, labs, scenario } = state;
+
+  // ── Scenario presets ──────────────────────────────────────────────────────
+  const scenarios = [
+    { name: "Stable Post-Op Day 1",   rhythm: "NSR",          labs: {} },
+    { name: "Septic Shock",           rhythm: "STACH",        labs: { wbc: { val: 18.4 }, lactate: { val: 4.2 }, glucose: { val: 180 } } },
+    { name: "Respiratory Failure",    rhythm: "STACH",        labs: { ph: { val: 7.28 }, paco2: { val: 58 }, pao2: { val: 54 }, hco3: { val: 20 } } },
+    { name: "Anterior STEMI",         rhythm: "PVC",          labs: { troponin: { val: 2.84 }, bnp: { val: 480 } } },
+    { name: "DKA",                    rhythm: "STACH",        labs: { glucose: { val: 488 }, ph: { val: 7.18 }, hco3: { val: 8 }, potassium: { val: 5.9 } } },
+    { name: "Cardiac Arrest (VF)",    rhythm: "VFIB",         labs: {} },
+    { name: "Complete Heart Block",   rhythm: "HEART_BLOCK_3",labs: {} },
+    { name: "Hypokalemia / TdP",      rhythm: "TORSADES",     labs: { potassium: { val: 2.2 }, magnesium: { val: 0.8 } } },
+    { name: "Pacemaker Malfunction",  rhythm: "PACED_FAILURE",labs: {} },
+  ];
+
+  const applyScenario = (s) => {
+    const r = RHYTHMS[s.rhythm];
+    onUpdate("scenario", s.name);
+    onUpdate("rhythm", s.rhythm);
+    if (r?.vitals) onUpdate("vitals", { ...vitals, ...r.vitals });
+    const newLabs = { ...state.labs };
+    Object.entries(s.labs).forEach(([k, v]) => { newLabs[k] = { ...newLabs[k], ...v }; });
+    onUpdate("labs", newLabs);
+  };
+
+  // When rhythm is selected, auto-apply its physiologic vitals
+  const selectRhythm = (key) => {
+    const r = RHYTHMS[key];
+    onUpdate("rhythm", key);
+    if (r?.vitals) onUpdate("vitals", { ...vitals, ...r.vitals });
+  };
+
+  const setVital = (key, val) => onUpdate("vitals", { ...vitals, [key]: parseFloat(val) || 0 });
+  const setLab   = (key, val) => onUpdate("labs",   { ...state.labs, [key]: { ...state.labs[key], val: parseFloat(val) || val } });
+
+  // Group rhythms by category
+  const categories = {};
+  Object.entries(RHYTHMS).forEach(([key, r]) => {
+    if (!categories[r.category]) categories[r.category] = [];
+    categories[r.category].push({ key, ...r });
+  });
+
+  const severityBorder = { normal: "#00ff88", warning: "#ffcc00", critical: "#ff4444" };
+  const severityBg     = { normal: "rgba(0,255,136,0.08)", warning: "rgba(255,200,0,0.08)", critical: "rgba(255,60,60,0.10)" };
+
+  // Quick deterioration events with full physiologic vitals
+  const quickEvents = [
+    { label: "↓ BP Crisis",      color: "#ff6666", fn: () => onUpdate("vitals", { ...vitals, sbp: 72, dbp: 40, map: 51 }) },
+    { label: "↓ Desat",          color: "#ff6666", fn: () => onUpdate("vitals", { ...vitals, spo2: 78, rr: 32, etco2: 48 }) },
+    { label: "→ V-Fib",          color: "#ff2222", fn: () => selectRhythm("VFIB") },
+    { label: "→ Asystole",       color: "#ff2222", fn: () => selectRhythm("ASYSTOLE") },
+    { label: "→ V-Tach",         color: "#ff4444", fn: () => selectRhythm("VTACH") },
+    { label: "→ 3° Block",       color: "#ff8800", fn: () => selectRhythm("HEART_BLOCK_3") },
+    { label: "↑ K+ (Hyperkal.)", color: "#ffaa44", fn: () => { setLab("potassium", 6.9); onUpdate("vitals", { ...vitals, hr: 48, sbp: 88, dbp: 54 }); } },
+    { label: "↓ K+ → TdP",      color: "#ffaa44", fn: () => { setLab("potassium", 2.1); selectRhythm("TORSADES"); } },
+    { label: "↑ Troponin",       color: "#ffaa44", fn: () => setLab("troponin", 4.2) },
+    { label: "↑ Lactate",        color: "#ffaa44", fn: () => setLab("lactate", 5.8) },
+    { label: "Restore Normal",   color: "#00ff88", fn: () => applyScenario(scenarios[0]) },
+  ];
+
+  return (
+    <div style={{ background: "#0e0e1a", minHeight: "100vh", color: "#e0e0f0", fontFamily: "'Courier New', monospace", padding: 20 }}>
+      {/* Header */}
+      <div style={{ borderBottom: "2px solid #4a4a8a", paddingBottom: 10, marginBottom: 16 }}>
+        <h2 style={{ color: "#a0a0ff", margin: 0, fontSize: 16, letterSpacing: 2 }}>⚕ INSTRUCTOR CONTROL TERMINAL</h2>
+        <div style={{ color: "#555", fontSize: 11, marginTop: 4 }}>Scenario: <span style={{ color: "#ffcc44" }}>{scenario}</span></div>
+      </div>
+
+      {/* Scenario Presets */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ color: "#6666aa", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>SCENARIO PRESETS</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {scenarios.map(s => (
+            <button key={s.name} onClick={() => applyScenario(s)} style={{
+              fontSize: 10, padding: "5px 10px", borderRadius: 3, cursor: "pointer",
+              border: scenario === s.name ? "1px solid #8888ff" : "1px solid #333355",
+              background: scenario === s.name ? "#2a2a5a" : "#151525",
+              color: scenario === s.name ? "#fff" : "#888"
+            }}>{s.name}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Rhythm Selector — categorized */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ color: "#6666aa", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>RHYTHM SELECTION — click to apply ECG + physiologic vitals</div>
+        {Object.entries(categories).map(([cat, rhythms]) => (
+          <div key={cat} style={{ marginBottom: 10 }}>
+            <div style={{ color: "#555", fontSize: 9, letterSpacing: 2, marginBottom: 5, textTransform: "uppercase" }}>── {cat}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+              {rhythms.map(r => {
+                const active = rhythm === r.key;
+                return (
+                  <button key={r.key} onClick={() => selectRhythm(r.key)} style={{
+                    fontSize: 10, padding: "5px 10px", borderRadius: 3, cursor: "pointer",
+                    border: `1px solid ${active ? r.color : severityBorder[r.severity] + "55"}`,
+                    background: active ? severityBg[r.severity] : "#111120",
+                    color: active ? r.color : severityBorder[r.severity],
+                    fontWeight: active ? "bold" : "normal",
+                    opacity: active ? 1 : 0.75,
+                    transition: "all 0.15s"
+                  }}>{r.label}</button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        {/* Vitals sliders */}
+        <div>
+          <div style={{ color: "#6666aa", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>FINE-TUNE VITALS</div>
+          {[
+            ["hr",    "Heart Rate",   "bpm",  0,  300],
+            ["sbp",   "Systolic BP",  "mmHg", 0,  260],
+            ["dbp",   "Diastolic BP", "mmHg", 0,  160],
+            ["map",   "MAP",          "mmHg", 0,  200],
+            ["spo2",  "SpO₂",         "%",   50,  100],
+            ["rr",    "Resp Rate",    "/min", 0,   60],
+            ["temp",  "Temp",         "°F",  90,  110],
+            ["etco2", "EtCO₂",        "mmHg", 0,   80],
+          ].map(([key, label, unit, min, max]) => {
+            const v = vitals[key];
+            // Color-code value if abnormal
+            let valColor = "#fff";
+            if (key === "hr"   && (v > 100 || v < 60))  valColor = v > 150 || v < 40 ? "#ff4444" : "#ffcc00";
+            if (key === "sbp"  && (v < 90  || v > 160)) valColor = v < 70  || v > 180 ? "#ff4444" : "#ffcc00";
+            if (key === "spo2" && v < 95)               valColor = v < 90  ? "#ff4444" : "#ffcc00";
+            if (key === "rr"   && (v > 20  || v < 12))  valColor = v > 30  || v < 8   ? "#ff4444" : "#ffcc00";
+            return (
+              <div key={key} style={{ display: "flex", alignItems: "center", marginBottom: 6, gap: 6 }}>
+                <label style={{ width: 90, fontSize: 10, color: "#666" }}>{label}</label>
+                <input type="range" min={min} max={max} step={key === "temp" ? 0.1 : 1}
+                  value={v} onChange={e => setVital(key, e.target.value)}
+                  style={{ flex: 1, accentColor: "#6666ff", height: 3 }} />
+                <span style={{ width: 64, textAlign: "right", fontSize: 12, color: valColor, fontWeight: "bold" }}>
+                  {v}<span style={{ color: "#444", fontSize: 9, fontWeight: "normal" }}> {unit}</span>
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Lab controls */}
+        <div>
+          <div style={{ color: "#6666aa", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>LAB VALUES</div>
+          {Object.entries(labs).map(([key, lab]) => {
+            const ref = lab.ref || "";
+            const parts = ref.split("-").map(parseFloat);
+            const isHi = parts.length === 2 && parseFloat(lab.val) > parts[1];
+            const isLo = parts.length === 2 && parseFloat(lab.val) < parts[0];
+            return (
+              <div key={key} style={{ display: "flex", alignItems: "center", marginBottom: 5, gap: 6 }}>
+                <label style={{ width: 80, fontSize: 9, color: "#666", textTransform: "uppercase" }}>{key}</label>
+                <input type="number" value={lab.val} step="0.1"
+                  onChange={e => setLab(key, e.target.value)}
+                  style={{ width: 72, fontSize: 11, padding: "2px 5px", background: "#0a0a18", border: `1px solid ${isHi || isLo ? "#ff6644" : "#333355"}`, color: isHi || isLo ? "#ffaa44" : "#ddd", borderRadius: 3 }} />
+                <span style={{ fontSize: 9, color: "#444" }}>{ref} {lab.unit}</span>
+                {isHi && <span style={{ color: "#ff6644", fontSize: 9 }}>↑</span>}
+                {isLo && <span style={{ color: "#6699ff", fontSize: 9 }}>↓</span>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Quick Events */}
+      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #222244" }}>
+        <div style={{ color: "#6666aa", fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>QUICK EVENTS</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {quickEvents.map(({ label, color, fn }) => (
+            <button key={label} onClick={fn} style={{
+              fontSize: 10, padding: "6px 12px", borderRadius: 3, cursor: "pointer",
+              border: `1px solid ${color}55`,
+              background: `${color}14`,
+              color: color, fontWeight: "bold"
+            }}>{label}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ROOT APP ───────────────────────────────────────────────────────────────
+function App() {
+  const [state, setState] = useState(INITIAL_STATE);
+  const [activeView, setActiveView] = useState("all");
+
+  const handleUpdate = useCallback((key, value) => {
+    setState(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  const handleMARUpdate = useCallback((medId, field, value) => {
+    setState(prev => ({
+      ...prev,
+      medications: prev.medications.map(m => m.id === medId ? { ...m, [field]: value } : m)
+    }));
+  }, []);
+
+  // Compute alarms
+  useEffect(() => {
+    const alarms = [];
+    const { vitals, rhythm } = state;
+    if (vitals.hr > 150 || vitals.hr < 40) alarms.push(`HR ${vitals.hr} bpm — out of range`);
+    if (vitals.sbp < 90) alarms.push(`BP ${vitals.sbp}/${vitals.dbp} — hypotension`);
+    if (vitals.spo2 < 92) alarms.push(`SpO₂ ${vitals.spo2}% — desaturation`);
+    if (rhythm === "VFIB") alarms.push("V-FIB DETECTED — Call code");
+    if (rhythm === "ASYSTOLE") alarms.push("ASYSTOLE — No pulse");
+    if (rhythm === "VTACH") alarms.push("V-TACH — Prepare for cardioversion");
+    setState(prev => ({ ...prev, alarms }));
+  }, [state.vitals, state.rhythm]);
+
+  const views = ["all", "instructor", "student", "monitor"];
+
+  return (
+    <div style={{ fontFamily: "sans-serif" }}>
+      {/* View Switcher */}
+      <div style={{ background: "#0d1117", padding: "8px 16px", display: "flex", gap: 8, alignItems: "center", borderBottom: "2px solid #30363d" }}>
+        <span style={{ color: "#58a6ff", fontSize: 12, fontWeight: "bold", marginRight: 8 }}>SimLab EMR</span>
+        {views.map(v => (
+          <button key={v} onClick={() => setActiveView(v)} style={{
+            fontSize: 11, padding: "4px 12px", borderRadius: 4, cursor: "pointer", border: "none",
+            background: activeView === v ? "#58a6ff" : "#21262d", color: activeView === v ? "#000" : "#8b949e",
+            fontWeight: activeView === v ? "bold" : "normal", textTransform: "capitalize"
+          }}>
+            {v === "all" ? "All Views" : v === "instructor" ? "Instructor" : v === "student" ? "Student EMR" : "Bedside Monitor"}
+          </button>
+        ))}
+        <span style={{ marginLeft: "auto", color: "#555", fontSize: 10 }}>All screens share live data</span>
+      </div>
+
+      {/* Render views */}
+      {activeView === "all" ? (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "auto auto", gap: 0 }}>
+          <div style={{ borderRight: "2px solid #333", borderBottom: "2px solid #333" }}>
+            <div style={{ background: "#161b22", padding: "4px 12px", fontSize: 10, color: "#58a6ff", letterSpacing: 2, fontFamily: "monospace" }}>INSTRUCTOR TERMINAL</div>
+            <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "138%", pointerEvents: "all" }}>
+              <InstructorPanel state={state} onUpdate={handleUpdate} />
+            </div>
+          </div>
+          <div style={{ borderBottom: "2px solid #333" }}>
+            <div style={{ background: "#161b22", padding: "4px 12px", fontSize: 10, color: "#58a6ff", letterSpacing: 2, fontFamily: "monospace" }}>STUDENT EMR TERMINAL</div>
+            <div style={{ transform: "scale(0.72)", transformOrigin: "top left", width: "138%", pointerEvents: "all" }}>
+              <StudentEMR state={state} onMARUpdate={handleMARUpdate} />
+            </div>
+          </div>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <div style={{ background: "#161b22", padding: "4px 12px", fontSize: 10, color: "#00ff88", letterSpacing: 2, fontFamily: "monospace" }}>BEDSIDE MONITOR (HDMI OUTPUT)</div>
+            <BedsideMonitor state={state} />
+          </div>
+        </div>
+      ) : activeView === "instructor" ? (
+        <InstructorPanel state={state} onUpdate={handleUpdate} />
+      ) : activeView === "student" ? (
+        <StudentEMR state={state} onMARUpdate={handleMARUpdate} />
+      ) : (
+        <BedsideMonitor state={state} />
+      )}
+    </div>
+  );
+}
+
+    // Mount
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
