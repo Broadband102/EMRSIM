@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disney Fantasy Reference Map</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        h1 { color: #002147; margin-bottom: 10px; }
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; }
+        
+        /* Toggle Logic */
+        input[type="radio"] { display: none; }
+        label { padding: 10px 20px; background: #fff; border: 2px solid #002147; border-radius: 25px; cursor: pointer; transition: 0.3s; font-weight: bold; }
+        input[type="radio"]:checked + label { background: #002147; color: white; }
+
+        .ship-container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 800px; }
+        
+        /* Layer Visibility */
+        .deck-layer { display: none; }
+        #deck3:checked ~ .ship-container #layer3 { display: block; }
+        #deck4:checked ~ .ship-container #layer4 { display: block; }
+        #deck11:checked ~ .ship-container #layer11 { display: block; }
+
+        .hull { fill: #e1e1e1; stroke: #333; stroke-width: 2; }
+        .room { stroke: white; stroke-width: 1; transition: 0.2s; cursor: pointer; }
+        .room:hover { opacity: 0.8; }
+        .label-text { font-size: 12px; font-weight: bold; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <h1>Disney Fantasy: Deck Reference</h1>
+    
+    <input type="radio" id="deck3" name="decks" checked>
+    <label for="deck3">Deck 3 (Lobby)</label>
+    
+    <input type="radio" id="deck4" name="decks">
+    <label for="deck4">Deck 4 (Entertainment)</label>
+    
+    <input type="radio" id="deck11" name="decks">
+    <label for="deck11">Deck 11 (Pools)</label>
+
+    <div class="ship-container">
+        <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,100 Q50,40 150,40 L700,40 Q750,40 750,100 Q750,160 700,160 L150,160 Q50,160 50,100" class="hull" />
+            
+            <g id="layer3" class="deck-layer">
+                <rect x="100" y="60" width="120" height="80" fill="#d4af37" class="room" /> <text x="110" y="105" class="label-text">Animator's Palate</text>
+                
+                <circle cx="400" cy="100" r="40" fill="#f0e68c" class="room" /> <text x="375" y="105" class="label-text">Atrium</text>
+                
+                <rect x="550" y="60" width="150" height="80" fill="#d4af37" class="room" /> <text x="580" y="105" class="label-text">Royal Court</text>
+            </g>
+
+            <g id="layer4" class="deck-layer">
+                <rect x="70" y="55" width="150" height="90" fill="#b22222" class="room" /> <text x="80" y="105" class="label-text" fill="white">Walt Disney Theatre</text>
+                
+                <rect x="350" y="60" width="100" height="80" fill="#4682b4" class="room" /> <text x="380" y="105" class="label-text" fill="white">Mickey's Mainsail</text>
+                
+                <rect x="580" y="60" width="120" height="80" fill="#483d8b" class="room" /> <text x="600" y="105" class="label-text" fill="white">The District</text>
+            </g>
+
+            <g id="layer11" class="deck-layer">
+                <rect x="250" y="70" width="80" height="60" fill="#87ceeb" class="room" /> <text x="255" y="105" class="label-text">Mickey's Pool</text>
+                
+                <rect x="450" y="70" width="80" height="60" fill="#00bfff" class="room" /> <text x="455" y="105" class="label-text">Donald's Pool</text>
+                
+                <path d="M150,50 Q400,20 650,50" fill="none" stroke="#ff4500" stroke-width="5" stroke-dasharray="10,5" /> <text x="350" y="40" class="label-text" fill="#ff4500">AquaDuck Path</text>
+                
+                <rect x="650" y="65" width="80" height="70" fill="#32cd32" class="room" /> <text x="660" y="105" class="label-text">Cabanas</text>
+            </g>
+        </svg>
+    </div>
+
+    <div style="margin-top: 20px; color: #666; max-width: 600px; text-align: center;">
+        <p><em>Note: This is a simplified spatial reference. Forward (Bow) is to the left, Aft (Stern) is to the right.</em></p>
+    </div>
+
+</body>
+</html>
